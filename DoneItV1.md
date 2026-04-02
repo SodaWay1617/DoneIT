@@ -38,17 +38,17 @@ It is intentionally practical:
 - [x] Add Testcontainers for PostgreSQL
 
 ### 2.3 Initial package layout
-- [ ] Create `com.doneit.common`
-- [ ] Create `com.doneit.user`
-- [ ] Create `com.doneit.task`
-- [ ] Create `com.doneit.config`
-- [ ] Within business modules, separate `domain`, `application`, `infrastructure`, and `web` where applicable
+- [x] Create `com.doneit.common`
+- [x] Create `com.doneit.user`
+- [x] Create `com.doneit.task`
+- [x] Create `com.doneit.config`
+- [x] Within business modules, separate `domain`, `application`, `infrastructure`, and `web` where applicable
 
 ### 2.4 Bootstrap done criteria
-- [ ] Application starts locally
-- [ ] Build runs successfully
-- [ ] Empty app can render a basic page or health response
-- [ ] Package structure matches architectural intent
+- [x] Application starts locally
+- [x] Build runs successfully
+- [x] Empty app can render a basic page or health response
+- [x] Package structure matches architectural intent
 
 ---
 
