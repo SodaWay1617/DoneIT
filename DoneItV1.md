@@ -28,14 +28,14 @@ It is intentionally practical:
 - [x] Add basic `application.yml`
 
 ### 2.2 Dependencies
-- [ ] Add Spring Web / Spring MVC
-- [ ] Add Thymeleaf
-- [ ] Add Spring JDBC
-- [ ] Add PostgreSQL driver
-- [ ] Add Liquibase
-- [ ] Add validation support
-- [ ] Add Spring Boot Test
-- [ ] Add Testcontainers for PostgreSQL
+- [x] Add Spring Web / Spring MVC
+- [x] Add Thymeleaf
+- [x] Add Spring JDBC
+- [x] Add PostgreSQL driver
+- [x] Add Liquibase
+- [x] Add validation support
+- [x] Add Spring Boot Test
+- [x] Add Testcontainers for PostgreSQL
 
 ### 2.3 Initial package layout
 - [ ] Create `com.doneit.common`
