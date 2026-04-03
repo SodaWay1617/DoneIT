@@ -137,6 +137,37 @@ There is no registration flow in MVP.
 
 The initial user is created manually in the database or via seed script.
 
+For MVP, the chosen seed strategy is:
+
+- keep user creation manual and explicit;
+- generate a bcrypt password hash locally;
+- insert the first user with a SQL script;
+- never store or commit a plain-text password.
+
+### Initial user seed flow
+
+1. Generate a bcrypt hash locally:
+
+```powershell
+./scripts/generate-password-hash.ps1 -Password "change-me"
+```
+
+2. Open [scripts/seed-initial-user.sql](scripts/seed-initial-user.sql) and replace the example hash, login, or display name if needed.
+
+3. Apply the seed against the local PostgreSQL container:
+
+```powershell
+Get-Content -Raw .\\scripts\\seed-initial-user.sql | docker exec -i doneit-postgres psql -U doneit -d doneit
+```
+
+4. Verify the seeded user exists:
+
+```powershell
+docker exec doneit-postgres psql -U doneit -d doneit -c "SELECT id, login, display_name FROM users;"
+```
+
+The committed hash in the example SQL matches the development password `change-me`. Replace it before any real use.
+
 ## Initial delivery expectations for Codex agent
 
 The first delivery should provide:
@@ -187,4 +218,5 @@ This starts:
 - PostgreSQL on `localhost:5432`
 - the application on `localhost:8080`
 
-At the current bootstrap stage, the application still runs with temporary JDBC and Liquibase autoconfiguration exclusions until the database integration phase is completed. The Docker and environment setup are already in place so we can remove those temporary exclusions in the next phase without restructuring runtime configuration.
+The application now starts with real JDBC and Liquibase configuration enabled, so local Docker Compose is enough to bring up PostgreSQL and run schema migrations automatically.
+

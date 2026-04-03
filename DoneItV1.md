@@ -97,9 +97,9 @@ It is intentionally practical:
 - [x] Add useful indexes for date queries
 
 ### 3.5 Seed strategy
-- [ ] Define how the initial user is created
-- [ ] Add a manual SQL seed or startup instruction
-- [ ] Ensure password is stored hashed, not plain text
+- [x] Define how the initial user is created
+- [x] Add a manual SQL seed or startup instruction
+- [x] Ensure password is stored hashed, not plain text
 
 ### 3.6 Foundation done criteria
 - [ ] Docker Compose starts DB and app successfully
