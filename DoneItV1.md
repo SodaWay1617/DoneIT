@@ -91,10 +91,10 @@ It is intentionally practical:
 - [x] Add `closed_at`
 
 ### 3.4 Data integrity
-- [ ] Add foreign key from `tasks.user_id` to `users.id`
-- [ ] Add required `NOT NULL` constraints where appropriate
-- [ ] Make status storage explicit
-- [ ] Add useful indexes for date queries
+- [x] Add foreign key from `tasks.user_id` to `users.id`
+- [x] Add required `NOT NULL` constraints where appropriate
+- [x] Make status storage explicit
+- [x] Add useful indexes for date queries
 
 ### 3.5 Seed strategy
 - [ ] Define how the initial user is created
@@ -400,3 +400,4 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
+
