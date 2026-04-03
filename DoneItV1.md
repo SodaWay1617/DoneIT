@@ -82,7 +82,7 @@ It is intentionally practical:
 - [ ] Add `title`
 - [ ] Add `description`
 - [ ] Add `status`
-- [ ] Add `planned_for_at`
+- [ ] Add `planned_for_at` as nullable for backlog tasks
 - [ ] Add `deadline_at`
 - [ ] Add `user_id`
 - [ ] Add `created_at`
@@ -119,17 +119,20 @@ It is intentionally practical:
 ### 4.2 Task domain model
 - [ ] Create `TaskStatus` enum with `OPEN`, `DONE`, `CLOSED`
 - [ ] Create task entity or aggregate model
-- [ ] Model `planned_for_at` as first-class field
+- [ ] Model `planned_for_at` as first-class but optional for backlog tasks
 - [ ] Model `deadline_at` as optional separate field
+- [ ] Model backlog as undated low-priority reminder tasks
 - [ ] Add audit timestamps
 
 ### 4.3 Domain rules
 - [ ] Task can be created only with valid required data
+- [ ] Backlog task can exist without planned date
 - [ ] `DONE` transition is explicit
 - [ ] `CLOSED` transition is explicit
 - [ ] Hard delete is not supported
 - [ ] Done and closed tasks are excluded from active list queries
-- [ ] Bulk move logic targets only unfinished tasks
+- [ ] Backlog tasks are excluded from dated active list queries
+- [ ] Bulk move logic targets only unfinished dated tasks
 
 ### 4.4 Domain done criteria
 - [ ] Core task rules are represented in code, not templates
@@ -151,9 +154,11 @@ It is intentionally practical:
 - [ ] Implement load by id
 - [ ] Implement query for today
 - [ ] Implement query by selected date
+- [ ] Implement query for backlog tasks
 - [ ] Implement query for completed/closed tasks if shown separately
 - [ ] Implement status update methods
 - [ ] Implement reschedule method
+- [ ] Implement move to backlog by clearing planned date
 - [ ] Implement bulk move unfinished tasks to tomorrow
 
 ### 5.3 SQL quality
@@ -164,6 +169,7 @@ It is intentionally practical:
 ### 5.4 Persistence done criteria
 - [ ] Repositories cover all MVP storage needs
 - [ ] Daily filtering works through SQL queries
+- [ ] Backlog filtering works through SQL queries
 - [ ] Bulk move uses clear and testable persistence logic
 
 ---
@@ -174,16 +180,21 @@ It is intentionally practical:
 - [ ] Create request DTOs / command models for create task
 - [ ] Create request DTOs / command models for edit task
 - [ ] Create request DTOs / command models for reschedule
+- [ ] Create request DTOs / command models for move to backlog
 - [ ] Create view DTOs for daily screens
+- [ ] Create view DTOs for backlog screen or section
 
 ### 6.2 Use cases
 - [ ] Implement create task use case
+- [ ] Implement create backlog task use case
 - [ ] Implement edit task use case
 - [ ] Implement get tasks for today use case
 - [ ] Implement get tasks for selected date use case
+- [ ] Implement get backlog tasks use case
 - [ ] Implement mark task as done use case
 - [ ] Implement mark task as closed use case
 - [ ] Implement move one task use case
+- [ ] Implement move task to backlog use case
 - [ ] Implement bulk move unfinished tasks to tomorrow use case
 
 ### 6.3 Validation and transaction boundaries
@@ -226,6 +237,7 @@ It is intentionally practical:
 - [ ] Implement login page
 - [ ] Implement today page
 - [ ] Implement selected date page
+- [ ] Implement backlog page, block, or collapsible section
 - [ ] Implement create task page
 - [ ] Implement edit task page
 - [ ] Implement completed/closed area as a page, block, or collapsible section
@@ -235,19 +247,22 @@ It is intentionally practical:
 - [ ] User can submit title
 - [ ] User can submit description
 - [ ] User can submit planned datetime
+- [ ] User can create a backlog task without planned datetime
 - [ ] User can optionally submit deadline datetime
 - [ ] Validation errors are shown clearly
 
 ### 8.3 Task editing flow
 - [ ] User can open edit page
 - [ ] User can update all editable task fields
+- [ ] User can clear planned datetime to move task into backlog
 - [ ] User can save changes successfully
 
 ### 8.4 Daily view flow
 - [ ] Today view loads current day's tasks
 - [ ] Selected date view loads tasks for chosen date
+- [ ] Backlog view or section loads undated tasks separately
 - [ ] Date picker exists
-- [ ] Main active list shows only `OPEN` tasks
+- [ ] Main active list shows only dated `OPEN` tasks
 
 ### 8.5 Status actions
 - [ ] User can mark task as `DONE`
@@ -256,6 +271,7 @@ It is intentionally practical:
 
 ### 8.6 Rescheduling actions
 - [ ] User can move one task to another datetime
+- [ ] User can move one task into backlog by removing planned datetime
 - [ ] User can bulk move unfinished tasks to tomorrow
 
 ### 8.7 UI done criteria
@@ -270,6 +286,7 @@ It is intentionally practical:
 ### 9.1 Required visual distinctions
 - [ ] Overdue tasks are highlighted
 - [ ] Today tasks are easy to identify
+- [ ] Backlog tasks are clearly separated from dated tasks
 - [ ] Completed and closed tasks do not clutter the active flow
 - [ ] Status is visible at a glance
 
@@ -288,8 +305,10 @@ It is intentionally practical:
 
 ### 10.1 Unit tests
 - [ ] Test task creation rules
+- [ ] Test backlog task creation rules
 - [ ] Test status transitions
 - [ ] Test reschedule logic
+- [ ] Test move to backlog logic
 - [ ] Test bulk move rules
 
 ### 10.2 Repository integration tests
@@ -297,16 +316,19 @@ It is intentionally practical:
 - [ ] Validate Liquibase migrations in test environment
 - [ ] Test task persistence
 - [ ] Test retrieval by date
+- [ ] Test retrieval from backlog
 - [ ] Test exclusion of `DONE` and `CLOSED` from active list
 - [ ] Test bulk move persistence behavior
 
 ### 10.3 Web or application flow tests
 - [ ] Test create task flow
+- [ ] Test create backlog task flow
 - [ ] Test edit task flow
 - [ ] Test complete task flow
 - [ ] Test close task flow
 - [ ] Test today view flow
 - [ ] Test selected date flow
+- [ ] Test backlog view flow
 - [ ] Test bulk move unfinished tasks flow
 
 ### 10.4 Testing done criteria
@@ -323,16 +345,20 @@ It is intentionally practical:
 - [ ] Create task for future date
 - [ ] Create task with specific time
 - [ ] Create task with deadline
+- [ ] Create backlog task without date
 - [ ] Edit existing task
 - [ ] Mark task as done
 - [ ] Mark task as closed
 - [ ] Move task to another date/time
+- [ ] Move task into backlog
 - [ ] Bulk move unfinished tasks to tomorrow
+- [ ] Verify backlog tasks are not shown in dated active list
 - [ ] Verify completed tasks are not shown in active list
 
 ### 11.2 Migration readiness
 - [ ] Recreate current real tasks manually in DoneIt
 - [ ] Add long-term reminders like birthdays
+- [ ] Add low-priority undated reminders into backlog
 - [ ] Use the app as the primary daily tracker for trial period
 
 ### 11.3 Final readiness criteria
@@ -351,10 +377,10 @@ It is intentionally practical:
 - [ ] Step 4: Implement task domain and JDBC repositories
 - [ ] Step 5: Implement application use cases and DTOs
 - [ ] Step 6: Implement minimal login
-- [ ] Step 7: Implement today view and selected date view
-- [ ] Step 8: Implement create and edit task flows
-- [ ] Step 9: Implement done/closed actions and completed bucket
-- [ ] Step 10: Implement move task and bulk move to tomorrow
+- [ ] Step 7: Implement today view, selected date view, and backlog view
+- [ ] Step 8: Implement create and edit task flows, including backlog tasks
+- [ ] Step 9: Implement done/closed actions, completed bucket, and backlog separation
+- [ ] Step 10: Implement move task, move to backlog, and bulk move to tomorrow
 - [ ] Step 11: Add tests for critical flows
 - [ ] Step 12: Run manual verification and prepare real migration
 

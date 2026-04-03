@@ -15,10 +15,13 @@ The MVP is intentionally small.
 It must allow a single user to:
 
 - create a task;
+- create a backlog task without a date;
 - edit a task;
 - view tasks for today;
 - view tasks for a selected date;
+- view backlog tasks separately from dated tasks;
 - move a task to another date/time;
+- move a task into backlog by clearing its planned date;
 - bulk move unfinished tasks to tomorrow;
 - mark a task as completed;
 - mark a task as closed/cancelled;
@@ -27,7 +30,7 @@ It must allow a single user to:
 
 ## Success criteria for MVP
 
-The MVP is considered successful when the user fully migrates from the current tracker to DoneIt and uses DoneIt as the primary daily task management tool.
+The MVP is considered successful when the user fully migrates from the current tracker to DoneIt and uses DoneIt as the primary daily task management tool, including undated reminder-style tasks kept in backlog.
 
 ## Product context
 
@@ -45,6 +48,7 @@ The first production scenario is simple:
 The following features are expected in future iterations:
 
 - projects;
+- project-level backlogs;
 - subtasks;
 - recurring tasks;
 - second family user;
@@ -91,9 +95,9 @@ The following features are explicitly out of scope for MVP:
 - Telegram integration;
 - advanced calendar UI;
 - recurring task execution;
-- projects and subtasks;
+- projects and subtasks beyond backlog planning for future design;
 - analytics;
-- reminders;
+- reminders infrastructure;
 - file attachments;
 - comments;
 - task ordering inside a day;
@@ -103,21 +107,24 @@ The following features are explicitly out of scope for MVP:
 
 MVP uses the following statuses:
 
-- `OPEN` — active task
-- `DONE` — completed task
-- `CLOSED` — cancelled / no longer relevant
+- `OPEN` - active task
+- `DONE` - completed task
+- `CLOSED` - cancelled / no longer relevant
 
 Completed and closed tasks must not appear in the main active task list.
 
 ## Date model
 
-Tasks store both planned execution datetime and optional deadline datetime.
+Tasks store optional planned execution datetime and optional deadline datetime.
 
 This is intentional because:
 
 - some tasks need a planned time;
+- some tasks belong to backlog and intentionally have no planned date yet;
 - some tasks may have a deadline separate from the execution slot;
 - the future calendar model should be supported by the domain from the start.
+
+Tasks without `planned_for_at` belong to backlog and must be displayed separately from dated tasks.
 
 Suggested field names:
 
@@ -142,6 +149,7 @@ The first delivery should provide:
 - tests with Testcontainers;
 - basic CRUD for tasks;
 - daily task views;
+- separate backlog view or section for undated tasks;
 - bulk move unfinished tasks to tomorrow.
 
 ## Notes for future frontend migration

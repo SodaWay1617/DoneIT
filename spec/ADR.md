@@ -4,7 +4,7 @@ This file captures the main architectural decisions accepted for the project.
 
 ---
 
-## ADR-001 — Use a web application instead of Telegram-based workflow
+## ADR-001 вЂ” Use a web application instead of Telegram-based workflow
 
 ### Status
 Accepted
@@ -27,7 +27,7 @@ DoneIt will be built as a web application.
 
 ---
 
-## ADR-002 — Start with a single-user MVP
+## ADR-002 вЂ” Start with a single-user MVP
 
 ### Status
 Accepted
@@ -50,7 +50,7 @@ MVP supports only one manually created user.
 
 ---
 
-## ADR-003 — Build as a modular monolith
+## ADR-003 вЂ” Build as a modular monolith
 
 ### Status
 Accepted
@@ -73,7 +73,7 @@ DoneIt will be implemented as a modular monolith with explicit internal module b
 
 ---
 
-## ADR-004 — Use Thymeleaf and server-side rendering for MVP
+## ADR-004 вЂ” Use Thymeleaf and server-side rendering for MVP
 
 ### Status
 Accepted
@@ -96,7 +96,7 @@ MVP UI will be server-rendered with Thymeleaf templates.
 
 ---
 
-## ADR-005 — Use PostgreSQL as the primary database
+## ADR-005 вЂ” Use PostgreSQL as the primary database
 
 ### Status
 Accepted
@@ -118,7 +118,7 @@ DoneIt will use PostgreSQL.
 
 ---
 
-## ADR-006 — Use plain SQL instead of ORM
+## ADR-006 вЂ” Use plain SQL instead of ORM
 
 ### Status
 Accepted
@@ -141,7 +141,7 @@ Persistence will use plain SQL through Spring JDBC or equivalent lightweight DB 
 
 ---
 
-## ADR-007 — Use Liquibase for schema migrations
+## ADR-007 вЂ” Use Liquibase for schema migrations
 
 ### Status
 Accepted
@@ -164,7 +164,7 @@ Liquibase will manage database schema migrations.
 
 ---
 
-## ADR-008 — Support both planned execution datetime and deadline datetime
+## ADR-008 вЂ” Support both planned execution datetime and deadline datetime
 
 ### Status
 Accepted
@@ -188,7 +188,7 @@ The task model will include:
 
 ---
 
-## ADR-009 — Do not implement task deletion in MVP
+## ADR-009 вЂ” Do not implement task deletion in MVP
 
 ### Status
 Accepted
@@ -214,7 +214,7 @@ Instead, they will transition to:
 
 ---
 
-## ADR-010 — Completed tasks must not appear in the primary active list
+## ADR-010 вЂ” Completed tasks must not appear in the primary active list
 
 ### Status
 Accepted
@@ -235,7 +235,7 @@ Tasks with status `DONE` or `CLOSED` must be hidden from the main active task li
 
 ---
 
-## ADR-011 — Bulk move unfinished tasks to tomorrow
+## ADR-011 вЂ” Bulk move unfinished tasks to tomorrow
 
 ### Status
 Accepted
@@ -257,7 +257,7 @@ MVP will provide a bulk action that moves all unfinished tasks for the current d
 
 ---
 
-## ADR-012 — No registration, no roles, no advanced auth in MVP
+## ADR-012 вЂ” No registration, no roles, no advanced auth in MVP
 
 ### Status
 Accepted
@@ -281,7 +281,7 @@ Authentication remains minimal:
 
 ---
 
-## ADR-013 — Test quality is mandatory from the start
+## ADR-013 вЂ” Test quality is mandatory from the start
 
 ### Status
 Accepted
@@ -305,7 +305,7 @@ MVP must include:
 
 ---
 
-## ADR-014 — Develop iteratively in small increments
+## ADR-014 вЂ” Develop iteratively in small increments
 
 ### Status
 Accepted
@@ -325,3 +325,29 @@ The project will grow iteratively, starting with a very small MVP.
 #### Negative
 - some future features are intentionally postponed;
 - temporary simplicity may look incomplete by design.
+---
+
+## ADR-015 - Support backlog tasks without planned execution datetime
+
+### Status
+Accepted
+
+### Context
+Some tasks are useful as low-priority reminders that should not occupy a concrete day yet. They still need to be stored, reviewed, and later promoted into the schedule. In the future, backlog may exist both globally and inside projects.
+
+### Decision
+MVP will support backlog tasks as regular tasks without `planned_for_at`.
+These tasks must:
+- remain separate from dated daily task lists;
+- be shown in a dedicated backlog block, section, or page;
+- be editable later into normal dated tasks.
+
+### Consequences
+#### Positive
+- supports real reminder-style tasks with no chosen date;
+- avoids forcing artificial scheduling;
+- creates a clean foundation for future project-level backlogs.
+
+#### Negative
+- `planned_for_at` can no longer be treated as universally required;
+- queries and UI must handle dated and undated tasks separately.

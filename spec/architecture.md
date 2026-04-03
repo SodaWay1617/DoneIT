@@ -13,7 +13,7 @@ The architecture must satisfy two goals:
 
 ## 1. Architectural style
 
-DoneIt is implemented as a **modular monolith**.
+DoneIt is implemented as a modular monolith.
 
 This means:
 
@@ -63,7 +63,8 @@ Responsible for:
 - task status changes;
 - task rescheduling;
 - bulk move logic;
-- date-based queries.
+- date-based queries;
+- backlog queries and backlog separation.
 
 ### `web`
 Responsible for:
@@ -159,7 +160,7 @@ Suggested fields:
 - `title`
 - `description`
 - `status`
-- `planned_for_at`
+- `planned_for_at` nullable for backlog tasks
 - `deadline_at`
 - `user_id`
 - `created_at`
@@ -180,12 +181,20 @@ Suggested fields:
 The system must support:
 - tasks for a specific day;
 - tasks at a specific time;
-- far-future reminders like birthdays.
+- far-future reminders like birthdays;
+- tasks without a chosen date yet that live in backlog.
+
+`planned_for_at` is therefore first-class, but optional for backlog tasks.
 
 ### Why `deadline_at`
 Some tasks have a desired execution slot and an actual deadline that are not the same.
 
 The domain should support this distinction early, even if the MVP UI uses it only lightly.
+
+### Why backlog exists in MVP
+Some tasks are low-priority reminders that are good to do someday, but not on a specific date yet.
+
+The MVP should support this explicitly rather than forcing fake dates.
 
 ### Why no hard delete in MVP
 The project prefers task closure over removal.
@@ -199,16 +208,19 @@ This preserves history and avoids accidental data loss.
 User opens task creation page and submits:
 - title
 - description
-- planned datetime
+- planned datetime or backlog placement
 - optional deadline datetime
 
 ### Edit task
-User updates existing task fields.
+User updates existing task fields, including moving a task between dated schedule and backlog.
 
 ### Daily view
 User opens:
 - today view
 - selected day view
+
+### Backlog view
+User opens a separate backlog block, section, or page with undated low-priority tasks.
 
 ### Complete task
 User marks task as `DONE`.
@@ -217,10 +229,11 @@ User marks task as `DONE`.
 User marks task as `CLOSED`.
 
 ### Move task
-User changes planned datetime for one task.
+User changes planned datetime for one task or removes the date to place the task into backlog.
 
 ### Bulk move unfinished tasks to tomorrow
 System finds all `OPEN` tasks for the current day and shifts them to the next day.
+Backlog tasks are not affected.
 
 ---
 
@@ -234,10 +247,12 @@ The MVP uses server-side rendering.
 - selected date page
 - task creation page
 - task edit page
+- backlog page, block, or collapsible section
 - completed/closed tasks page or collapsible section
 
 ### Visual rules
-- active tasks must be visually separate from completed/closed tasks;
+- active dated tasks must be visually separate from completed/closed tasks;
+- backlog tasks must be visually separate from dated tasks;
 - overdue tasks must be highlighted;
 - task statuses should be immediately visible;
 - completed tasks should not clutter the primary daily flow.
@@ -285,12 +300,15 @@ The first version can remain relatively simple as long as the logic is explicit 
 
 ### Minimum critical test areas
 - task creation
+- backlog task creation without date
 - task editing
 - task completion
 - task closure
 - rescheduling
+- moving tasks between schedule and backlog
 - bulk move unfinished tasks to tomorrow
 - daily filtering
+- backlog filtering
 - exclusion of done/closed tasks from active list
 
 ---
@@ -304,7 +322,7 @@ The architecture must not be bent around the following features yet:
 - event-driven microservices;
 - asynchronous notification infrastructure;
 - recurring task engine;
-- project/subtask graph;
+- project/subtask graph beyond future backlog preparation;
 - analytics warehouse;
 - advanced frontend SPA concerns.
 
@@ -315,13 +333,14 @@ The architecture must not be bent around the following features yet:
 ### After MVP
 Likely next modules:
 1. projects
-2. subtasks
-3. recurring tasks
-4. second user
-5. notifications
-6. time tracking
-7. analytics
-8. calendar
+2. project-level backlogs
+3. subtasks
+4. recurring tasks
+5. second user
+6. notifications
+7. time tracking
+8. analytics
+9. calendar
 
 ### Architecture expectation
 Each of these should be added as an internal module with clear boundaries rather than by scattering changes across the entire codebase.
@@ -332,15 +351,16 @@ Each of these should be added as an internal module with clear boundaries rather
 
 ```text
 com.doneit
-  ├── common
-  ├── user
-  │   ├── domain
-  │   ├── application
-  │   ├── infrastructure
-  │   └── web
-  ├── task
-  │   ├── domain
-  │   ├── application
-  │   ├── infrastructure
-  │   └── web
-  └── config
+  |- common
+  |- user
+  |  |- domain
+  |  |- application
+  |  |- infrastructure
+  |  \- web
+  |- task
+  |  |- domain
+  |  |- application
+  |  |- infrastructure
+  |  \- web
+  \- config
+```
