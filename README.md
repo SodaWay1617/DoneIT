@@ -155,3 +155,36 @@ The first delivery should provide:
 ## Notes for future frontend migration
 
 The MVP uses server-side rendering, but the application should expose a clean internal application layer and REST endpoints where reasonable so that a future migration to a dedicated frontend is straightforward.
+
+## Local development
+
+### Environment variables
+
+The application is prepared to read PostgreSQL connection settings from environment variables:
+
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_DATASOURCE_DRIVER_CLASS_NAME`
+
+Default local values currently assume:
+
+- database: `doneit`
+- user: `doneit`
+- password: `doneit`
+- port: `5432`
+
+### Run with Docker Compose
+
+From the repository root:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- PostgreSQL on `localhost:5432`
+- the application on `localhost:8080`
+
+At the current bootstrap stage, the application still runs with temporary JDBC and Liquibase autoconfiguration exclusions until the database integration phase is completed. The Docker and environment setup are already in place so we can remove those temporary exclusions in the next phase without restructuring runtime configuration.

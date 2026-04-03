@@ -1,6 +1,11 @@
 spring:
   application:
     name: doneit
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/doneit}
+    username: ${SPRING_DATASOURCE_USERNAME:doneit}
+    password: ${SPRING_DATASOURCE_PASSWORD:doneit}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration

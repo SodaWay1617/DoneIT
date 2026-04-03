@@ -55,10 +55,10 @@ It is intentionally practical:
 ## 3. Phase 1 - Database and runtime foundation
 
 ### 3.1 PostgreSQL and local runtime
-- [ ] Add Dockerfile for application
-- [ ] Add `docker-compose.yml` for app + PostgreSQL
-- [ ] Define environment variables for DB connection
-- [ ] Document local startup flow in `README.md`
+- [x] Add Dockerfile for application
+- [x] Add `docker-compose.yml` for app + PostgreSQL
+- [x] Define environment variables for DB connection
+- [x] Document local startup flow in `README.md`
 
 ### 3.2 Liquibase setup
 - [ ] Add Liquibase changelog root file
