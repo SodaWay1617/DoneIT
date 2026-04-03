@@ -6,7 +6,5 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:doneit}
     password: ${SPRING_DATASOURCE_PASSWORD:doneit}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml

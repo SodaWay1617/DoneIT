@@ -61,9 +61,9 @@ It is intentionally practical:
 - [x] Document local startup flow in `README.md`
 
 ### 3.2 Liquibase setup
-- [ ] Add Liquibase changelog root file
-- [ ] Ensure migrations run on application startup
-- [ ] Verify migration execution against local PostgreSQL
+- [x] Add Liquibase changelog root file
+- [x] Ensure migrations run on application startup
+- [x] Verify migration execution against local PostgreSQL
 
 ### 3.3 Initial schema
 
