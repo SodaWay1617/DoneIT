@@ -68,27 +68,27 @@ It is intentionally practical:
 ### 3.3 Initial schema
 
 #### `users`
-- [ ] Create `users` table
-- [ ] Add `id`
-- [ ] Add `login`
-- [ ] Add `password_hash`
-- [ ] Add `display_name`
-- [ ] Add `created_at`
-- [ ] Add `updated_at`
+- [x] Create `users` table
+- [x] Add `id`
+- [x] Add `login`
+- [x] Add `password_hash`
+- [x] Add `display_name`
+- [x] Add `created_at`
+- [x] Add `updated_at`
 
 #### `tasks`
-- [ ] Create `tasks` table
-- [ ] Add `id`
-- [ ] Add `title`
-- [ ] Add `description`
-- [ ] Add `status`
-- [ ] Add `planned_for_at` as nullable for backlog tasks
-- [ ] Add `deadline_at`
-- [ ] Add `user_id`
-- [ ] Add `created_at`
-- [ ] Add `updated_at`
-- [ ] Add `completed_at`
-- [ ] Add `closed_at`
+- [x] Create `tasks` table
+- [x] Add `id`
+- [x] Add `title`
+- [x] Add `description`
+- [x] Add `status`
+- [x] Add `planned_for_at` as nullable for backlog tasks
+- [x] Add `deadline_at`
+- [x] Add `user_id`
+- [x] Add `created_at`
+- [x] Add `updated_at`
+- [x] Add `completed_at`
+- [x] Add `closed_at`
 
 ### 3.4 Data integrity
 - [ ] Add foreign key from `tasks.user_id` to `users.id`
