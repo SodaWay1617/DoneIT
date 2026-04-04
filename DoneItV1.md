@@ -117,12 +117,12 @@ It is intentionally practical:
 - [x] Keep implementation simple for single-user MVP
 
 ### 4.2 Task domain model
-- [ ] Create `TaskStatus` enum with `OPEN`, `DONE`, `CLOSED`
-- [ ] Create task entity or aggregate model
-- [ ] Model `planned_for_at` as first-class but optional for backlog tasks
-- [ ] Model `deadline_at` as optional separate field
-- [ ] Model backlog as undated low-priority reminder tasks
-- [ ] Add audit timestamps
+- [x] Create `TaskStatus` enum with `OPEN`, `DONE`, `CLOSED`
+- [x] Create task entity or aggregate model
+- [x] Model `planned_for_at` as first-class but optional for backlog tasks
+- [x] Model `deadline_at` as optional separate field
+- [x] Model backlog as undated low-priority reminder tasks
+- [x] Add audit timestamps
 
 ### 4.3 Domain rules
 - [ ] Task can be created only with valid required data
@@ -400,6 +400,4 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
-
-
 
