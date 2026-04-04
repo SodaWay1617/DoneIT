@@ -125,14 +125,14 @@ It is intentionally practical:
 - [x] Add audit timestamps
 
 ### 4.3 Domain rules
-- [ ] Task can be created only with valid required data
-- [ ] Backlog task can exist without planned date
-- [ ] `DONE` transition is explicit
-- [ ] `CLOSED` transition is explicit
-- [ ] Hard delete is not supported
-- [ ] Done and closed tasks are excluded from active list queries
-- [ ] Backlog tasks are excluded from dated active list queries
-- [ ] Bulk move logic targets only unfinished dated tasks
+- [x] Task can be created only with valid required data
+- [x] Backlog task can exist without planned date
+- [x] DONE transition is explicit
+- [x] CLOSED transition is explicit
+- [x] Hard delete is not supported
+- [x] Done and closed tasks are excluded from active list queries
+- [x] Backlog tasks are excluded from dated active list queries
+- [x] Bulk move logic targets only unfinished dated tasks
 
 ### 4.4 Domain done criteria
 - [ ] Core task rules are represented in code, not templates
@@ -400,4 +400,5 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
+
 
