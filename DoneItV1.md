@@ -135,9 +135,9 @@ It is intentionally practical:
 - [x] Bulk move logic targets only unfinished dated tasks
 
 ### 4.4 Domain done criteria
-- [ ] Core task rules are represented in code, not templates
-- [ ] Status model is explicit and easy to test
-- [ ] Naming follows `planned_for_at` and `deadline_at`
+- [x] Core task rules are represented in code, not templates
+- [x] Status model is explicit and easy to test
+- [x] Naming follows `planned_for_at` and `deadline_at`
 
 ---
 
@@ -400,5 +400,4 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
-
 
