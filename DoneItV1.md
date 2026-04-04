@@ -112,9 +112,9 @@ It is intentionally practical:
 ## 4. Phase 2 - Core domain model
 
 ### 4.1 User model
-- [ ] Create minimal user domain model
-- [ ] Create repository contract for loading the active user
-- [ ] Keep implementation simple for single-user MVP
+- [x] Create minimal user domain model
+- [x] Create repository contract for loading the active user
+- [x] Keep implementation simple for single-user MVP
 
 ### 4.2 Task domain model
 - [ ] Create `TaskStatus` enum with `OPEN`, `DONE`, `CLOSED`
@@ -400,5 +400,6 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
+
 
 
