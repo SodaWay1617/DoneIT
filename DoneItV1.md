@@ -102,10 +102,10 @@ It is intentionally practical:
 - [x] Ensure password is stored hashed, not plain text
 
 ### 3.6 Foundation done criteria
-- [ ] Docker Compose starts DB and app successfully
-- [ ] Liquibase creates schema automatically
-- [ ] Manual initial user can be created reliably
-- [ ] Local setup has no hidden steps
+- [x] Docker Compose starts DB and app successfully
+- [x] Liquibase creates schema automatically
+- [x] Manual initial user can be created reliably
+- [x] Local setup has no hidden steps
 
 ---
 
@@ -400,4 +400,5 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
+
 
