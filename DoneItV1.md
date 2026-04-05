@@ -1,4 +1,4 @@
-# DoneIt V1 Implementation Plan
+﻿# DoneIt V1 Implementation Plan
 
 This document is a step-by-step checklist for the first MVP implementation.
 
@@ -162,15 +162,15 @@ It is intentionally practical:
 - [x] Implement bulk move unfinished tasks to tomorrow
 
 ### 5.3 SQL quality
-- [ ] Keep SQL explicit and readable
-- [ ] Avoid ORM abstractions
-- [ ] Keep orchestration logic out of repositories
+- [x] Keep SQL explicit and readable
+- [x] Avoid ORM abstractions
+- [x] Keep orchestration logic out of repositories
 
 ### 5.4 Persistence done criteria
-- [ ] Repositories cover all MVP storage needs
-- [ ] Daily filtering works through SQL queries
-- [ ] Backlog filtering works through SQL queries
-- [ ] Bulk move uses clear and testable persistence logic
+- [x] Repositories cover all MVP storage needs
+- [x] Daily filtering works through SQL queries
+- [x] Backlog filtering works through SQL queries
+- [x] Bulk move uses clear and testable persistence logic
 
 ---
 
@@ -400,6 +400,5 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
-
 
 
