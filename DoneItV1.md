@@ -149,17 +149,17 @@ It is intentionally practical:
 - [x] Keep repository logic persistence-only
 
 ### 5.2 Task persistence
-- [ ] Implement task create
-- [ ] Implement task update
-- [ ] Implement load by id
-- [ ] Implement query for today
-- [ ] Implement query by selected date
-- [ ] Implement query for backlog tasks
-- [ ] Implement query for completed/closed tasks if shown separately
-- [ ] Implement status update methods
-- [ ] Implement reschedule method
-- [ ] Implement move to backlog by clearing planned date
-- [ ] Implement bulk move unfinished tasks to tomorrow
+- [x] Implement task create
+- [x] Implement task update
+- [x] Implement load by id
+- [x] Implement query for today
+- [x] Implement query by selected date
+- [x] Implement query for backlog tasks
+- [x] Implement query for completed/closed tasks if shown separately
+- [x] Implement status update methods
+- [x] Implement reschedule method
+- [x] Implement move to backlog by clearing planned date
+- [x] Implement bulk move unfinished tasks to tomorrow
 
 ### 5.3 SQL quality
 - [ ] Keep SQL explicit and readable
@@ -400,5 +400,6 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
+
 
 
