@@ -144,9 +144,9 @@ It is intentionally practical:
 ## 5. Phase 3 - Persistence layer
 
 ### 5.1 User persistence
-- [ ] Implement JDBC repository for user loading
-- [ ] Add row mapper(s)
-- [ ] Keep repository logic persistence-only
+- [x] Implement JDBC repository for user loading
+- [x] Add row mapper(s)
+- [x] Keep repository logic persistence-only
 
 ### 5.2 Task persistence
 - [ ] Implement task create
@@ -400,4 +400,5 @@ Do not add these in V1 unless the scope is explicitly changed:
 - [ ] No ORM
 - [ ] No microservices
 - [ ] No hard delete
+
 
