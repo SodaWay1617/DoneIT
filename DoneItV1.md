@@ -1,4 +1,4 @@
-﻿# DoneIt V1 Implementation Plan
+# DoneIt V1 Implementation Plan
 
 This document is a step-by-step checklist for the first MVP implementation.
 
@@ -177,12 +177,12 @@ It is intentionally practical:
 ## 6. Phase 4 - Application layer and use cases
 
 ### 6.1 Commands and DTOs
-- [ ] Create request DTOs / command models for create task
-- [ ] Create request DTOs / command models for edit task
-- [ ] Create request DTOs / command models for reschedule
-- [ ] Create request DTOs / command models for move to backlog
-- [ ] Create view DTOs for daily screens
-- [ ] Create view DTOs for backlog screen or section
+- [x] Create request DTOs / command models for create task
+- [x] Create request DTOs / command models for edit task
+- [x] Create request DTOs / command models for reschedule
+- [x] Create request DTOs / command models for move to backlog
+- [x] Create view DTOs for daily screens
+- [x] Create view DTOs for backlog screen or section
 
 ### 6.2 Use cases
 - [ ] Implement create task use case
