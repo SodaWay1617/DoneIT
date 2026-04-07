@@ -3,12 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${appName}">DoneIt</title>
+    <title th:text="${appName} + ' Home'">DoneIt Home</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f6f3ea;
+            --card: #fffaf1;
+            --ink: #1d2a2f;
+            --muted: #5b6a70;
+            --accent: #1f6f78;
+            --border: #d8d0c2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(circle at top left, rgba(31, 111, 120, 0.14), transparent 32%),
+                linear-gradient(135deg, #efe7d9, var(--bg));
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        main {
+            width: min(680px, calc(100% - 32px));
+            padding: 32px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: 0 18px 40px rgba(29, 42, 47, 0.12);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: clamp(2rem, 6vw, 3.4rem);
+            line-height: 0.95;
+        }
+
+        p {
+            margin: 0;
+            font-size: 1.05rem;
+            color: var(--muted);
+        }
+
+        .meta {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .tag,
+        .logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            text-decoration: none;
+        }
+
+        .tag {
+            background: rgba(31, 111, 120, 0.08);
+            color: var(--accent);
+        }
+
+        .logout {
+            background: transparent;
+            color: var(--ink);
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .logout:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+    </style>
 </head>
 <body>
 <main>
     <h1 th:text="${appName}">DoneIt</h1>
     <p th:text="${message}">Bootstrap is ready for the first MVP slice.</p>
+    <div class="meta">
+        <span class="tag" th:text="'Signed in as ' + ${username}">Signed in</span>
+        <form th:action="@{/logout}" method="post">
+            <button class="logout" type="submit">Sign out</button>
+        </form>
+    </div>
 </main>
 </body>
 </html>

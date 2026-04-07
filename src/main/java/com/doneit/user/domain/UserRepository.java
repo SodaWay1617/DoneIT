@@ -5,4 +5,6 @@ import java.util.Optional;
 public interface UserRepository {
 
     Optional<User> findActiveUser();
+
+    Optional<User> findByLogin(String login);
 }

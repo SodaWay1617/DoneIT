@@ -212,10 +212,10 @@ It is intentionally practical:
 ## 7. Phase 5 - Authentication for single-user MVP
 
 ### 7.1 Minimal auth scope
-- [ ] Implement simple login page
-- [ ] Authenticate against manually created user
-- [ ] Use safe password hashing
-- [ ] Keep auth flow intentionally minimal
+- [x] Implement simple login page
+- [x] Authenticate against manually created user
+- [x] Use safe password hashing
+- [x] Keep auth flow intentionally minimal
 
 ### 7.2 Explicit non-goals
 - [ ] No registration page

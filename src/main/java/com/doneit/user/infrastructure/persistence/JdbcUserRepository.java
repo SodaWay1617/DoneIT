@@ -2,18 +2,17 @@ package com.doneit.user.infrastructure.persistence;
 
 import com.doneit.user.domain.User;
 import com.doneit.user.domain.UserRepository;
-import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 @Repository
 public class JdbcUserRepository implements UserRepository {
 
-    private static final String FIND_ACTIVE_USER_SQL = """
+    private static final String BASE_SELECT = """
             SELECT id, login, password_hash, display_name, created_at, updated_at
             FROM users
-            ORDER BY id
-            LIMIT 1
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -26,8 +25,21 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public Optional<User> findActiveUser() {
-        return jdbcTemplate.query(FIND_ACTIVE_USER_SQL, userRowMapper)
-                .stream()
-                .findFirst();
+        return jdbcTemplate.query(
+                BASE_SELECT + """
+                        ORDER BY id
+                        LIMIT 1
+                        """,
+                userRowMapper
+        ).stream().findFirst();
+    }
+
+    @Override
+    public Optional<User> findByLogin(String login) {
+        return jdbcTemplate.query(
+                BASE_SELECT + "WHERE login = ?",
+                userRowMapper,
+                login
+        ).stream().findFirst();
     }
 }

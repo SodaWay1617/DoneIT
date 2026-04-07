@@ -1,54 +1,63 @@
 package com.doneit.user.infrastructure.persistence;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.doneit.user.domain.User;
-import com.doneit.user.domain.UserRepository;
-import java.time.LocalDateTime;
-import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @SpringBootTest
 @TestPropertySource(properties = "spring.main.lazy-initialization=true")
 class JdbcUserRepositoryTest {
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private JdbcUserRepository userRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    @Test
-    void findsSingleActiveUserByLowestId() {
+    @BeforeEach
+    void setUp() {
         jdbcTemplate.update("DELETE FROM tasks");
         jdbcTemplate.update("DELETE FROM users");
-
-        jdbcTemplate.update(
-                """
+        jdbcTemplate.update("""
                 INSERT INTO users (login, password_hash, display_name, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)
                 """,
-                "alpha",
+                "doneit",
                 "hash-1",
-                "Alpha User",
-                LocalDateTime.of(2026, 4, 5, 12, 0),
-                LocalDateTime.of(2026, 4, 5, 12, 0),
-                "beta",
+                "DoneIt",
+                LocalDateTime.of(2026, 4, 1, 10, 0),
+                LocalDateTime.of(2026, 4, 1, 10, 0),
+                "backup",
                 "hash-2",
-                "Beta User",
-                LocalDateTime.of(2026, 4, 5, 12, 5),
-                LocalDateTime.of(2026, 4, 5, 12, 5)
+                "Backup",
+                LocalDateTime.of(2026, 4, 1, 11, 0),
+                LocalDateTime.of(2026, 4, 1, 11, 0)
         );
+    }
 
+    @Test
+    void findsSingleActiveUserByLowestId() {
         Optional<User> activeUser = userRepository.findActiveUser();
 
         assertTrue(activeUser.isPresent());
-        assertEquals("alpha", activeUser.get().login());
-        assertEquals("Alpha User", activeUser.get().displayName());
+        assertEquals("doneit", activeUser.get().login());
+    }
+
+    @Test
+    void findsUserByLogin() {
+        Optional<User> user = userRepository.findByLogin("backup");
+
+        assertTrue(user.isPresent());
+        assertEquals("Backup", user.get().displayName());
     }
 }
