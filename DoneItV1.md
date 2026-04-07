@@ -203,9 +203,9 @@ It is intentionally practical:
 - [x] Keep controllers thin
 
 ### 6.4 Application layer done criteria
-- [ ] All MVP actions are available as explicit use cases
-- [ ] Business rules live in domain/application layers
-- [ ] DTO boundaries are ready for possible future REST exposure
+- [x] All MVP actions are available as explicit use cases
+- [x] Business rules live in domain/application layers
+- [x] DTO boundaries are ready for possible future REST exposure
 
 ---
 
