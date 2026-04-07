@@ -198,9 +198,9 @@ It is intentionally practical:
 - [x] Implement bulk move unfinished tasks to tomorrow use case
 
 ### 6.3 Validation and transaction boundaries
-- [ ] Validate incoming data before business logic
-- [ ] Keep transaction boundaries in application services
-- [ ] Keep controllers thin
+- [x] Validate incoming data before business logic
+- [x] Keep transaction boundaries in application services
+- [x] Keep controllers thin
 
 ### 6.4 Application layer done criteria
 - [ ] All MVP actions are available as explicit use cases

@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -88,6 +89,7 @@ class TaskApplicationServiceTest {
     @Test
     void createTaskRequiresPlannedDate() {
         assertThrows(IllegalArgumentException.class, () -> service.createTask(new CreateTaskCommand("Task", null, null, null)));
+        verifyNoInteractions(taskRepository);
     }
 
     @Test
@@ -146,6 +148,12 @@ class TaskApplicationServiceTest {
     }
 
     @Test
+    void getTasksForDateRequiresDate() {
+        assertThrows(IllegalArgumentException.class, () -> service.getTasksForDate(null));
+        verifyNoInteractions(taskRepository);
+    }
+
+    @Test
     void getBacklogTasksReturnsSeparateViewModel() {
         when(taskRepository.findBacklogTasks(ACTIVE_USER.id())).thenReturn(List.of(openTask(4L, null, null)));
 
@@ -162,6 +170,12 @@ class TaskApplicationServiceTest {
         TaskListItemView result = service.markTaskAsDone(300L);
 
         assertEquals(TaskStatus.DONE, result.status());
+    }
+
+    @Test
+    void markTaskAsDoneRequiresId() {
+        assertThrows(IllegalArgumentException.class, () -> service.markTaskAsDone(null));
+        verifyNoInteractions(taskRepository);
     }
 
     @Test
@@ -201,6 +215,12 @@ class TaskApplicationServiceTest {
         int moved = service.bulkMoveUnfinishedTasksToTomorrow(date);
 
         assertEquals(3, moved);
+    }
+
+    @Test
+    void bulkMoveRequiresDate() {
+        assertThrows(IllegalArgumentException.class, () -> service.bulkMoveUnfinishedTasksToTomorrow(null));
+        verifyNoInteractions(taskRepository);
     }
 
     @Test

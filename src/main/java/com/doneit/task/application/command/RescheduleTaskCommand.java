@@ -1,10 +1,12 @@
 package com.doneit.task.application.command;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 
 public record RescheduleTaskCommand(
-        Long taskId,
-        LocalDateTime plannedForAt
+        @NotNull(message = "Task id is required") Long taskId,
+        @NotNull(message = "plannedForAt is required") LocalDateTime plannedForAt
 ) {
 
     public RescheduleTaskCommand {

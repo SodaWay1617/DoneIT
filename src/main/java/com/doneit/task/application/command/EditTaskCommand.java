@@ -1,10 +1,13 @@
 package com.doneit.task.application.command;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 
 public record EditTaskCommand(
-        Long taskId,
-        String title,
+        @NotNull(message = "Task id is required") Long taskId,
+        @NotBlank(message = "Task title is required") String title,
         String description,
         LocalDateTime plannedForAt,
         LocalDateTime deadlineAt

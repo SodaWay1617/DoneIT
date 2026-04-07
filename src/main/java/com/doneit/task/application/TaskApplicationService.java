@@ -12,8 +12,11 @@ import com.doneit.task.domain.TaskRepository;
 import com.doneit.task.domain.TaskStatus;
 import com.doneit.user.domain.User;
 import com.doneit.user.domain.UserRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -21,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Validated
 @Transactional(readOnly = true)
 public class TaskApplicationService {
 
@@ -35,7 +39,7 @@ public class TaskApplicationService {
     }
 
     @Transactional
-    public TaskListItemView createTask(CreateTaskCommand command) {
+    public TaskListItemView createTask(@Valid @NotNull CreateTaskCommand command) {
         if (command.plannedForAt() == null) {
             throw new IllegalArgumentException("plannedForAt is required for a dated task");
         }
@@ -60,7 +64,7 @@ public class TaskApplicationService {
     }
 
     @Transactional
-    public TaskListItemView createBacklogTask(CreateTaskCommand command) {
+    public TaskListItemView createBacklogTask(@Valid @NotNull CreateTaskCommand command) {
         if (command.plannedForAt() != null) {
             throw new IllegalArgumentException("Backlog task must not have plannedForAt");
         }
@@ -85,7 +89,7 @@ public class TaskApplicationService {
     }
 
     @Transactional
-    public TaskListItemView editTask(EditTaskCommand command) {
+    public TaskListItemView editTask(@Valid @NotNull EditTaskCommand command) {
         Task existingTask = getTaskOrThrow(command.taskId());
         LocalDateTime now = LocalDateTime.now(clock);
 
@@ -110,7 +114,7 @@ public class TaskApplicationService {
         return getTasksForDate(LocalDate.now(clock));
     }
 
-    public DailyTasksView getTasksForDate(LocalDate date) {
+    public DailyTasksView getTasksForDate(@NotNull LocalDate date) {
         User activeUser = requireActiveUser();
         LocalDate targetDate = requireDate(date);
 
@@ -135,35 +139,35 @@ public class TaskApplicationService {
     }
 
     @Transactional
-    public TaskListItemView markTaskAsDone(Long taskId) {
+    public TaskListItemView markTaskAsDone(@NotNull Long taskId) {
         Task task = taskRepository.markDone(requireTaskId(taskId), LocalDateTime.now(clock))
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
         return toView(task);
     }
 
     @Transactional
-    public TaskListItemView markTaskAsClosed(Long taskId) {
+    public TaskListItemView markTaskAsClosed(@NotNull Long taskId) {
         Task task = taskRepository.markClosed(requireTaskId(taskId), LocalDateTime.now(clock))
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
         return toView(task);
     }
 
     @Transactional
-    public TaskListItemView moveTask(RescheduleTaskCommand command) {
+    public TaskListItemView moveTask(@Valid @NotNull RescheduleTaskCommand command) {
         Task task = taskRepository.reschedule(command.taskId(), command.plannedForAt(), LocalDateTime.now(clock))
                 .orElseThrow(() -> new TaskNotFoundException(command.taskId()));
         return toView(task);
     }
 
     @Transactional
-    public TaskListItemView moveTaskToBacklog(MoveTaskToBacklogCommand command) {
+    public TaskListItemView moveTaskToBacklog(@Valid @NotNull MoveTaskToBacklogCommand command) {
         Task task = taskRepository.moveToBacklog(command.taskId(), LocalDateTime.now(clock))
                 .orElseThrow(() -> new TaskNotFoundException(command.taskId()));
         return toView(task);
     }
 
     @Transactional
-    public int bulkMoveUnfinishedTasksToTomorrow(LocalDate date) {
+    public int bulkMoveUnfinishedTasksToTomorrow(@NotNull LocalDate date) {
         User activeUser = requireActiveUser();
         return taskRepository.bulkMoveOpenDatedTasksToNextDay(
                 activeUser.id(),
