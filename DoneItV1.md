@@ -185,17 +185,17 @@ It is intentionally practical:
 - [x] Create view DTOs for backlog screen or section
 
 ### 6.2 Use cases
-- [ ] Implement create task use case
-- [ ] Implement create backlog task use case
-- [ ] Implement edit task use case
-- [ ] Implement get tasks for today use case
-- [ ] Implement get tasks for selected date use case
-- [ ] Implement get backlog tasks use case
-- [ ] Implement mark task as done use case
-- [ ] Implement mark task as closed use case
-- [ ] Implement move one task use case
-- [ ] Implement move task to backlog use case
-- [ ] Implement bulk move unfinished tasks to tomorrow use case
+- [x] Implement create task use case
+- [x] Implement create backlog task use case
+- [x] Implement edit task use case
+- [x] Implement get tasks for today use case
+- [x] Implement get tasks for selected date use case
+- [x] Implement get backlog tasks use case
+- [x] Implement mark task as done use case
+- [x] Implement mark task as closed use case
+- [x] Implement move one task use case
+- [x] Implement move task to backlog use case
+- [x] Implement bulk move unfinished tasks to tomorrow use case
 
 ### 6.3 Validation and transaction boundaries
 - [ ] Validate incoming data before business logic
