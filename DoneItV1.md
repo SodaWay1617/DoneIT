@@ -218,16 +218,16 @@ It is intentionally practical:
 - [x] Keep auth flow intentionally minimal
 
 ### 7.2 Explicit non-goals
-- [ ] No registration page
-- [ ] No roles
-- [ ] No JWT
-- [ ] No OAuth
-- [ ] No password reset flow
+- [x] No registration page
+- [x] No roles
+- [x] No JWT
+- [x] No OAuth
+- [x] No password reset flow
 
 ### 7.3 Auth done criteria
-- [ ] Single user can sign in
-- [ ] Password is never stored plain text
-- [ ] Auth implementation does not introduce unnecessary complexity
+- [x] Single user can sign in
+- [x] Password is never stored plain text
+- [x] Auth implementation does not introduce unnecessary complexity
 
 ---
 

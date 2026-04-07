@@ -52,7 +52,7 @@ public class SecurityConfiguration {
     private static UserDetails toUserDetails(String login, String passwordHash) {
         return User.withUsername(login)
                 .password(passwordHash)
-                .roles("USER")
+                .authorities("DONEIT_MVP")
                 .build();
     }
 }
