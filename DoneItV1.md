@@ -284,20 +284,20 @@ It is intentionally practical:
 ## 9. Phase 7 - Visual behavior and usability polish
 
 ### 9.1 Required visual distinctions
-- [ ] Overdue tasks are highlighted
-- [ ] Today tasks are easy to identify
-- [ ] Backlog tasks are clearly separated from dated tasks
-- [ ] Completed and closed tasks do not clutter the active flow
-- [ ] Status is visible at a glance
+- [x] Overdue tasks are highlighted
+- [x] Today tasks are easy to identify
+- [x] Backlog tasks are clearly separated from dated tasks
+- [x] Completed and closed tasks do not clutter the active flow
+- [x] Status is visible at a glance
 
 ### 9.2 Lightweight polish only
-- [ ] Keep templates functional and simple
-- [ ] Avoid business logic in templates
-- [ ] Prefer clarity over visual complexity
+- [x] Keep templates functional and simple
+- [x] Avoid business logic in templates
+- [x] Prefer clarity over visual complexity
 
 ### 9.3 Usability done criteria
-- [ ] The main page is comfortable for daily use
-- [ ] Important task states are hard to miss
+- [x] The main page is comfortable for daily use
+- [x] Important task states are hard to miss
 
 ---
 

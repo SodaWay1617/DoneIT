@@ -16,6 +16,7 @@
             --border: #d8cfbf;
             --danger: #9f4d36;
             --danger-soft: rgba(159, 77, 54, 0.1);
+            --shadow: rgba(31, 43, 45, 0.06);
         }
 
         * { box-sizing: border-box; }
@@ -61,7 +62,7 @@
 
         .hero p { margin: 0; color: var(--muted); }
 
-        .actions, .nav, .date-picker, .task-actions, .reschedule-form, .bulk-action {
+        .actions, .nav, .date-picker, .task-actions, .reschedule-form, .bulk-action, .badges {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
@@ -74,8 +75,9 @@
         .bulk-action { margin-top: 14px; }
         .task-actions { margin-top: 12px; }
         .reschedule-form { margin-top: 12px; }
+        .badges { gap: 8px; }
 
-        .pill, .ghost, .solid, .logout, .date-input, .secondary, .compact-input {
+        .pill, .ghost, .solid, .logout, .date-input, .secondary, .compact-input, .badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -87,6 +89,13 @@
             color: inherit;
             background: rgba(255, 255, 255, 0.72);
             font: inherit;
+        }
+
+        .badge {
+            min-height: 30px;
+            padding: 6px 10px;
+            font-size: 0.82rem;
+            letter-spacing: 0.03em;
         }
 
         .date-input, .compact-input {
@@ -113,6 +122,45 @@
             border-color: rgba(30, 109, 115, 0.22);
         }
 
+        .badge.status-open,
+        .badge.status-today {
+            background: var(--accent-soft);
+            color: var(--accent);
+            border-color: rgba(30, 109, 115, 0.22);
+        }
+
+        .badge.status-done,
+        .badge.status-closed,
+        .badge.status-backlog {
+            background: rgba(31, 43, 45, 0.06);
+            color: var(--ink);
+        }
+
+        .badge.status-overdue {
+            background: var(--danger-soft);
+            color: var(--danger);
+            border-color: rgba(159, 77, 54, 0.28);
+        }
+
+        .guide {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(30, 109, 115, 0.15);
+            background: rgba(30, 109, 115, 0.05);
+            color: var(--ink);
+        }
+
+        .guide strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .section-note {
+            margin: -4px 0 14px;
+            color: var(--muted);
+        }
+
         .logout { cursor: pointer; }
 
         .flash {
@@ -135,7 +183,7 @@
             border-radius: 22px;
             border: 1px solid var(--border);
             background: rgba(255, 250, 241, 0.94);
-            box-shadow: 0 14px 30px rgba(31, 43, 45, 0.06);
+            box-shadow: 0 14px 30px var(--shadow);
         }
 
         .card h2, .card h3 {
@@ -161,11 +209,25 @@
             background: linear-gradient(180deg, var(--danger-soft), white);
         }
 
+        .task.backlog-task {
+            background: linear-gradient(180deg, rgba(31, 43, 45, 0.04), white);
+        }
+
+        .task.completed-task {
+            background: linear-gradient(180deg, rgba(31, 43, 45, 0.04), rgba(255, 255, 255, 0.96));
+            border-style: dashed;
+        }
+
         .task-top {
             display: flex;
             justify-content: space-between;
             gap: 12px;
-            align-items: baseline;
+            align-items: flex-start;
+        }
+
+        .task-top-main {
+            display: grid;
+            gap: 8px;
         }
 
         .task-title {
@@ -227,6 +289,10 @@
                 <input type="hidden" name="redirectTo" th:value="${todayPage} ? '/' : '/tasks?date=' + daily.selectedDate" />
                 <button class="secondary" type="submit">Move unfinished to tomorrow</button>
             </form>
+            <div class="guide">
+                <strong>Quick guide</strong>
+                <span>Use the main column for dated work, keep may-be-later reminders in backlog, and check the finished section only for recent context.</span>
+            </div>
             <div class="flash" th:if="${flashMessage != null}" th:text="${flashMessage}">Task created.</div>
         </div>
         <div class="actions">
@@ -241,10 +307,18 @@
     <div class="grid">
         <section id="active-tasks" class="card">
             <h2>Active tasks</h2>
+            <p class="section-note">Only dated OPEN tasks stay in the main flow.</p>
             <div class="stack" th:if="!${#lists.isEmpty(daily.activeTasks)}">
                 <article class="task" th:each="task : ${daily.activeTasks}" th:classappend="${task.overdue} ? ' overdue'">
                     <div class="task-top">
-                        <h3 class="task-title" th:text="${task.title}">Task title</h3>
+                        <div class="task-top-main">
+                            <div class="badges">
+                                <span class="badge status-open">OPEN</span>
+                                <span class="badge status-today" th:if="${todayPage}">TODAY</span>
+                                <span class="badge status-overdue" th:if="${task.overdue}">OVERDUE</span>
+                            </div>
+                            <h3 class="task-title" th:text="${task.title}">Task title</h3>
+                        </div>
                         <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>
                     </div>
                     <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
@@ -281,10 +355,17 @@
         <aside class="stack">
             <section id="backlog-preview" class="card">
                 <h2>Backlog preview</h2>
+                <p class="section-note">Undated low-priority reminders stay separate until you schedule them.</p>
                 <div class="stack" th:if="!${#lists.isEmpty(backlogPreview)}">
-                    <article class="task" th:each="task : ${backlogPreview}">
+                    <article class="task backlog-task" th:each="task : ${backlogPreview}">
                         <div class="task-top">
-                            <h3 class="task-title" th:text="${task.title}">Backlog task</h3>
+                            <div class="task-top-main">
+                                <div class="badges">
+                                    <span class="badge status-open">OPEN</span>
+                                    <span class="badge status-backlog">BACKLOG</span>
+                                </div>
+                                <h3 class="task-title" th:text="${task.title}">Backlog task</h3>
+                            </div>
                             <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>
                         </div>
                         <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
@@ -307,11 +388,16 @@
 
             <section id="completed-tasks" class="card">
                 <h2>Completed and closed</h2>
+                <p class="section-note">Finished work stays visible, but out of the active flow.</p>
                 <div class="stack" th:if="!${#lists.isEmpty(daily.completedTasks)}">
-                    <article class="task" th:each="task : ${daily.completedTasks}">
+                    <article class="task completed-task" th:each="task : ${daily.completedTasks}">
                         <div class="task-top">
-                            <h3 class="task-title" th:text="${task.title}">Completed task</h3>
-                            <span class="pill" th:text="${task.status}">DONE</span>
+                            <div class="task-top-main">
+                                <div class="badges">
+                                    <span class="badge" th:classappend="${task.status.name() == 'DONE'} ? ' status-done' : ' status-closed'" th:text="${task.status}">DONE</span>
+                                </div>
+                                <h3 class="task-title" th:text="${task.title}">Completed task</h3>
+                            </div>
                         </div>
                         <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
                     </article>

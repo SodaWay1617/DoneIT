@@ -11,6 +11,7 @@
             --ink: #1f2b2d;
             --muted: #607074;
             --accent: #1e6d73;
+            --accent-soft: rgba(30, 109, 115, 0.09);
             --border: #d8cfbf;
         }
 
@@ -39,15 +40,18 @@
 
         h1, h2 { margin-top: 0; }
         .hero p { color: var(--muted); }
-        .actions, .stack, .task-actions, .reschedule-form { display: grid; gap: 12px; }
-        .actions, .task-actions, .reschedule-form {
+        .actions, .stack, .task-actions, .reschedule-form, .badges {
+            display: grid;
+            gap: 12px;
+        }
+        .actions, .task-actions, .reschedule-form, .badges {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             align-items: center;
         }
 
-        .ghost, .solid, .secondary, .compact-input {
+        .ghost, .solid, .secondary, .compact-input, .badge {
             display: inline-flex;
             min-height: 42px;
             align-items: center;
@@ -59,6 +63,14 @@
             color: inherit;
             font: inherit;
             background: white;
+        }
+
+        .badge {
+            min-height: 30px;
+            padding: 6px 10px;
+            font-size: 0.82rem;
+            letter-spacing: 0.03em;
+            background: rgba(31, 43, 45, 0.06);
         }
 
         .compact-input {
@@ -76,13 +88,43 @@
             background: rgba(31, 43, 45, 0.06);
         }
 
+        .badge.status-open {
+            background: var(--accent-soft);
+            color: var(--accent);
+            border-color: rgba(30, 109, 115, 0.22);
+        }
+
+        .guide {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(30, 109, 115, 0.15);
+            background: rgba(30, 109, 115, 0.05);
+            color: var(--ink);
+        }
+
+        .guide strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .meta { color: var(--muted); }
+        .section-note {
+            margin-top: 0;
+            color: var(--muted);
+        }
+
         .stack { margin-top: 16px; }
 
         .task {
             padding: 18px;
+            background: linear-gradient(180deg, rgba(31, 43, 45, 0.04), white);
         }
 
-        .meta { color: var(--muted); }
+        .task-top {
+            display: grid;
+            gap: 8px;
+        }
 
         form.inline { margin: 0; }
     </style>
@@ -92,6 +134,11 @@
     <section class="hero">
         <h1>Backlog</h1>
         <p th:text="'Signed in as ' + ${username}">Signed in as doneit</p>
+        <p class="section-note">Backlog holds undated low-priority reminders until they are worth scheduling.</p>
+        <div class="guide">
+            <strong>How to use backlog</strong>
+            <span>Keep reminders here when timing is unclear, then schedule them into the main list once they become real work.</span>
+        </div>
         <div class="actions">
             <a class="ghost" th:href="@{/}">Back to today</a>
             <a class="solid" th:href="@{/tasks/new}">Create task</a>
@@ -101,7 +148,13 @@
 
     <section class="stack" th:if="!${#lists.isEmpty(backlog.tasks)}">
         <article class="task" th:each="task : ${backlog.tasks}">
-            <h2 th:text="${task.title}">Backlog task</h2>
+            <div class="task-top">
+                <div class="badges">
+                    <span class="badge status-open">OPEN</span>
+                    <span class="badge">BACKLOG</span>
+                </div>
+                <h2 th:text="${task.title}">Backlog task</h2>
+            </div>
             <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
             <p class="meta" th:if="${task.deadlineAt != null}" th:text="'Deadline: ' + ${#temporals.format(task.deadlineAt, 'dd MMM yyyy HH:mm')}">Deadline</p>
             <form class="reschedule-form" method="post" th:action="@{/tasks/{id}/reschedule(id=${task.id})}">

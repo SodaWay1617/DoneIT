@@ -136,7 +136,12 @@ class HomeControllerTest {
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'Already done')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Backlog reminder')]").doesNotExist())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Already done')]").doesNotExist())
-                .andExpect(xpath("//form[@class='date-picker']//input[@type='date' and @name='date']").exists());
+                .andExpect(xpath("//form[@class='date-picker']//input[@type='date' and @name='date']").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'TODAY')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'OPEN')]").exists())
+                .andExpect(xpath("//*[@id='backlog-preview']//*[contains(text(),'BACKLOG')]").exists())
+                .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'DONE')]").exists())
+                .andExpect(content().string(containsString("Quick guide")));
     }
 
     @Test
@@ -147,7 +152,8 @@ class HomeControllerTest {
                 .andExpect(content().string(containsString("Selected date view")))
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Tomorrow task')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").doesNotExist())
-                .andExpect(xpath("//input[@type='date' and @name='date']/@value").string("2026-04-09"));
+                .andExpect(xpath("//input[@type='date' and @name='date']/@value").string("2026-04-09"))
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'TODAY')]").doesNotExist());
     }
 
     @Test
@@ -156,7 +162,10 @@ class HomeControllerTest {
         mockMvc.perform(get("/backlog"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Backlog")))
-                .andExpect(content().string(containsString("Backlog reminder")));
+                .andExpect(content().string(containsString("Backlog reminder")))
+                .andExpect(xpath("//*[contains(text(),'BACKLOG')]").exists())
+                .andExpect(xpath("//*[contains(text(),'OPEN')]").exists())
+                .andExpect(content().string(containsString("How to use backlog")));
     }
 
     @Test
@@ -431,5 +440,18 @@ class HomeControllerTest {
                 .andExpect(content().string(containsString("Edit Task")))
                 .andExpect(content().string(containsString("Title is required")))
                 .andExpect(content().string(containsString("/tasks/" + taskId)));
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
+    void shouldHighlightOverdueTasksAndKeepFinishedWorkOutOfMainFlow() throws Exception {
+        jdbcTemplate.update("UPDATE tasks SET deadline_at = ? WHERE id = ?", LocalDateTime.of(2026, 4, 7, 23, 0), taskId);
+
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'OVERDUE')]").exists())
+                .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'DONE')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Already done')]").doesNotExist());
     }
 }
