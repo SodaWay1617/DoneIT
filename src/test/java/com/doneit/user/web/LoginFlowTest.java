@@ -1,5 +1,7 @@
 package com.doneit.user.web;
 
+import com.doneit.support.IntegrationTestSupport;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(properties = "spring.main.lazy-initialization=true")
-class LoginFlowTest {
+class LoginFlowTest extends IntegrationTestSupport {
 
     @Autowired
     private MockMvc mockMvc;

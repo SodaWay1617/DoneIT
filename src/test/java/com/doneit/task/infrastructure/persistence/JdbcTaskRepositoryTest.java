@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.doneit.support.IntegrationTestSupport;
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskRepository;
 import com.doneit.task.domain.TaskStatus;
@@ -20,7 +21,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @TestPropertySource(properties = "spring.main.lazy-initialization=true")
-class JdbcTaskRepositoryTest {
+class JdbcTaskRepositoryTest extends IntegrationTestSupport {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -47,6 +48,17 @@ class JdbcTaskRepositoryTest {
                 LocalDateTime.of(2026, 4, 5, 18, 0),
                 LocalDateTime.of(2026, 4, 5, 18, 0)
         );
+    }
+
+    @Test
+    void liquibaseRunsInTestEnvironment() {
+        Integer changelogEntries = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM databasechangelog",
+                Integer.class
+        );
+
+        assertNotNull(changelogEntries);
+        assertTrue(changelogEntries > 0);
     }
 
     @Test

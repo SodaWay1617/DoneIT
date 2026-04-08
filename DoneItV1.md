@@ -304,37 +304,37 @@ It is intentionally practical:
 ## 10. Phase 8 - Automated tests
 
 ### 10.1 Unit tests
-- [ ] Test task creation rules
-- [ ] Test backlog task creation rules
-- [ ] Test status transitions
-- [ ] Test reschedule logic
-- [ ] Test move to backlog logic
-- [ ] Test bulk move rules
+- [x] Test task creation rules
+- [x] Test backlog task creation rules
+- [x] Test status transitions
+- [x] Test reschedule logic
+- [x] Test move to backlog logic
+- [x] Test bulk move rules
 
 ### 10.2 Repository integration tests
-- [ ] Run PostgreSQL through Testcontainers
-- [ ] Validate Liquibase migrations in test environment
-- [ ] Test task persistence
-- [ ] Test retrieval by date
-- [ ] Test retrieval from backlog
-- [ ] Test exclusion of `DONE` and `CLOSED` from active list
-- [ ] Test bulk move persistence behavior
+- [x] Run PostgreSQL through Testcontainers
+- [x] Validate Liquibase migrations in test environment
+- [x] Test task persistence
+- [x] Test retrieval by date
+- [x] Test retrieval from backlog
+- [x] Test exclusion of `DONE` and `CLOSED` from active list
+- [x] Test bulk move persistence behavior
 
 ### 10.3 Web or application flow tests
-- [ ] Test create task flow
-- [ ] Test create backlog task flow
-- [ ] Test edit task flow
-- [ ] Test complete task flow
-- [ ] Test close task flow
-- [ ] Test today view flow
-- [ ] Test selected date flow
-- [ ] Test backlog view flow
-- [ ] Test bulk move unfinished tasks flow
+- [x] Test create task flow
+- [x] Test create backlog task flow
+- [x] Test edit task flow
+- [x] Test complete task flow
+- [x] Test close task flow
+- [x] Test today view flow
+- [x] Test selected date flow
+- [x] Test backlog view flow
+- [x] Test bulk move unfinished tasks flow
 
 ### 10.4 Testing done criteria
-- [ ] Critical MVP flows are covered
-- [ ] Test suite is stable and repeatable
-- [ ] Refactoring can be done with confidence
+- [x] Critical MVP flows are covered
+- [x] Test suite is stable and repeatable
+- [x] Refactoring can be done with confidence
 
 ---
 

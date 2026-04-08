@@ -1,5 +1,7 @@
 package com.doneit.task.web;
 
+import com.doneit.support.IntegrationTestSupport;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(properties = "spring.main.lazy-initialization=true")
-class HomeControllerTest {
+class HomeControllerTest extends IntegrationTestSupport {
 
     @Autowired
     private MockMvc mockMvc;

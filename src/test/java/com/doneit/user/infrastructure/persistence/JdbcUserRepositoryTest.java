@@ -1,5 +1,6 @@
 package com.doneit.user.infrastructure.persistence;
 
+import com.doneit.support.IntegrationTestSupport;
 import com.doneit.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @TestPropertySource(properties = "spring.main.lazy-initialization=true")
-class JdbcUserRepositoryTest {
+class JdbcUserRepositoryTest extends IntegrationTestSupport {
 
     @Autowired
     private JdbcUserRepository userRepository;
