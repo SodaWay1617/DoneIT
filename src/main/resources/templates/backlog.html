@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DoneIt Backlog</title>
+    <style>
+        :root {
+            --bg: #f4efe6;
+            --panel: #fffaf1;
+            --ink: #1f2b2d;
+            --muted: #607074;
+            --accent: #1e6d73;
+            --border: #d8cfbf;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #efe7d9, var(--bg));
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .shell {
+            width: min(920px, calc(100% - 24px));
+            margin: 24px auto 40px;
+        }
+
+        .hero, .task {
+            border: 1px solid var(--border);
+            background: rgba(255, 250, 241, 0.94);
+            border-radius: 24px;
+        }
+
+        .hero {
+            padding: 28px;
+        }
+
+        h1, h2 { margin-top: 0; }
+        .hero p { color: var(--muted); }
+        .actions, .stack, .task-actions, .reschedule-form { display: grid; gap: 12px; }
+        .actions, .task-actions, .reschedule-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .ghost, .solid, .secondary, .compact-input {
+            display: inline-flex;
+            min-height: 42px;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            color: inherit;
+            font: inherit;
+            background: white;
+        }
+
+        .compact-input {
+            min-width: 220px;
+            justify-content: flex-start;
+        }
+
+        .solid {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .secondary {
+            background: rgba(31, 43, 45, 0.06);
+        }
+
+        .stack { margin-top: 16px; }
+
+        .task {
+            padding: 18px;
+        }
+
+        .meta { color: var(--muted); }
+
+        form.inline { margin: 0; }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <section class="hero">
+        <h1>Backlog</h1>
+        <p th:text="'Signed in as ' + ${username}">Signed in as doneit</p>
+        <div class="actions">
+            <a class="ghost" th:href="@{/}">Back to today</a>
+            <a class="solid" th:href="@{/tasks/new}">Create task</a>
+        </div>
+        <p class="meta" th:if="${flashMessage != null}" th:text="${flashMessage}">Task updated.</p>
+    </section>
+
+    <section class="stack" th:if="!${#lists.isEmpty(backlog.tasks)}">
+        <article class="task" th:each="task : ${backlog.tasks}">
+            <h2 th:text="${task.title}">Backlog task</h2>
+            <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
+            <p class="meta" th:if="${task.deadlineAt != null}" th:text="'Deadline: ' + ${#temporals.format(task.deadlineAt, 'dd MMM yyyy HH:mm')}">Deadline</p>
+            <form class="reschedule-form" method="post" th:action="@{/tasks/{id}/reschedule(id=${task.id})}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" name="redirectTo" value="/backlog" />
+                <input class="compact-input" type="datetime-local" name="plannedForAt" />
+                <button class="secondary" type="submit">Schedule</button>
+            </form>
+            <div class="task-actions">
+                <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>
+                <form class="inline" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" name="redirectTo" value="/backlog" />
+                    <button class="solid" type="submit">Done</button>
+                </form>
+                <form class="inline" method="post" th:action="@{/tasks/{id}/closed(id=${task.id})}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" name="redirectTo" value="/backlog" />
+                    <button class="secondary" type="submit">Close</button>
+                </form>
+            </div>
+        </article>
+    </section>
+
+    <section class="hero" th:if="${#lists.isEmpty(backlog.tasks)}">
+        <p class="meta">No backlog reminders yet.</p>
+    </section>
+</div>
+</body>
+</html>

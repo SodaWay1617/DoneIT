@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${pageTitle}">Task Form</title>
+    <style>
+        :root {
+            --bg: #f4efe6;
+            --panel: #fffaf1;
+            --ink: #1f2b2d;
+            --muted: #607074;
+            --accent: #1e6d73;
+            --border: #d8cfbf;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at top left, rgba(30, 109, 115, 0.12), transparent 28%),
+                linear-gradient(135deg, #efe7d9, var(--bg));
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .shell {
+            width: min(820px, calc(100% - 24px));
+            margin: 24px auto 40px;
+            padding: 28px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            background: rgba(255, 250, 241, 0.96);
+            box-shadow: 0 18px 48px rgba(31, 43, 45, 0.08);
+        }
+
+        h1 { margin-top: 0; }
+        p { color: var(--muted); }
+        form { display: grid; gap: 16px; }
+        label { display: grid; gap: 8px; }
+        input, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--ink);
+            font: inherit;
+        }
+
+        textarea { min-height: 120px; resize: vertical; }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .ghost, .solid {
+            display: inline-flex;
+            min-height: 42px;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            color: inherit;
+            background: white;
+            font: inherit;
+        }
+        .solid {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .hint {
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(30, 109, 115, 0.08);
+            margin-bottom: 16px;
+        }
+        .error-summary {
+            margin-bottom: 4px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #b15c4a;
+            background: #fff1ed;
+            color: #6f281a;
+        }
+        .field-error {
+            color: #8b3020;
+            font-size: 0.95rem;
+        }
+        .field-invalid {
+            border-color: #b15c4a;
+            background: #fff8f6;
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <h1 th:text="${pageTitle}">Create Task</h1>
+    <p th:text="'Signed in as ' + ${username}">Signed in as doneit</p>
+
+    <div class="hint">
+        <strong th:text="${form.editMode} ? 'You can reschedule this task or clear the planned time to move it into backlog.' : 'Leave planned time empty to send this task into backlog.'">Leave planned time empty to send this task into backlog.</strong>
+        <p>Backlog tasks stay separate from your dated list and act like low-priority reminders for later.</p>
+    </div>
+
+    <form method="post" th:action="${formAction}" th:object="${form}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <div class="error-summary" th:if="${#fields.hasErrors('*')}">
+            <strong>Please fix the highlighted fields.</strong>
+        </div>
+        <input type="hidden" th:field="*{taskId}" />
+        <label>
+            Title
+            <input type="text" th:field="*{title}" th:classappend="${#fields.hasErrors('title')} ? ' field-invalid'" placeholder="Task title" />
+            <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Title error</span>
+        </label>
+        <label>
+            Description
+            <textarea th:field="*{description}" placeholder="Notes, details, links"></textarea>
+        </label>
+        <label>
+            Planned for
+            <input type="datetime-local" th:field="*{plannedForAt}" th:classappend="${#fields.hasErrors('plannedForAt')} ? ' field-invalid'" />
+            <span class="field-error" th:if="${#fields.hasErrors('plannedForAt')}" th:errors="*{plannedForAt}">Planned time error</span>
+        </label>
+        <label>
+            Deadline
+            <input type="datetime-local" th:field="*{deadlineAt}" th:classappend="${#fields.hasErrors('deadlineAt')} ? ' field-invalid'" />
+            <span class="field-error" th:if="${#fields.hasErrors('deadlineAt')}" th:errors="*{deadlineAt}">Deadline error</span>
+        </label>
+        <div class="actions">
+            <button class="solid" type="submit" th:text="${submitLabel}">Create task</button>
+            <a class="ghost" th:href="@{/}">Back to tasks</a>
+            <a class="ghost" th:href="@{/backlog}">Open backlog</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

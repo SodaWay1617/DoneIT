@@ -234,50 +234,50 @@ It is intentionally practical:
 ## 8. Phase 6 - Web UI flows
 
 ### 8.1 Pages
-- [ ] Implement login page
-- [ ] Implement today page
-- [ ] Implement selected date page
-- [ ] Implement backlog page, block, or collapsible section
-- [ ] Implement create task page
-- [ ] Implement edit task page
-- [ ] Implement completed/closed area as a page, block, or collapsible section
+- [x] Implement login page
+- [x] Implement today page
+- [x] Implement selected date page
+- [x] Implement backlog page, block, or collapsible section
+- [x] Implement create task page
+- [x] Implement edit task page
+- [x] Implement completed/closed area as a page, block, or collapsible section
 
 ### 8.2 Task creation flow
-- [ ] User can open create page
-- [ ] User can submit title
-- [ ] User can submit description
-- [ ] User can submit planned datetime
-- [ ] User can create a backlog task without planned datetime
-- [ ] User can optionally submit deadline datetime
-- [ ] Validation errors are shown clearly
+- [x] User can open create page
+- [x] User can submit title
+- [x] User can submit description
+- [x] User can submit planned datetime
+- [x] User can create a backlog task without planned datetime
+- [x] User can optionally submit deadline datetime
+- [x] Validation errors are shown clearly
 
 ### 8.3 Task editing flow
-- [ ] User can open edit page
-- [ ] User can update all editable task fields
-- [ ] User can clear planned datetime to move task into backlog
-- [ ] User can save changes successfully
+- [x] User can open edit page
+- [x] User can update all editable task fields
+- [x] User can clear planned datetime to move task into backlog
+- [x] User can save changes successfully
 
 ### 8.4 Daily view flow
-- [ ] Today view loads current day's tasks
-- [ ] Selected date view loads tasks for chosen date
-- [ ] Backlog view or section loads undated tasks separately
-- [ ] Date picker exists
-- [ ] Main active list shows only dated `OPEN` tasks
+- [x] Today view loads current day's tasks
+- [x] Selected date view loads tasks for chosen date
+- [x] Backlog view or section loads undated tasks separately
+- [x] Date picker exists
+- [x] Main active list shows only dated OPEN tasks
 
 ### 8.5 Status actions
-- [ ] User can mark task as `DONE`
-- [ ] User can mark task as `CLOSED`
-- [ ] Completed and closed tasks are separated from active list
+- [x] User can mark task as DONE`r
+- [x] User can mark task as CLOSED`r
+- [x] Completed and closed tasks are separated from active list
 
 ### 8.6 Rescheduling actions
-- [ ] User can move one task to another datetime
-- [ ] User can move one task into backlog by removing planned datetime
-- [ ] User can bulk move unfinished tasks to tomorrow
+- [x] User can move one task to another datetime
+- [x] User can move one task into backlog by removing planned datetime
+- [x] User can bulk move unfinished tasks to tomorrow
 
 ### 8.7 UI done criteria
-- [ ] Main flows are usable without design polish
-- [ ] Create and edit are separate, clear screens
-- [ ] Daily work can be performed without confusion
+- [x] Main flows are usable without design polish
+- [x] Create and edit are separate, clear screens
+- [x] Daily work can be performed without confusion
 
 ---
 

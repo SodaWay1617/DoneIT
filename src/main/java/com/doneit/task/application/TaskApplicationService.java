@@ -6,6 +6,7 @@ import com.doneit.task.application.command.MoveTaskToBacklogCommand;
 import com.doneit.task.application.command.RescheduleTaskCommand;
 import com.doneit.task.application.view.BacklogTasksView;
 import com.doneit.task.application.view.DailyTasksView;
+import com.doneit.task.application.view.TaskFormView;
 import com.doneit.task.application.view.TaskListItemView;
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskRepository;
@@ -136,6 +137,23 @@ public class TaskApplicationService {
                 .toList();
 
         return new BacklogTasksView(backlogTasks);
+    }
+
+    public TaskFormView getCreateTaskForm() {
+        return TaskFormView.forCreate(LocalDateTime.now(clock).withSecond(0).withNano(0));
+    }
+
+    public TaskFormView getTaskForEdit(@NotNull Long taskId) {
+        Task task = getTaskOrThrow(taskId);
+        return new TaskFormView(
+                task.id(),
+                task.title(),
+                task.description() == null ? "" : task.description(),
+                task.plannedForAt(),
+                task.deadlineAt(),
+                task.isBacklog(),
+                true
+        );
     }
 
     @Transactional
