@@ -159,14 +159,14 @@ public class TaskApplicationService {
     @Transactional
     public TaskListItemView markTaskAsDone(@NotNull Long taskId) {
         Task task = taskRepository.markDone(requireTaskId(taskId), LocalDateTime.now(clock))
-                .orElseThrow(() -> new TaskNotFoundException(taskId));
+                .orElseGet(() -> getExistingTaskForStatusAction(taskId));
         return toView(task);
     }
 
     @Transactional
     public TaskListItemView markTaskAsClosed(@NotNull Long taskId) {
         Task task = taskRepository.markClosed(requireTaskId(taskId), LocalDateTime.now(clock))
-                .orElseThrow(() -> new TaskNotFoundException(taskId));
+                .orElseGet(() -> getExistingTaskForStatusAction(taskId));
         return toView(task);
     }
 
@@ -201,6 +201,10 @@ public class TaskApplicationService {
     private Task getTaskOrThrow(Long taskId) {
         return taskRepository.findById(requireTaskId(taskId))
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
+    }
+
+    private Task getExistingTaskForStatusAction(Long taskId) {
+        return getTaskOrThrow(taskId);
     }
 
     private TaskListItemView toView(Task task) {

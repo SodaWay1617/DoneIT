@@ -8,12 +8,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -28,6 +34,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestPropertySource(properties = "spring.main.lazy-initialization=true")
 class HomeControllerTest extends IntegrationTestSupport {
+
+    @TestConfiguration
+    static class FixedClockConfiguration {
+        @Bean
+        @Primary
+        Clock testClock() {
+            return Clock.fixed(Instant.parse("2026-04-08T09:00:00Z"), ZoneId.of("UTC"));
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -143,6 +158,8 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'OPEN')]").exists())
                 .andExpect(xpath("//*[@id='backlog-preview']//*[contains(text(),'BACKLOG')]").exists())
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'DONE')]").exists())
+                .andExpect(xpath("//form[@class='bulk-action']//input[@name='redirectTo']/@value").string("/"))
+                .andExpect(xpath("(//*[@id='active-tasks']//input[@name='redirectTo'])[1]/@value").string("/"))
                 .andExpect(content().string(containsString("Quick guide")));
     }
 
@@ -155,6 +172,8 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Tomorrow task')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").doesNotExist())
                 .andExpect(xpath("//input[@type='date' and @name='date']/@value").string("2026-04-09"))
+                .andExpect(xpath("//form[@class='bulk-action']//input[@name='date']/@value").string("2026-04-09"))
+                .andExpect(xpath("(//*[@id='active-tasks']//input[@name='redirectTo'])[1]/@value").string("/tasks?date=2026-04-09"))
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'TODAY')]").doesNotExist());
     }
 
@@ -331,6 +350,12 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").doesNotExist())
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'Today task')]").exists());
+
+        mockMvc.perform(post("/tasks/{taskId}/done", taskId)
+                        .with(csrf())
+                        .param("redirectTo", "/"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"));
     }
 
     @Test

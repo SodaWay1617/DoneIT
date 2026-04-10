@@ -173,6 +173,16 @@ class TaskApplicationServiceTest {
     }
 
     @Test
+    void markTaskAsDoneReturnsExistingTaskWhenActionWasAlreadyApplied() {
+        when(taskRepository.markDone(eq(300L), any(LocalDateTime.class))).thenReturn(Optional.empty());
+        when(taskRepository.findById(300L)).thenReturn(Optional.of(doneTask(300L)));
+
+        TaskListItemView result = service.markTaskAsDone(300L);
+
+        assertEquals(TaskStatus.DONE, result.status());
+    }
+
+    @Test
     void markTaskAsDoneRequiresId() {
         assertThrows(IllegalArgumentException.class, () -> service.markTaskAsDone(null));
         verifyNoInteractions(taskRepository);
@@ -181,6 +191,16 @@ class TaskApplicationServiceTest {
     @Test
     void markTaskAsClosedUsesRepositoryTransition() {
         when(taskRepository.markClosed(eq(301L), any(LocalDateTime.class))).thenReturn(Optional.of(closedTask(301L)));
+
+        TaskListItemView result = service.markTaskAsClosed(301L);
+
+        assertEquals(TaskStatus.CLOSED, result.status());
+    }
+
+    @Test
+    void markTaskAsClosedReturnsExistingTaskWhenActionWasAlreadyApplied() {
+        when(taskRepository.markClosed(eq(301L), any(LocalDateTime.class))).thenReturn(Optional.empty());
+        when(taskRepository.findById(301L)).thenReturn(Optional.of(closedTask(301L)));
 
         TaskListItemView result = service.markTaskAsClosed(301L);
 
