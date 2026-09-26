@@ -26,6 +26,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
@@ -172,6 +173,8 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(content().string(containsString("Completed and closed")))
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Overdue planned task')]").exists())
+                .andExpect(xpath("//*[contains(text(),'Active today: 2')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Active tasks (2)')]").exists())
                 .andExpect(xpath("//*[@id='backlog-preview']//*[contains(text(),'Backlog reminder')]").exists())
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'Already done')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Backlog reminder')]").doesNotExist())
@@ -182,6 +185,8 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(xpath("//*[@id='backlog-preview']//*[contains(text(),'BACKLOG')]").exists())
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'DONE')]").exists())
                 .andExpect(xpath("//form[@class='bulk-action']//input[@name='redirectTo']/@value").string("/"))
+                .andExpect(xpath("//form[@action='/tasks/bulk-move-overdue-to-today']//button[contains(text(),'Move overdue to today')]").exists())
+                .andExpect(xpath("//form[@class='random-action']//button[contains(text(),'Pick random task')]").exists())
                 .andExpect(xpath("(//*[@id='active-tasks']//input[@name='redirectTo'])[1]/@value").string("/"))
                 .andExpect(content().string(containsString("Quick guide")));
     }
@@ -193,6 +198,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Selected date view")))
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Tomorrow task')]").exists())
+                .andExpect(xpath("//*[contains(text(),'Active: 1')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").doesNotExist())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Overdue planned task')]").doesNotExist())
                 .andExpect(xpath("//input[@type='date' and @name='date']/@value").string("2026-04-09"))
@@ -457,6 +463,50 @@ class HomeControllerTest extends IntegrationTestSupport {
         mockMvc.perform(get("/backlog"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Today task")));
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
+    void shouldPickRandomTaskFromToday() throws Exception {
+        jdbcTemplate.update("UPDATE tasks SET status = 'DONE', completed_at = ?, updated_at = ? WHERE title = ?",
+                LocalDateTime.of(2026, 4, 8, 13, 0),
+                LocalDateTime.of(2026, 4, 8, 13, 0),
+                "Overdue planned task"
+        );
+
+        mockMvc.perform(post("/tasks/random-today").with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andExpect(flash().attribute("randomTaskTitle", "Today task"));
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
+    void shouldMoveOverdueTasksToTodayWithoutTouchingTodayOrFutureTasks() throws Exception {
+        mockMvc.perform(post("/tasks/bulk-move-overdue-to-today").with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andExpect(flash().attribute("flashMessage", "Moved 1 overdue tasks to today."));
+
+        LocalDateTime movedOverdueTaskDate = jdbcTemplate.queryForObject("""
+                SELECT planned_for_at
+                FROM tasks
+                WHERE id = ?
+                """, LocalDateTime.class, overdueTaskId);
+        LocalDateTime todayTaskDate = jdbcTemplate.queryForObject("""
+                SELECT planned_for_at
+                FROM tasks
+                WHERE id = ?
+                """, LocalDateTime.class, taskId);
+        LocalDateTime tomorrowTaskDate = jdbcTemplate.queryForObject("""
+                SELECT planned_for_at
+                FROM tasks
+                WHERE id = ?
+                """, LocalDateTime.class, tomorrowTaskId);
+
+        Assertions.assertThat(movedOverdueTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 8, 10, 0));
+        Assertions.assertThat(todayTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 8, 10, 0));
+        Assertions.assertThat(tomorrowTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 9, 11, 0));
     }
 
     @Test

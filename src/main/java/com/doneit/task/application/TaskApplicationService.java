@@ -23,6 +23,8 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Validated
@@ -150,6 +152,16 @@ public class TaskApplicationService {
         return new BacklogTasksView(backlogTasks);
     }
 
+    public Optional<TaskListItemView> getRandomTaskForToday() {
+        List<TaskListItemView> activeTasks = getTasksForToday().activeTasks();
+        if (activeTasks.isEmpty()) {
+            return Optional.empty();
+        }
+
+        int randomIndex = ThreadLocalRandom.current().nextInt(activeTasks.size());
+        return Optional.of(activeTasks.get(randomIndex));
+    }
+
     public TaskFormView getCreateTaskForm() {
         return TaskFormView.forCreate(LocalDateTime.now(clock).withSecond(0).withNano(0));
     }
@@ -201,6 +213,16 @@ public class TaskApplicationService {
         return taskRepository.bulkMoveOpenDatedTasksToNextDay(
                 activeUser.id(),
                 requireDate(date),
+                LocalDateTime.now(clock)
+        );
+    }
+
+    @Transactional
+    public int bulkMoveOverdueTasksToToday() {
+        User activeUser = requireActiveUser();
+        return taskRepository.bulkMoveOverdueOpenDatedTasksToDate(
+                activeUser.id(),
+                LocalDate.now(clock),
                 LocalDateTime.now(clock)
         );
     }

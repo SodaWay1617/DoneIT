@@ -15,4 +15,8 @@ public record DailyTasksView(
         activeTasks = List.copyOf(Objects.requireNonNull(activeTasks, "activeTasks is required"));
         completedTasks = List.copyOf(Objects.requireNonNull(completedTasks, "completedTasks is required"));
     }
+
+    public int activeTaskCount() {
+        return activeTasks.size();
+    }
 }

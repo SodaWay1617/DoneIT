@@ -121,6 +121,16 @@ public class JdbcTaskRepository implements TaskRepository {
               AND planned_for_at < ?
             """;
 
+    private static final String BULK_MOVE_OVERDUE_TO_DATE_SQL = """
+            UPDATE tasks
+            SET planned_for_at = CAST(? AS date) + CAST(planned_for_at AS time),
+                updated_at = ?
+            WHERE user_id = ?
+              AND status = 'OPEN'
+              AND planned_for_at IS NOT NULL
+              AND planned_for_at < ?
+            """;
+
     private final JdbcTemplate jdbcTemplate;
     private final TaskRowMapper taskRowMapper;
 
@@ -233,5 +243,11 @@ public class JdbcTaskRepository implements TaskRepository {
     public int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt) {
         LocalDateTime end = date.plusDays(1).atStartOfDay();
         return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId, end);
+    }
+
+    @Override
+    public int bulkMoveOverdueOpenDatedTasksToDate(Long userId, LocalDate date, LocalDateTime updatedAt) {
+        LocalDateTime start = date.atStartOfDay();
+        return jdbcTemplate.update(BULK_MOVE_OVERDUE_TO_DATE_SQL, date, updatedAt, userId, start);
     }
 }

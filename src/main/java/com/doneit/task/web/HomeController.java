@@ -182,6 +182,23 @@ public class HomeController {
         return "redirect:" + resolveRedirectTarget(redirectTo, resolveDateRedirect(date));
     }
 
+    @PostMapping("/tasks/bulk-move-overdue-to-today")
+    public String bulkMoveOverdueToToday(RedirectAttributes redirectAttributes) {
+        int movedCount = taskApplicationService.bulkMoveOverdueTasksToToday();
+        redirectAttributes.addFlashAttribute("flashMessage", "Moved " + movedCount + " overdue tasks to today.");
+        return "redirect:/";
+    }
+
+    @PostMapping("/tasks/random-today")
+    public String randomTaskForToday(RedirectAttributes redirectAttributes) {
+        taskApplicationService.getRandomTaskForToday()
+                .ifPresentOrElse(
+                        task -> redirectAttributes.addFlashAttribute("randomTaskTitle", task.title()),
+                        () -> redirectAttributes.addFlashAttribute("flashMessage", "No active tasks for today.")
+                );
+        return "redirect:/";
+    }
+
     private static void populateDailyModel(Model model,
                                            Principal principal,
                                            DailyTasksView dailyTasksView,

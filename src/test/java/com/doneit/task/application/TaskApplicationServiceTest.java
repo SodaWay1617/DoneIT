@@ -186,6 +186,30 @@ class TaskApplicationServiceTest {
     }
 
     @Test
+    void randomTaskForTodayReturnsActiveTaskFromTodayView() {
+        LocalDate today = LocalDate.of(2026, 4, 7);
+        when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), today))
+                .thenReturn(List.of(openTask(5L, LocalDateTime.of(2026, 4, 7, 12, 0), null)));
+        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of());
+
+        Optional<TaskListItemView> result = service.getRandomTaskForToday();
+
+        assertTrue(result.isPresent());
+        assertEquals(5L, result.orElseThrow().id());
+    }
+
+    @Test
+    void randomTaskForTodayReturnsEmptyWhenTodayHasNoActiveTasks() {
+        LocalDate today = LocalDate.of(2026, 4, 7);
+        when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), today)).thenReturn(List.of());
+        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of());
+
+        Optional<TaskListItemView> result = service.getRandomTaskForToday();
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
     void markTaskAsDoneUsesRepositoryTransition() {
         when(taskRepository.markDone(eq(300L), any(LocalDateTime.class))).thenReturn(Optional.of(doneTask(300L)));
 
@@ -257,6 +281,16 @@ class TaskApplicationServiceTest {
         int moved = service.bulkMoveUnfinishedTasksToTomorrow(date);
 
         assertEquals(3, moved);
+    }
+
+    @Test
+    void bulkMoveOverdueTasksUsesActiveUserAndToday() {
+        LocalDate today = LocalDate.of(2026, 4, 7);
+        when(taskRepository.bulkMoveOverdueOpenDatedTasksToDate(eq(ACTIVE_USER.id()), eq(today), any(LocalDateTime.class))).thenReturn(2);
+
+        int moved = service.bulkMoveOverdueTasksToToday();
+
+        assertEquals(2, moved);
     }
 
     @Test

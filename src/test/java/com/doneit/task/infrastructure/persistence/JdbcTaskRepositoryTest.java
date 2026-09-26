@@ -213,6 +213,31 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
         assertEquals(TaskStatus.DONE, taskRepository.findById(done.id()).orElseThrow().status());
     }
 
+    @Test
+    void bulkMoveOverdueOpenDatedTasksToSelectedDatePreservesTime() {
+        Task overdue = taskRepository.create(openTask("Overdue", LocalDateTime.of(2026, 4, 5, 8, 30)));
+        Task today = taskRepository.create(openTask("Today", LocalDateTime.of(2026, 4, 6, 9, 0)));
+        Task future = taskRepository.create(openTask("Future", LocalDateTime.of(2026, 4, 7, 10, 0)));
+        Task alwaysActive = taskRepository.create(openTask("Always active", null));
+        Task backlog = taskRepository.create(backlogTask("Backlog"));
+        Task done = taskRepository.create(openTask("Done", LocalDateTime.of(2026, 4, 5, 11, 0)));
+        taskRepository.markDone(done.id(), LocalDateTime.of(2026, 4, 5, 20, 40));
+
+        int movedCount = taskRepository.bulkMoveOverdueOpenDatedTasksToDate(
+                userId,
+                LocalDate.of(2026, 4, 6),
+                LocalDateTime.of(2026, 4, 6, 7, 45)
+        );
+
+        assertEquals(1, movedCount);
+        assertEquals(LocalDateTime.of(2026, 4, 6, 8, 30), taskRepository.findById(overdue.id()).orElseThrow().plannedForAt());
+        assertEquals(LocalDateTime.of(2026, 4, 6, 9, 0), taskRepository.findById(today.id()).orElseThrow().plannedForAt());
+        assertEquals(LocalDateTime.of(2026, 4, 7, 10, 0), taskRepository.findById(future.id()).orElseThrow().plannedForAt());
+        assertEquals(null, taskRepository.findById(alwaysActive.id()).orElseThrow().plannedForAt());
+        assertTrue(taskRepository.findById(backlog.id()).orElseThrow().isBacklog());
+        assertEquals(TaskStatus.DONE, taskRepository.findById(done.id()).orElseThrow().status());
+    }
+
     private Task openTask(String title, LocalDateTime plannedForAt) {
         LocalDateTime createdAt = LocalDateTime.of(2026, 4, 5, 18, 30);
         return new Task(

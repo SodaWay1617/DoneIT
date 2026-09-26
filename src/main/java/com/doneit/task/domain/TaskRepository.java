@@ -30,4 +30,6 @@ public interface TaskRepository {
     Optional<Task> moveToBacklog(Long taskId, LocalDateTime updatedAt);
 
     int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt);
+
+    int bulkMoveOverdueOpenDatedTasksToDate(Long userId, LocalDate date, LocalDateTime updatedAt);
 }

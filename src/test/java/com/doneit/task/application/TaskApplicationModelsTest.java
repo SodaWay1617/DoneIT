@@ -93,11 +93,13 @@ class TaskApplicationModelsTest {
     @Test
     void dailyTasksViewDefensivelyCopiesCollections() {
         List<TaskListItemView> activeTasks = new ArrayList<>();
+        activeTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.OPEN, null, null, false, false));
         DailyTasksView view = new DailyTasksView(LocalDate.of(2026, 4, 5), activeTasks, List.of());
 
-        activeTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.BACKLOG, null, null, true, false));
+        activeTasks.add(new TaskListItemView(2L, "Other task", null, TaskStatus.OPEN, null, null, false, false));
 
-        assertTrue(view.activeTasks().isEmpty());
+        assertEquals(1, view.activeTasks().size());
+        assertEquals(1, view.activeTaskCount());
     }
 
     @Test
