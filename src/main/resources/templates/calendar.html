@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DoneIt Calendar</title>
+    <style>
+        :root {
+            --bg: #f4efe6;
+            --panel: #fffaf1;
+            --ink: #1f2b2d;
+            --muted: #607074;
+            --accent: #1e6d73;
+            --accent-soft: rgba(30, 109, 115, 0.09);
+            --border: #d8cfbf;
+            --danger: #9f4d36;
+            --danger-soft: rgba(159, 77, 54, 0.1);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #efe7d9, var(--bg));
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+        .shell { width: min(1180px, calc(100% - 24px)); margin: 24px auto 40px; }
+        .hero {
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            background: rgba(255, 250, 241, 0.94);
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .nav { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+        .pill, .ghost, .item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: white;
+            color: inherit;
+            text-decoration: none;
+        }
+        .meta { color: var(--muted); margin: 8px 0 0; }
+        .calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; margin-top: 18px; border: 1px solid var(--border); background: var(--border); }
+        .weekday, .day { background: rgba(255, 250, 241, 0.96); padding: 10px; min-height: 118px; }
+        .weekday { min-height: auto; color: var(--muted); font-size: 0.9rem; }
+        .day.outside { background: rgba(255, 250, 241, 0.62); color: var(--muted); }
+        .day.today { outline: 2px solid rgba(30, 109, 115, 0.35); outline-offset: -2px; }
+        .day-number { font-weight: 700; }
+        .items { display: grid; gap: 6px; margin-top: 8px; }
+        .item {
+            justify-content: flex-start;
+            min-height: 30px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            line-height: 1.2;
+        }
+        .item.deadline { border-color: rgba(159, 77, 54, 0.35); background: var(--danger-soft); color: var(--danger); }
+        .item.done, .item.closed { opacity: 0.72; }
+        @media (max-width: 760px) {
+            .calendar { grid-template-columns: 1fr; }
+            .weekday { display: none; }
+            .day { min-height: auto; }
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <section class="hero">
+        <div>
+            <p class="meta">Signed in as <span th:text="${username}">doneit</span></p>
+            <h1 th:text="'Calendar - ' + ${calendar.month}">Calendar</h1>
+            <div class="nav">
+                <a class="pill" th:href="@{/}">List</a>
+                <a class="pill" th:href="@{/kanban}">Kanban</a>
+                <a class="pill" th:href="@{/calendar(month=${calendar.monthValue})}">Calendar</a>
+                <a class="ghost" th:href="@{/backlog}">Backlog</a>
+            </div>
+        </div>
+        <div class="nav">
+            <a class="ghost" th:href="@{/calendar(month=${calendar.previousMonthValue})}">Previous</a>
+            <a class="ghost" th:href="@{/calendar(month=${calendar.nextMonthValue})}">Next</a>
+        </div>
+    </section>
+
+    <section class="calendar">
+        <div class="weekday">Mon</div>
+        <div class="weekday">Tue</div>
+        <div class="weekday">Wed</div>
+        <div class="weekday">Thu</div>
+        <div class="weekday">Fri</div>
+        <div class="weekday">Sat</div>
+        <div class="weekday">Sun</div>
+
+        <article class="day" th:each="day : ${calendar.days}" th:classappend="${!day.currentMonth} ? ' outside' : (${day.today} ? ' today' : '')">
+            <div class="day-number" th:text="${day.date.dayOfMonth}">1</div>
+            <div class="items" th:if="!${#lists.isEmpty(day.items)}">
+                <a class="item"
+                   th:each="item : ${day.items}"
+                   th:classappend="${item.deadlineHighlighted} ? ' deadline' : (${item.taskStatus.name() == 'DONE'} ? ' done' : (${item.taskStatus.name() == 'CLOSED'} ? ' closed' : ''))"
+                   th:href="@{/tasks/{id}/edit(id=${item.taskId})}"
+                   th:text="${#temporals.format(item.dateTime, 'HH:mm')} + ' ' + ${item.title}">09:00 Task</a>
+            </div>
+        </article>
+    </section>
+</div>
+</body>
+</html>

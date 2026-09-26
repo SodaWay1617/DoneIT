@@ -5,7 +5,11 @@ import com.doneit.task.application.command.EditTaskCommand;
 import com.doneit.task.application.command.MoveTaskToBacklogCommand;
 import com.doneit.task.application.command.RescheduleTaskCommand;
 import com.doneit.task.application.view.BacklogTasksView;
+import com.doneit.task.application.view.CalendarDayView;
+import com.doneit.task.application.view.CalendarItemView;
+import com.doneit.task.application.view.CalendarMonthView;
 import com.doneit.task.application.view.DailyTasksView;
+import com.doneit.task.application.view.KanbanTasksView;
 import com.doneit.task.application.view.TaskFormView;
 import com.doneit.task.application.view.TaskListItemView;
 import com.doneit.task.domain.Task;
@@ -20,11 +24,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
 @Validated
@@ -162,6 +173,56 @@ public class TaskApplicationService {
         return Optional.of(activeTasks.get(randomIndex));
     }
 
+    public KanbanTasksView getKanbanTasksForDate(@NotNull LocalDate date) {
+        User activeUser = requireActiveUser();
+        LocalDate targetDate = requireDate(date);
+
+        List<TaskListItemView> activeTasks = findActiveTasksForScreen(activeUser.id(), targetDate).stream()
+                .map(task -> TaskListItemView.from(task, targetDate))
+                .toList();
+        List<TaskListItemView> finishedTasks = taskRepository.findCompletedOrClosedTasksForDate(activeUser.id(), targetDate).stream()
+                .map(task -> TaskListItemView.from(task, targetDate))
+                .toList();
+
+        return new KanbanTasksView(
+                targetDate,
+                activeTasks,
+                finishedTasks.stream().filter(task -> task.status() == TaskStatus.DONE).toList(),
+                finishedTasks.stream().filter(task -> task.status() == TaskStatus.CLOSED).toList()
+        );
+    }
+
+    public CalendarMonthView getCalendarMonth(@NotNull YearMonth month) {
+        User activeUser = requireActiveUser();
+        YearMonth targetMonth = Objects.requireNonNull(month, "month is required");
+        LocalDate monthStart = targetMonth.atDay(1);
+        LocalDate monthEndExclusive = targetMonth.plusMonths(1).atDay(1);
+        LocalDate gridStart = monthStart.minusDays(daysSinceMonday(monthStart));
+        LocalDate gridEndExclusive = monthEndExclusive.plusDays(daysUntilSunday(monthEndExclusive.minusDays(1)));
+
+        Map<LocalDate, List<CalendarItemView>> itemsByDate = taskRepository
+                .findTasksForCalendarRange(activeUser.id(), gridStart, gridEndExclusive)
+                .stream()
+                .flatMap(task -> calendarItems(task).stream())
+                .collect(Collectors.groupingBy(CalendarItemView::date));
+
+        LocalDate today = LocalDate.now(clock);
+        List<CalendarDayView> days = new ArrayList<>();
+        for (LocalDate date = gridStart; date.isBefore(gridEndExclusive); date = date.plusDays(1)) {
+            List<CalendarItemView> items = itemsByDate.getOrDefault(date, List.of()).stream()
+                    .sorted(Comparator.comparing(CalendarItemView::dateTime).thenComparing(CalendarItemView::taskId))
+                    .toList();
+            days.add(new CalendarDayView(date, YearMonth.from(date).equals(targetMonth), date.equals(today), items));
+        }
+
+        return new CalendarMonthView(
+                targetMonth,
+                targetMonth.minusMonths(1).atDay(1),
+                targetMonth.plusMonths(1).atDay(1),
+                days
+        );
+    }
+
     public TaskFormView getCreateTaskForm() {
         return TaskFormView.forCreate(LocalDateTime.now(clock).withSecond(0).withNano(0));
     }
@@ -233,6 +294,26 @@ public class TaskApplicationService {
             return taskRepository.findActiveTasksForDate(userId, targetDate);
         }
         return taskRepository.findActiveTasksDueByDate(userId, targetDate);
+    }
+
+    private static List<CalendarItemView> calendarItems(Task task) {
+        List<CalendarItemView> items = new ArrayList<>();
+        if (task.plannedForAt() != null) {
+            items.add(CalendarItemView.planned(task));
+        }
+        if (task.deadlineAt() != null && (task.plannedForAt() == null
+                || !task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate()))) {
+            items.add(CalendarItemView.deadline(task));
+        }
+        return items;
+    }
+
+    private static int daysSinceMonday(LocalDate date) {
+        return date.getDayOfWeek().getValue() - DayOfWeek.MONDAY.getValue();
+    }
+
+    private static int daysUntilSunday(LocalDate date) {
+        return DayOfWeek.SUNDAY.getValue() - date.getDayOfWeek().getValue();
     }
 
     private User requireActiveUser() {

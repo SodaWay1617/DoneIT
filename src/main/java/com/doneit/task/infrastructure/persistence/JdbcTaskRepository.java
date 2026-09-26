@@ -75,6 +75,23 @@ public class JdbcTaskRepository implements TaskRepository {
             ORDER BY updated_at DESC, id DESC
             """;
 
+    private static final String FIND_COMPLETED_OR_CLOSED_FOR_DATE_SQL = BASE_SELECT + """
+            WHERE user_id = ?
+              AND status IN ('DONE', 'CLOSED')
+              AND planned_for_at >= ?
+              AND planned_for_at < ?
+            ORDER BY planned_for_at, updated_at DESC, id
+            """;
+
+    private static final String FIND_FOR_CALENDAR_RANGE_SQL = BASE_SELECT + """
+            WHERE user_id = ?
+              AND (
+                  (planned_for_at IS NOT NULL AND planned_for_at >= ? AND planned_for_at < ?)
+                  OR (deadline_at IS NOT NULL AND deadline_at >= ? AND deadline_at < ?)
+              )
+            ORDER BY COALESCE(planned_for_at, deadline_at), id
+            """;
+
     private static final String MARK_DONE_SQL = """
             UPDATE tasks
             SET status = 'DONE',
@@ -201,6 +218,20 @@ public class JdbcTaskRepository implements TaskRepository {
     @Override
     public List<Task> findCompletedOrClosedTasks(Long userId) {
         return jdbcTemplate.query(FIND_COMPLETED_OR_CLOSED_SQL, taskRowMapper, userId);
+    }
+
+    @Override
+    public List<Task> findCompletedOrClosedTasksForDate(Long userId, LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+        return jdbcTemplate.query(FIND_COMPLETED_OR_CLOSED_FOR_DATE_SQL, taskRowMapper, userId, start, end);
+    }
+
+    @Override
+    public List<Task> findTasksForCalendarRange(Long userId, LocalDate startDate, LocalDate endDateExclusive) {
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDateExclusive.atStartOfDay();
+        return jdbcTemplate.query(FIND_FOR_CALENDAR_RANGE_SQL, taskRowMapper, userId, start, end, start, end);
     }
 
     @Override

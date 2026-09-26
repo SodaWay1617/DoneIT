@@ -5,7 +5,9 @@ import com.doneit.task.application.command.EditTaskCommand;
 import com.doneit.task.application.command.MoveTaskToBacklogCommand;
 import com.doneit.task.application.command.RescheduleTaskCommand;
 import com.doneit.task.application.view.BacklogTasksView;
+import com.doneit.task.application.view.CalendarMonthView;
 import com.doneit.task.application.view.DailyTasksView;
+import com.doneit.task.application.view.KanbanTasksView;
 import com.doneit.task.application.view.TaskListItemView;
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskRepository;
@@ -23,6 +25,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
@@ -207,6 +210,63 @@ class TaskApplicationServiceTest {
         Optional<TaskListItemView> result = service.getRandomTaskForToday();
 
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getKanbanTasksForDateSplitsTasksByColumn() {
+        LocalDate date = LocalDate.of(2026, 4, 7);
+        when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), date))
+                .thenReturn(List.of(openTask(10L, LocalDateTime.of(2026, 4, 6, 9, 0), null)));
+        when(taskRepository.findCompletedOrClosedTasksForDate(ACTIVE_USER.id(), date))
+                .thenReturn(List.of(doneTask(11L), closedTask(12L)));
+
+        KanbanTasksView result = service.getKanbanTasksForDate(date);
+
+        assertEquals(date, result.selectedDate());
+        assertEquals(1, result.openTasks().size());
+        assertEquals(1, result.doneTasks().size());
+        assertEquals(1, result.closedTasks().size());
+        assertTrue(result.openTasks().getFirst().overdue());
+        verify(taskRepository).findCompletedOrClosedTasksForDate(ACTIVE_USER.id(), date);
+    }
+
+    @Test
+    void getCalendarMonthBuildsMondayFirstGridAndDeduplicatesSameDayDeadline() {
+        YearMonth month = YearMonth.of(2026, 4);
+        Task plannedWithSameDayDeadline = openTask(
+                20L,
+                LocalDateTime.of(2026, 4, 7, 9, 0),
+                LocalDateTime.of(2026, 4, 7, 18, 0)
+        );
+        Task separateDeadline = openTask(
+                21L,
+                LocalDateTime.of(2026, 4, 8, 10, 0),
+                LocalDateTime.of(2026, 4, 9, 12, 0)
+        );
+        when(taskRepository.findTasksForCalendarRange(
+                ACTIVE_USER.id(),
+                LocalDate.of(2026, 3, 30),
+                LocalDate.of(2026, 5, 4)
+        )).thenReturn(List.of(plannedWithSameDayDeadline, separateDeadline));
+
+        CalendarMonthView result = service.getCalendarMonth(month);
+
+        assertEquals(month, result.month());
+        assertEquals(LocalDate.of(2026, 3, 30), result.days().getFirst().date());
+        assertEquals(LocalDate.of(2026, 5, 3), result.days().getLast().date());
+        assertTrue(result.days().stream().anyMatch(day -> day.date().equals(LocalDate.of(2026, 4, 7)) && day.today()));
+        assertEquals(1, result.days().stream()
+                .filter(day -> day.date().equals(LocalDate.of(2026, 4, 7)))
+                .findFirst()
+                .orElseThrow()
+                .items()
+                .size());
+        assertEquals(1, result.days().stream()
+                .filter(day -> day.date().equals(LocalDate.of(2026, 4, 9)))
+                .findFirst()
+                .orElseThrow()
+                .items()
+                .size());
     }
 
     @Test

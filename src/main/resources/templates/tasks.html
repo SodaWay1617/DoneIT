@@ -278,6 +278,8 @@
             </div>
             <div class="nav">
                 <a class="pill" th:classappend="${todayPage} ? ' active'" th:href="@{/}">Today</a>
+                <a class="pill" th:href="@{/kanban(date=${daily.selectedDate})}">Kanban</a>
+                <a class="pill" th:href="@{/calendar(month=${#temporals.format(daily.selectedDate, 'yyyy-MM')})}">Calendar</a>
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.minusDays(1)})}">Previous day</a>
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.plusDays(1)})}">Next day</a>
                 <a class="ghost" th:href="@{/backlog}">Backlog</a>

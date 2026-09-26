@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 
 @Controller
 public class HomeController {
@@ -55,6 +56,28 @@ public class HomeController {
         model.addAttribute("username", principal.getName());
         model.addAttribute("backlog", taskApplicationService.getBacklogTasks());
         return "backlog";
+    }
+
+    @GetMapping("/kanban")
+    public String kanban(@RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                         Model model,
+                         Principal principal) {
+        LocalDate selectedDate = date == null ? taskApplicationService.getTasksForToday().selectedDate() : date;
+        model.addAttribute("username", principal.getName());
+        model.addAttribute("kanban", taskApplicationService.getKanbanTasksForDate(selectedDate));
+        return "kanban";
+    }
+
+    @GetMapping("/calendar")
+    public String calendar(@RequestParam(value = "month", required = false) String month,
+                           Model model,
+                           Principal principal) {
+        YearMonth selectedMonth = month == null || month.isBlank()
+                ? YearMonth.from(taskApplicationService.getTasksForToday().selectedDate())
+                : YearMonth.parse(month);
+        model.addAttribute("username", principal.getName());
+        model.addAttribute("calendar", taskApplicationService.getCalendarMonth(selectedMonth));
+        return "calendar";
     }
 
     @GetMapping("/tasks/new")

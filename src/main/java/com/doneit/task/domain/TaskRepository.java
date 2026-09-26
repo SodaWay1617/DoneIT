@@ -21,6 +21,10 @@ public interface TaskRepository {
 
     List<Task> findCompletedOrClosedTasks(Long userId);
 
+    List<Task> findCompletedOrClosedTasksForDate(Long userId, LocalDate date);
+
+    List<Task> findTasksForCalendarRange(Long userId, LocalDate startDate, LocalDate endDateExclusive);
+
     Optional<Task> markDone(Long taskId, LocalDateTime completedAt);
 
     Optional<Task> markClosed(Long taskId, LocalDateTime closedAt);
