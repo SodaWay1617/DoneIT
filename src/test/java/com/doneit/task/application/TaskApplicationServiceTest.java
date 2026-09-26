@@ -125,13 +125,17 @@ class TaskApplicationServiceTest {
     @Test
     void getTasksForTodayDelegatesToCurrentDate() {
         LocalDate today = LocalDate.of(2026, 4, 7);
-        when(taskRepository.findActiveTasksForDate(ACTIVE_USER.id(), today)).thenReturn(List.of(openTask(1L, LocalDateTime.of(2026, 4, 7, 12, 0), null)));
+        when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), today)).thenReturn(List.of(
+                openTask(1L, LocalDateTime.of(2026, 4, 7, 12, 0), null),
+                openTask(2L, LocalDateTime.of(2026, 4, 6, 12, 0), null)
+        ));
         when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of(doneTask(2L)));
 
         DailyTasksView result = service.getTasksForToday();
 
         assertEquals(today, result.selectedDate());
-        assertEquals(1, result.activeTasks().size());
+        assertEquals(2, result.activeTasks().size());
+        assertTrue(result.activeTasks().get(1).overdue());
         assertEquals(1, result.completedTasks().size());
     }
 
@@ -230,7 +234,7 @@ class TaskApplicationServiceTest {
     @Test
     void bulkMoveUsesActiveUserAndTargetDate() {
         LocalDate date = LocalDate.of(2026, 4, 7);
-        when(taskRepository.bulkMoveOpenDatedTasksToNextDay(eq(ACTIVE_USER.id()), eq(date), any(LocalDateTime.class))).thenReturn(3);
+        when(taskRepository.bulkMoveOpenDatedTasksToNextDay(eq(ACTIVE_USER.id()), any(LocalDateTime.class))).thenReturn(3);
 
         int moved = service.bulkMoveUnfinishedTasksToTomorrow(date);
 

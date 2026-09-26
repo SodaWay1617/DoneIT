@@ -95,6 +95,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
     @Test
     void findsOnlyOpenDatedTasksForSelectedDate() {
         taskRepository.create(openTask("Today open", LocalDateTime.of(2026, 4, 6, 9, 0)));
+        taskRepository.create(openTask("Overdue open", LocalDateTime.of(2026, 4, 5, 9, 0)));
         taskRepository.create(openTask("Backlog", null));
         taskRepository.create(openTask("Other day", LocalDateTime.of(2026, 4, 7, 9, 0)));
         Task doneTask = taskRepository.create(openTask("Done same day", LocalDateTime.of(2026, 4, 6, 12, 0)));
@@ -104,6 +105,22 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
 
         assertEquals(1, tasks.size());
         assertEquals("Today open", tasks.getFirst().title());
+    }
+
+    @Test
+    void findsOpenDatedTasksDueBySelectedDate() {
+        taskRepository.create(openTask("Overdue open", LocalDateTime.of(2026, 4, 5, 9, 0)));
+        taskRepository.create(openTask("Today open", LocalDateTime.of(2026, 4, 6, 9, 0)));
+        taskRepository.create(openTask("Backlog", null));
+        taskRepository.create(openTask("Future open", LocalDateTime.of(2026, 4, 7, 9, 0)));
+        Task doneTask = taskRepository.create(openTask("Done overdue", LocalDateTime.of(2026, 4, 5, 12, 0)));
+        taskRepository.markDone(doneTask.id(), LocalDateTime.of(2026, 4, 5, 20, 0));
+
+        List<Task> tasks = taskRepository.findActiveTasksDueByDate(userId, LocalDate.of(2026, 4, 6));
+
+        assertEquals(2, tasks.size());
+        assertEquals("Overdue open", tasks.get(0).title());
+        assertEquals("Today open", tasks.get(1).title());
     }
 
     @Test
@@ -167,7 +184,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
     }
 
     @Test
-    void bulkMoveShiftsOnlyOpenDatedTasksForSelectedDay() {
+    void bulkMoveShiftsAllOpenDatedTasksToNextDay() {
         Task first = taskRepository.create(openTask("First", LocalDateTime.of(2026, 4, 6, 9, 0)));
         Task second = taskRepository.create(openTask("Second", LocalDateTime.of(2026, 4, 6, 15, 0)));
         Task backlog = taskRepository.create(openTask("Backlog", null));
@@ -177,15 +194,14 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
 
         int movedCount = taskRepository.bulkMoveOpenDatedTasksToNextDay(
                 userId,
-                LocalDate.of(2026, 4, 6),
                 LocalDateTime.of(2026, 4, 5, 20, 45)
         );
 
-        assertEquals(2, movedCount);
+        assertEquals(3, movedCount);
         assertEquals(LocalDateTime.of(2026, 4, 7, 9, 0), taskRepository.findById(first.id()).orElseThrow().plannedForAt());
         assertEquals(LocalDateTime.of(2026, 4, 7, 15, 0), taskRepository.findById(second.id()).orElseThrow().plannedForAt());
         assertTrue(taskRepository.findById(backlog.id()).orElseThrow().isBacklog());
-        assertEquals(LocalDateTime.of(2026, 4, 7, 10, 0), taskRepository.findById(otherDay.id()).orElseThrow().plannedForAt());
+        assertEquals(LocalDateTime.of(2026, 4, 8, 10, 0), taskRepository.findById(otherDay.id()).orElseThrow().plannedForAt());
         assertEquals(TaskStatus.DONE, taskRepository.findById(done.id()).orElseThrow().status());
     }
 

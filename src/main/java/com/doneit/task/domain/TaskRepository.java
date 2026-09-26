@@ -15,6 +15,8 @@ public interface TaskRepository {
 
     List<Task> findActiveTasksForDate(Long userId, LocalDate date);
 
+    List<Task> findActiveTasksDueByDate(Long userId, LocalDate date);
+
     List<Task> findBacklogTasks(Long userId);
 
     List<Task> findCompletedOrClosedTasks(Long userId);
@@ -27,5 +29,5 @@ public interface TaskRepository {
 
     Optional<Task> moveToBacklog(Long taskId, LocalDateTime updatedAt);
 
-    int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt);
+    int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDateTime updatedAt);
 }

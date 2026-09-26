@@ -112,7 +112,17 @@ public class TaskApplicationService {
     }
 
     public DailyTasksView getTasksForToday() {
-        return getTasksForDate(LocalDate.now(clock));
+        User activeUser = requireActiveUser();
+        LocalDate today = LocalDate.now(clock);
+
+        List<TaskListItemView> activeTasks = taskRepository.findActiveTasksDueByDate(activeUser.id(), today).stream()
+                .map(task -> TaskListItemView.from(task, today))
+                .toList();
+        List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream()
+                .map(task -> TaskListItemView.from(task, today))
+                .toList();
+
+        return new DailyTasksView(today, activeTasks, completedTasks);
     }
 
     public DailyTasksView getTasksForDate(@NotNull LocalDate date) {
@@ -187,11 +197,8 @@ public class TaskApplicationService {
     @Transactional
     public int bulkMoveUnfinishedTasksToTomorrow(@NotNull LocalDate date) {
         User activeUser = requireActiveUser();
-        return taskRepository.bulkMoveOpenDatedTasksToNextDay(
-                activeUser.id(),
-                requireDate(date),
-                LocalDateTime.now(clock)
-        );
+        requireDate(date);
+        return taskRepository.bulkMoveOpenDatedTasksToNextDay(activeUser.id(), LocalDateTime.now(clock));
     }
 
     private User requireActiveUser() {

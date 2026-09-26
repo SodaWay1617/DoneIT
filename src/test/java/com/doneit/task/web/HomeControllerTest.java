@@ -52,6 +52,7 @@ class HomeControllerTest extends IntegrationTestSupport {
 
     private Long taskId;
     private Long backlogTaskId;
+    private Long tomorrowTaskId;
 
     @BeforeEach
     void setUp() {
@@ -93,6 +94,24 @@ class HomeControllerTest extends IntegrationTestSupport {
                 INSERT INTO tasks (title, description, status, planned_for_at, deadline_at, user_id, created_at, updated_at, completed_at, closed_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
+                "Overdue planned task",
+                "Should stay visible on today",
+                "OPEN",
+                LocalDateTime.of(2026, 4, 7, 10, 0),
+                null,
+                userId,
+                LocalDateTime.of(2026, 4, 1, 10, 0),
+                LocalDateTime.of(2026, 4, 1, 10, 0),
+                null,
+                null
+        );
+
+        tomorrowTaskId = jdbcTemplate.queryForObject("""
+                INSERT INTO tasks (title, description, status, planned_for_at, deadline_at, user_id, created_at, updated_at, completed_at, closed_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                RETURNING id
+                """,
+                Long.class,
                 "Tomorrow task",
                 "Visible on selected date page",
                 "OPEN",
@@ -149,6 +168,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(content().string(containsString("Backlog preview")))
                 .andExpect(content().string(containsString("Completed and closed")))
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Overdue planned task')]").exists())
                 .andExpect(xpath("//*[@id='backlog-preview']//*[contains(text(),'Backlog reminder')]").exists())
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'Already done')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Backlog reminder')]").doesNotExist())
@@ -171,6 +191,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(content().string(containsString("Selected date view")))
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Tomorrow task')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").doesNotExist())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Overdue planned task')]").doesNotExist())
                 .andExpect(xpath("//input[@type='date' and @name='date']/@value").string("2026-04-09"))
                 .andExpect(xpath("//form[@class='bulk-action']//input[@name='date']/@value").string("2026-04-09"))
                 .andExpect(xpath("(//*[@id='active-tasks']//input[@name='redirectTo'])[1]/@value").string("/tasks?date=2026-04-09"))
@@ -439,6 +460,11 @@ class HomeControllerTest extends IntegrationTestSupport {
                 FROM tasks
                 WHERE id = ?
                 """, LocalDateTime.class, taskId);
+        LocalDateTime movedTomorrowTaskDate = jdbcTemplate.queryForObject("""
+                SELECT planned_for_at
+                FROM tasks
+                WHERE id = ?
+                """, LocalDateTime.class, tomorrowTaskId);
         Object backlogDate = jdbcTemplate.queryForObject("""
                 SELECT planned_for_at
                 FROM tasks
@@ -451,6 +477,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 """, String.class);
 
         Assertions.assertThat(movedTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 9, 10, 0));
+        Assertions.assertThat(movedTomorrowTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 10, 11, 0));
         Assertions.assertThat(backlogDate).isNull();
         Assertions.assertThat(doneStatus).isEqualTo("DONE");
     }
@@ -477,6 +504,7 @@ class HomeControllerTest extends IntegrationTestSupport {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Overdue planned task')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'OVERDUE')]").exists())
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'DONE')]").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Already done')]").doesNotExist());

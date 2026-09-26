@@ -31,9 +31,12 @@ public record TaskListItemView(
 
     public static TaskListItemView from(Task task, LocalDate today) {
         LocalDate referenceDate = today == null ? LocalDate.now() : today;
-        boolean overdue = task.deadlineAt() != null
-                && task.deadlineAt().toLocalDate().isBefore(referenceDate)
-                && task.status() == TaskStatus.OPEN;
+        boolean plannedBeforeReferenceDate = task.plannedForAt() != null
+                && task.plannedForAt().toLocalDate().isBefore(referenceDate);
+        boolean deadlineBeforeReferenceDate = task.deadlineAt() != null
+                && task.deadlineAt().toLocalDate().isBefore(referenceDate);
+        boolean overdue = task.status() == TaskStatus.OPEN
+                && (plannedBeforeReferenceDate || deadlineBeforeReferenceDate);
 
         return new TaskListItemView(
                 task.id(),

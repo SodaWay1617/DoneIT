@@ -51,6 +51,14 @@ public class JdbcTaskRepository implements TaskRepository {
             ORDER BY planned_for_at, id
             """;
 
+    private static final String FIND_ACTIVE_DUE_BY_DATE_SQL = BASE_SELECT + """
+            WHERE user_id = ?
+              AND status = 'OPEN'
+              AND planned_for_at IS NOT NULL
+              AND planned_for_at < ?
+            ORDER BY planned_for_at, id
+            """;
+
     private static final String FIND_BACKLOG_SQL = BASE_SELECT + """
             WHERE user_id = ?
               AND status = 'OPEN'
@@ -104,8 +112,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 updated_at = ?
             WHERE user_id = ?
               AND status = 'OPEN'
-              AND planned_for_at >= ?
-              AND planned_for_at < ?
+              AND planned_for_at IS NOT NULL
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -165,6 +172,12 @@ public class JdbcTaskRepository implements TaskRepository {
     }
 
     @Override
+    public List<Task> findActiveTasksDueByDate(Long userId, LocalDate date) {
+        LocalDateTime end = date.plusDays(1).atStartOfDay();
+        return jdbcTemplate.query(FIND_ACTIVE_DUE_BY_DATE_SQL, taskRowMapper, userId, end);
+    }
+
+    @Override
     public List<Task> findBacklogTasks(Long userId) {
         return jdbcTemplate.query(FIND_BACKLOG_SQL, taskRowMapper, userId);
     }
@@ -211,9 +224,7 @@ public class JdbcTaskRepository implements TaskRepository {
     }
 
     @Override
-    public int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt) {
-        LocalDateTime start = date.atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
-        return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId, start, end);
+    public int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDateTime updatedAt) {
+        return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId);
     }
 }
