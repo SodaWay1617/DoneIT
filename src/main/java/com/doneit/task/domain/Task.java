@@ -33,8 +33,8 @@ public record Task(
         if (updatedAt == null) {
             throw new IllegalArgumentException("Task updatedAt is required");
         }
-        if (status == TaskStatus.OPEN && (completedAt != null || closedAt != null)) {
-            throw new IllegalArgumentException("Open task cannot have completion timestamps");
+        if ((status == TaskStatus.OPEN || status == TaskStatus.BACKLOG) && (completedAt != null || closedAt != null)) {
+            throw new IllegalArgumentException("Unfinished task cannot have completion timestamps");
         }
         if (status == TaskStatus.DONE && completedAt == null) {
             throw new IllegalArgumentException("Done task must have completedAt timestamp");
@@ -51,7 +51,7 @@ public record Task(
     }
 
     public boolean isBacklog() {
-        return plannedForAt == null;
+        return status == TaskStatus.BACKLOG;
     }
 
     public boolean isActive() {
@@ -59,11 +59,11 @@ public record Task(
     }
 
     public boolean isVisibleInActiveDatedList() {
-        return isActive() && !isBacklog();
+        return isActive();
     }
 
     public boolean isEligibleForBulkMove() {
-        return isVisibleInActiveDatedList();
+        return isActive() && plannedForAt != null;
     }
 
     public Task markDone(LocalDateTime completedAt) {
@@ -110,7 +110,7 @@ public record Task(
                 userId,
                 title,
                 description,
-                status,
+                TaskStatus.OPEN,
                 plannedForAt,
                 deadlineAt,
                 createdAt,
@@ -127,7 +127,7 @@ public record Task(
                 userId,
                 title,
                 description,
-                status,
+                TaskStatus.BACKLOG,
                 null,
                 deadlineAt,
                 createdAt,
@@ -138,8 +138,8 @@ public record Task(
     }
 
     private void ensureOpenForTransition(String action) {
-        if (status != TaskStatus.OPEN) {
-            throw new IllegalStateException("Only open task can " + action);
+        if (status != TaskStatus.OPEN && status != TaskStatus.BACKLOG) {
+            throw new IllegalStateException("Only unfinished task can " + action);
         }
     }
 

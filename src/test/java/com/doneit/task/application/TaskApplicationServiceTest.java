@@ -100,6 +100,7 @@ class TaskApplicationServiceTest {
         TaskListItemView result = service.createBacklogTask(command);
 
         assertTrue(result.backlog());
+        assertEquals(TaskStatus.BACKLOG, result.status());
         assertEquals(102L, result.id());
     }
 
@@ -152,6 +153,23 @@ class TaskApplicationServiceTest {
     }
 
     @Test
+    void getTasksForPastSelectedDateIncludesOpenTasksDueByThatDate() {
+        LocalDate date = LocalDate.of(2026, 4, 6);
+        when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), date)).thenReturn(List.of(
+                openTask(3L, LocalDateTime.of(2026, 4, 4, 9, 0), null),
+                openTask(4L, LocalDateTime.of(2026, 4, 6, 9, 0), null)
+        ));
+        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of());
+
+        DailyTasksView result = service.getTasksForDate(date);
+
+        assertEquals(date, result.selectedDate());
+        assertEquals(2, result.activeTasks().size());
+        assertTrue(result.activeTasks().getFirst().overdue());
+        verify(taskRepository).findActiveTasksDueByDate(ACTIVE_USER.id(), date);
+    }
+
+    @Test
     void getTasksForDateRequiresDate() {
         assertThrows(IllegalArgumentException.class, () -> service.getTasksForDate(null));
         verifyNoInteractions(taskRepository);
@@ -159,7 +177,7 @@ class TaskApplicationServiceTest {
 
     @Test
     void getBacklogTasksReturnsSeparateViewModel() {
-        when(taskRepository.findBacklogTasks(ACTIVE_USER.id())).thenReturn(List.of(openTask(4L, null, null)));
+        when(taskRepository.findBacklogTasks(ACTIVE_USER.id())).thenReturn(List.of(backlogTask(4L)));
 
         BacklogTasksView result = service.getBacklogTasks();
 
@@ -223,7 +241,7 @@ class TaskApplicationServiceTest {
 
     @Test
     void moveTaskToBacklogClearsPlannedDate() {
-        when(taskRepository.moveToBacklog(eq(303L), any(LocalDateTime.class))).thenReturn(Optional.of(openTask(303L, null, null)));
+        when(taskRepository.moveToBacklog(eq(303L), any(LocalDateTime.class))).thenReturn(Optional.of(backlogTask(303L)));
 
         TaskListItemView result = service.moveTaskToBacklog(new MoveTaskToBacklogCommand(303L));
 
@@ -234,7 +252,7 @@ class TaskApplicationServiceTest {
     @Test
     void bulkMoveUsesActiveUserAndTargetDate() {
         LocalDate date = LocalDate.of(2026, 4, 7);
-        when(taskRepository.bulkMoveOpenDatedTasksToNextDay(eq(ACTIVE_USER.id()), any(LocalDateTime.class))).thenReturn(3);
+        when(taskRepository.bulkMoveOpenDatedTasksToNextDay(eq(ACTIVE_USER.id()), eq(date), any(LocalDateTime.class))).thenReturn(3);
 
         int moved = service.bulkMoveUnfinishedTasksToTomorrow(date);
 
@@ -305,6 +323,22 @@ class TaskApplicationServiceTest {
                 LocalDateTime.of(2026, 4, 1, 9, 0),
                 LocalDateTime.of(2026, 4, 7, 11, 0),
                 LocalDateTime.of(2026, 4, 7, 11, 0),
+                null
+        );
+    }
+
+    private static Task backlogTask(Long id) {
+        return new Task(
+                id,
+                ACTIVE_USER.id(),
+                "Backlog " + id,
+                null,
+                TaskStatus.BACKLOG,
+                null,
+                null,
+                LocalDateTime.of(2026, 4, 1, 9, 0),
+                LocalDateTime.of(2026, 4, 1, 9, 0),
+                null,
                 null
         );
     }

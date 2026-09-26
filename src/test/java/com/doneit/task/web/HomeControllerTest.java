@@ -51,6 +51,7 @@ class HomeControllerTest extends IntegrationTestSupport {
     private JdbcTemplate jdbcTemplate;
 
     private Long taskId;
+    private Long overdueTaskId;
     private Long backlogTaskId;
     private Long tomorrowTaskId;
 
@@ -90,10 +91,12 @@ class HomeControllerTest extends IntegrationTestSupport {
                 null
         );
 
-        jdbcTemplate.update("""
+        overdueTaskId = jdbcTemplate.queryForObject("""
                 INSERT INTO tasks (title, description, status, planned_for_at, deadline_at, user_id, created_at, updated_at, completed_at, closed_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                RETURNING id
                 """,
+                Long.class,
                 "Overdue planned task",
                 "Should stay visible on today",
                 "OPEN",
@@ -132,7 +135,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 Long.class,
                 "Backlog reminder",
                 "Undated reminder",
-                "OPEN",
+                "BACKLOG",
                 null,
                 null,
                 userId,
@@ -200,13 +203,24 @@ class HomeControllerTest extends IntegrationTestSupport {
 
     @Test
     @WithMockUser(username = "doneit")
+    void shouldRenderSelectedCurrentDatePageWithOverdueTasks() throws Exception {
+        mockMvc.perform(get("/tasks").param("date", "2026-04-08"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Selected date view")))
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Today task')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Overdue planned task')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'OVERDUE')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Tomorrow task')]").doesNotExist());
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
     void shouldRenderBacklogPage() throws Exception {
         mockMvc.perform(get("/backlog"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Backlog")))
                 .andExpect(content().string(containsString("Backlog reminder")))
                 .andExpect(xpath("//*[contains(text(),'BACKLOG')]").exists())
-                .andExpect(xpath("//*[contains(text(),'OPEN')]").exists())
                 .andExpect(content().string(containsString("How to use backlog")));
     }
 
@@ -278,7 +292,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                   AND description = ?
                   AND planned_for_at IS NULL
                   AND deadline_at = ?
-                  AND status = 'OPEN'
+                  AND status = 'BACKLOG'
                 """,
                 Integer.class,
                 "Maybe later",
@@ -438,7 +452,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 """, taskId);
 
         Assertions.assertThat(task.get("planned_for_at")).isNull();
-        Assertions.assertThat(task.get("status")).isEqualTo("OPEN");
+        Assertions.assertThat(task.get("status")).isEqualTo("BACKLOG");
 
         mockMvc.perform(get("/backlog"))
                 .andExpect(status().isOk())
@@ -460,6 +474,11 @@ class HomeControllerTest extends IntegrationTestSupport {
                 FROM tasks
                 WHERE id = ?
                 """, LocalDateTime.class, taskId);
+        LocalDateTime movedOverdueTaskDate = jdbcTemplate.queryForObject("""
+                SELECT planned_for_at
+                FROM tasks
+                WHERE id = ?
+                """, LocalDateTime.class, overdueTaskId);
         LocalDateTime movedTomorrowTaskDate = jdbcTemplate.queryForObject("""
                 SELECT planned_for_at
                 FROM tasks
@@ -477,7 +496,8 @@ class HomeControllerTest extends IntegrationTestSupport {
                 """, String.class);
 
         Assertions.assertThat(movedTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 9, 10, 0));
-        Assertions.assertThat(movedTomorrowTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 10, 11, 0));
+        Assertions.assertThat(movedOverdueTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 8, 10, 0));
+        Assertions.assertThat(movedTomorrowTaskDate).isEqualTo(LocalDateTime.of(2026, 4, 9, 11, 0));
         Assertions.assertThat(backlogDate).isNull();
         Assertions.assertThat(doneStatus).isEqualTo("DONE");
     }

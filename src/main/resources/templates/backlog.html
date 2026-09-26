@@ -150,7 +150,6 @@
         <article class="task" th:each="task : ${backlog.tasks}">
             <div class="task-top">
                 <div class="badges">
-                    <span class="badge status-open">OPEN</span>
                     <span class="badge">BACKLOG</span>
                 </div>
                 <h2 th:text="${task.title}">Backlog task</h2>

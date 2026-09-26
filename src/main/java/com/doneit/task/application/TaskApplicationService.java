@@ -77,7 +77,7 @@ public class TaskApplicationService {
                 activeUser.id(),
                 command.title(),
                 normalizeDescription(command.description()),
-                TaskStatus.OPEN,
+                TaskStatus.BACKLOG,
                 null,
                 command.deadlineAt(),
                 now,
@@ -99,7 +99,7 @@ public class TaskApplicationService {
                 existingTask.userId(),
                 command.title(),
                 normalizeDescription(command.description()),
-                existingTask.status(),
+                statusForEdit(existingTask, command.plannedForAt()),
                 command.plannedForAt(),
                 command.deadlineAt(),
                 existingTask.createdAt(),
@@ -129,7 +129,8 @@ public class TaskApplicationService {
         User activeUser = requireActiveUser();
         LocalDate targetDate = requireDate(date);
 
-        List<TaskListItemView> activeTasks = taskRepository.findActiveTasksForDate(activeUser.id(), targetDate).stream()
+        List<Task> activeTaskSource = findActiveTasksForScreen(activeUser.id(), targetDate);
+        List<TaskListItemView> activeTasks = activeTaskSource.stream()
                 .map(task -> TaskListItemView.from(task, targetDate))
                 .toList();
         List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream()
@@ -197,8 +198,19 @@ public class TaskApplicationService {
     @Transactional
     public int bulkMoveUnfinishedTasksToTomorrow(@NotNull LocalDate date) {
         User activeUser = requireActiveUser();
-        requireDate(date);
-        return taskRepository.bulkMoveOpenDatedTasksToNextDay(activeUser.id(), LocalDateTime.now(clock));
+        return taskRepository.bulkMoveOpenDatedTasksToNextDay(
+                activeUser.id(),
+                requireDate(date),
+                LocalDateTime.now(clock)
+        );
+    }
+
+    private List<Task> findActiveTasksForScreen(Long userId, LocalDate targetDate) {
+        LocalDate today = LocalDate.now(clock);
+        if (targetDate.isAfter(today)) {
+            return taskRepository.findActiveTasksForDate(userId, targetDate);
+        }
+        return taskRepository.findActiveTasksDueByDate(userId, targetDate);
     }
 
     private User requireActiveUser() {
@@ -220,6 +232,16 @@ public class TaskApplicationService {
 
     private static String normalizeDescription(String description) {
         return description == null || description.isBlank() ? null : description;
+    }
+
+    private static TaskStatus statusForEdit(Task existingTask, LocalDateTime plannedForAt) {
+        if (existingTask.status() == TaskStatus.OPEN || existingTask.status() == TaskStatus.BACKLOG) {
+            if (plannedForAt == null) {
+                return TaskStatus.BACKLOG;
+            }
+            return TaskStatus.OPEN;
+        }
+        return existingTask.status();
     }
 
     private static LocalDate requireDate(LocalDate date) {

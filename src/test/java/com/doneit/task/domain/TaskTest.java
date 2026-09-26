@@ -32,11 +32,11 @@ class TaskTest {
     }
 
     @Test
-    void backlogTaskCanExistWithoutPlannedDate() {
+    void openTaskCanExistWithoutPlannedDateAsAlwaysActive() {
         assertDoesNotThrow(() -> new Task(
                 1L,
                 1L,
-                "Backlog reminder",
+                "Always active",
                 null,
                 TaskStatus.OPEN,
                 null,
@@ -85,8 +85,30 @@ class TaskTest {
         Task backlogTask = openTask().moveToBacklog(LocalDateTime.of(2026, 4, 4, 21, 5));
 
         assertTrue(backlogTask.isBacklog());
+        assertEquals(TaskStatus.BACKLOG, backlogTask.status());
         assertFalse(backlogTask.isVisibleInActiveDatedList());
         assertFalse(backlogTask.isEligibleForBulkMove());
+    }
+
+    @Test
+    void undatedOpenTaskIsVisibleButNotEligibleForBulkMove() {
+        Task task = new Task(
+                1L,
+                1L,
+                "Daily work",
+                null,
+                TaskStatus.OPEN,
+                null,
+                null,
+                CREATED_AT,
+                UPDATED_AT,
+                null,
+                null
+        );
+
+        assertFalse(task.isBacklog());
+        assertTrue(task.isVisibleInActiveDatedList());
+        assertFalse(task.isEligibleForBulkMove());
     }
 
     @Test

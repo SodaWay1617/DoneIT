@@ -52,7 +52,7 @@ class TaskApplicationModelsTest {
                 1L,
                 "Someday maybe",
                 "Reminder",
-                TaskStatus.OPEN,
+                TaskStatus.BACKLOG,
                 null,
                 null,
                 LocalDateTime.of(2026, 4, 1, 9, 0),
@@ -95,7 +95,7 @@ class TaskApplicationModelsTest {
         List<TaskListItemView> activeTasks = new ArrayList<>();
         DailyTasksView view = new DailyTasksView(LocalDate.of(2026, 4, 5), activeTasks, List.of());
 
-        activeTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.OPEN, null, null, true, false));
+        activeTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.BACKLOG, null, null, true, false));
 
         assertTrue(view.activeTasks().isEmpty());
     }
@@ -105,7 +105,7 @@ class TaskApplicationModelsTest {
         List<TaskListItemView> source = new ArrayList<>();
         BacklogTasksView view = new BacklogTasksView(source);
 
-        source.add(new TaskListItemView(1L, "Task", null, TaskStatus.OPEN, null, null, true, false));
+        source.add(new TaskListItemView(1L, "Task", null, TaskStatus.BACKLOG, null, null, true, false));
 
         assertTrue(view.tasks().isEmpty());
     }

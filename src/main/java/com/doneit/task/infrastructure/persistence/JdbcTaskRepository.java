@@ -46,23 +46,26 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String FIND_ACTIVE_FOR_DATE_SQL = BASE_SELECT + """
             WHERE user_id = ?
               AND status = 'OPEN'
-              AND planned_for_at >= ?
-              AND planned_for_at < ?
+              AND (
+                  planned_for_at IS NULL
+                  OR (planned_for_at >= ? AND planned_for_at < ?)
+              )
             ORDER BY planned_for_at, id
             """;
 
     private static final String FIND_ACTIVE_DUE_BY_DATE_SQL = BASE_SELECT + """
             WHERE user_id = ?
               AND status = 'OPEN'
-              AND planned_for_at IS NOT NULL
-              AND planned_for_at < ?
+              AND (
+                  planned_for_at IS NULL
+                  OR planned_for_at < ?
+              )
             ORDER BY planned_for_at, id
             """;
 
     private static final String FIND_BACKLOG_SQL = BASE_SELECT + """
             WHERE user_id = ?
-              AND status = 'OPEN'
-              AND planned_for_at IS NULL
+              AND status = 'BACKLOG'
             ORDER BY updated_at DESC, id DESC
             """;
 
@@ -79,7 +82,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 completed_at = ?,
                 closed_at = NULL
             WHERE id = ?
-              AND status = 'OPEN'
+              AND status IN ('OPEN', 'BACKLOG')
             """;
 
     private static final String MARK_CLOSED_SQL = """
@@ -89,19 +92,21 @@ public class JdbcTaskRepository implements TaskRepository {
                 completed_at = NULL,
                 closed_at = ?
             WHERE id = ?
-              AND status = 'OPEN'
+              AND status IN ('OPEN', 'BACKLOG')
             """;
 
     private static final String RESCHEDULE_SQL = """
             UPDATE tasks
-            SET planned_for_at = ?,
+            SET status = 'OPEN',
+                planned_for_at = ?,
                 updated_at = ?
             WHERE id = ?
             """;
 
     private static final String MOVE_TO_BACKLOG_SQL = """
             UPDATE tasks
-            SET planned_for_at = NULL,
+            SET status = 'BACKLOG',
+                planned_for_at = NULL,
                 updated_at = ?
             WHERE id = ?
             """;
@@ -113,6 +118,7 @@ public class JdbcTaskRepository implements TaskRepository {
             WHERE user_id = ?
               AND status = 'OPEN'
               AND planned_for_at IS NOT NULL
+              AND planned_for_at < ?
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -224,7 +230,8 @@ public class JdbcTaskRepository implements TaskRepository {
     }
 
     @Override
-    public int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDateTime updatedAt) {
-        return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId);
+    public int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt) {
+        LocalDateTime end = date.plusDays(1).atStartOfDay();
+        return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId, end);
     }
 }
