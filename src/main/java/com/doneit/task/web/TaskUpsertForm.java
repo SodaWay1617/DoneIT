@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class TaskUpsertForm {
 
     private Long taskId;
+    private Long projectId;
 
     @NotBlank(message = "Title is required")
     private String title;
@@ -26,6 +27,7 @@ public class TaskUpsertForm {
     public static TaskUpsertForm from(TaskFormView taskFormView) {
         TaskUpsertForm form = new TaskUpsertForm();
         form.setTaskId(taskFormView.taskId());
+        form.setProjectId(taskFormView.projectId());
         form.setTitle(taskFormView.title());
         form.setDescription(taskFormView.description());
         form.setPlannedForAt(taskFormView.plannedForAt());
@@ -41,6 +43,9 @@ public class TaskUpsertForm {
     public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
+
+    public Long getProjectId() { return projectId; }
+    public void setProjectId(Long projectId) { this.projectId = projectId; }
 
     public String getTitle() {
         return title;

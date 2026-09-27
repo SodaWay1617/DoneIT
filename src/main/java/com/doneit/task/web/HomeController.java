@@ -1,5 +1,6 @@
 package com.doneit.task.web;
 
+import com.doneit.project.application.ProjectService;
 import com.doneit.task.application.TaskApplicationService;
 import com.doneit.task.application.command.CreateTaskCommand;
 import com.doneit.task.application.command.EditTaskCommand;
@@ -10,6 +11,7 @@ import com.doneit.task.application.view.DailyTasksView;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,55 +30,69 @@ import java.time.YearMonth;
 public class HomeController {
 
     private final TaskApplicationService taskApplicationService;
+    private final ProjectService projectService;
 
     public HomeController(TaskApplicationService taskApplicationService) {
+        this(taskApplicationService, null);
+    }
+
+    @Autowired
+    public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService) {
         this.taskApplicationService = taskApplicationService;
+        this.projectService = projectService;
+    }
+
+    @ModelAttribute
+    public void projectContext(@RequestParam(required=false) Long projectId, Model model) {
+        if (projectService != null) model.addAttribute(\u0022projects\u0022, projectService.list());
+        model.addAttribute(\u0022selectedProjectId\u0022, projectId);
     }
 
     @GetMapping("/")
-    public String today(Model model, Principal principal) {
-        DailyTasksView dailyTasksView = taskApplicationService.getTasksForToday();
-        BacklogTasksView backlogTasksView = taskApplicationService.getBacklogTasks();
+    public String today(@RequestParam(required=false) Long projectId, Model model, Principal principal) {
+        DailyTasksView dailyTasksView = taskApplicationService.getTasksForToday(projectId);
+        BacklogTasksView backlogTasksView = taskApplicationService.getBacklogTasks(projectId);
         populateDailyModel(model, principal, dailyTasksView, backlogTasksView, true);
         return "tasks";
     }
 
     @GetMapping("/tasks")
     public String tasksForDate(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                               @RequestParam(required=false) Long projectId,
                                Model model,
                                Principal principal) {
-        DailyTasksView dailyTasksView = taskApplicationService.getTasksForDate(date);
-        BacklogTasksView backlogTasksView = taskApplicationService.getBacklogTasks();
+        DailyTasksView dailyTasksView = taskApplicationService.getTasksForDate(date,projectId);
+        BacklogTasksView backlogTasksView = taskApplicationService.getBacklogTasks(projectId);
         populateDailyModel(model, principal, dailyTasksView, backlogTasksView, false);
         return "tasks";
     }
 
     @GetMapping("/backlog")
-    public String backlog(Model model, Principal principal) {
+    public String backlog(@RequestParam(required=false) Long projectId,Model model, Principal principal) {
         model.addAttribute("username", principal.getName());
-        model.addAttribute("backlog", taskApplicationService.getBacklogTasks());
+        model.addAttribute("backlog", taskApplicationService.getBacklogTasks(projectId));
         return "backlog";
     }
 
     @GetMapping("/kanban")
     public String kanban(@RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                          Model model,
-                         Principal principal) {
+                         Principal principal,@RequestParam(required=false) Long projectId) {
         LocalDate selectedDate = date == null ? taskApplicationService.getTasksForToday().selectedDate() : date;
         model.addAttribute("username", principal.getName());
-        model.addAttribute("kanban", taskApplicationService.getKanbanTasksForDate(selectedDate));
+        model.addAttribute("kanban", taskApplicationService.getKanbanTasksForDate(selectedDate,projectId));
         return "kanban";
     }
 
     @GetMapping("/calendar")
     public String calendar(@RequestParam(value = "month", required = false) String month,
                            Model model,
-                           Principal principal) {
+                           Principal principal,@RequestParam(required=false) Long projectId) {
         YearMonth selectedMonth = month == null || month.isBlank()
                 ? YearMonth.from(taskApplicationService.getTasksForToday().selectedDate())
                 : YearMonth.parse(month);
         model.addAttribute("username", principal.getName());
-        model.addAttribute("calendar", taskApplicationService.getCalendarMonth(selectedMonth));
+        model.addAttribute("calendar", taskApplicationService.getCalendarMonth(selectedMonth,projectId));
         return "calendar";
     }
 
@@ -107,7 +123,7 @@ public class HomeController {
                 form.getTitle(),
                 form.getDescription(),
                 form.getPlannedForAt(),
-                form.getDeadlineAt()
+                form.getDeadlineAt(), form.getProjectId()
         );
 
         if (form.getPlannedForAt() == null) {
@@ -152,7 +168,7 @@ public class HomeController {
                 form.getTitle(),
                 form.getDescription(),
                 form.getPlannedForAt(),
-                form.getDeadlineAt()
+                form.getDeadlineAt(), form.getProjectId()
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
@@ -222,6 +238,12 @@ public class HomeController {
         return "redirect:/";
     }
 
+    @PostMapping(\u0022/tasks/{taskId}/project\u0022)
+    public String moveTaskToProject(@PathVariable Long taskId,@RequestParam Long projectId,@RequestParam(required=false) String redirectTo) {
+        taskApplicationService.moveTaskToProject(taskId,projectId);
+        return \u0022redirect:\u0022 + resolveRedirectTarget(redirectTo, \u0022/\u0022);
+    }
+
     private static void populateDailyModel(Model model,
                                            Principal principal,
                                            DailyTasksView dailyTasksView,
@@ -234,9 +256,10 @@ public class HomeController {
         model.addAttribute("todayPage", todayPage);
     }
 
-    private static void populateTaskFormModel(Model model, Principal principal, TaskUpsertForm form) {
+    private void populateTaskFormModel(Model model, Principal principal, TaskUpsertForm form) {
         model.addAttribute("username", principal.getName());
         model.addAttribute("form", form);
+        if (projectService != null) model.addAttribute(\u0022projects\u0022, projectService.list());
     }
 
     private static String resolveRedirectTarget(String redirectTo, String fallback) {

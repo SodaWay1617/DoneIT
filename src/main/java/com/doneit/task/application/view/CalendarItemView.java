@@ -22,7 +22,7 @@ public record CalendarItemView(
                 CalendarOccurrenceType.PLANNED,
                 task.plannedForAt().toLocalDate(),
                 task.plannedForAt(),
-                task.title(),
+                displayTitle(task),
                 task.status(),
                 task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate())
         );
@@ -34,9 +34,13 @@ public record CalendarItemView(
                 CalendarOccurrenceType.DEADLINE,
                 task.deadlineAt().toLocalDate(),
                 task.deadlineAt(),
-                task.title(),
+                displayTitle(task),
                 task.status(),
                 true
         );
+    }
+
+    private static String displayTitle(Task task) {
+        return task.taskKey() == null ? task.title() : task.taskKey().split(\u0022___\u0022, 2)[0] + \u0022  \u0022 + task.title();
     }
 }

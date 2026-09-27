@@ -14,8 +14,17 @@ public record Task(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         LocalDateTime completedAt,
-        LocalDateTime closedAt
+        LocalDateTime closedAt,
+        Long projectId,
+        Long taskNumber,
+        String taskKey
 ) {
+
+    public Task(Long id, Long userId, String title, String description, TaskStatus status,
+                LocalDateTime plannedForAt, LocalDateTime deadlineAt, LocalDateTime createdAt,
+                LocalDateTime updatedAt, LocalDateTime completedAt, LocalDateTime closedAt) {
+        this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,null,null,null);
+    }
 
     public Task {
         if (userId == null) {
@@ -80,7 +89,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 transitionAt,
-                null
+                null, projectId, taskNumber, taskKey
         );
     }
 
@@ -98,7 +107,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 null,
-                transitionAt
+                transitionAt, projectId, taskNumber, taskKey
         );
     }
 
@@ -116,7 +125,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt
+                closedAt, projectId, taskNumber, taskKey
         );
     }
 
@@ -133,7 +142,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt
+                closedAt, projectId, taskNumber, taskKey
         );
     }
 

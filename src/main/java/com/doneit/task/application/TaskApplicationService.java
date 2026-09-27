@@ -1,5 +1,6 @@
 package com.doneit.task.application;
 
+import com.doneit.project.application.ProjectService;
 import com.doneit.task.application.command.CreateTaskCommand;
 import com.doneit.task.application.command.EditTaskCommand;
 import com.doneit.task.application.command.MoveTaskToBacklogCommand;
@@ -20,6 +21,8 @@ import com.doneit.user.domain.UserRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
@@ -45,11 +48,18 @@ public class TaskApplicationService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final Clock clock;
+    private final ProjectService projectService;
 
     public TaskApplicationService(TaskRepository taskRepository, UserRepository userRepository, Clock clock) {
+        this(taskRepository,userRepository,clock,null);
+    }
+
+    @Autowired
+    public TaskApplicationService(TaskRepository taskRepository, UserRepository userRepository, Clock clock, ProjectService projectService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.clock = clock;
+        this.projectService = projectService;
     }
 
     @Transactional
@@ -59,6 +69,7 @@ public class TaskApplicationService {
         }
 
         User activeUser = requireActiveUser();
+        requireProjectAccess(command.projectId());
         LocalDateTime now = LocalDateTime.now(clock);
         Task task = new Task(
                 null,
@@ -71,7 +82,8 @@ public class TaskApplicationService {
                 now,
                 now,
                 null,
-                null
+                null,
+                command.projectId(), null, null
         );
 
         return toView(taskRepository.create(task));
@@ -84,6 +96,7 @@ public class TaskApplicationService {
         }
 
         User activeUser = requireActiveUser();
+        requireProjectAccess(command.projectId());
         LocalDateTime now = LocalDateTime.now(clock);
         Task task = new Task(
                 null,
@@ -96,7 +109,8 @@ public class TaskApplicationService {
                 now,
                 now,
                 null,
-                null
+                null,
+                command.projectId(), null, null
         );
 
         return toView(taskRepository.create(task));
@@ -105,6 +119,7 @@ public class TaskApplicationService {
     @Transactional
     public TaskListItemView editTask(@Valid @NotNull EditTaskCommand command) {
         Task existingTask = getTaskOrThrow(command.taskId());
+        requireProjectAccess(command.projectId());
         LocalDateTime now = LocalDateTime.now(clock);
 
         Task updatedTask = new Task(
@@ -118,20 +133,26 @@ public class TaskApplicationService {
                 existingTask.createdAt(),
                 now,
                 existingTask.completedAt(),
-                existingTask.closedAt()
+                existingTask.closedAt(),
+                command.projectId() == null ? existingTask.projectId() : command.projectId(),
+                existingTask.taskNumber(), existingTask.taskKey()
         );
 
         return toView(taskRepository.update(updatedTask));
     }
 
     public DailyTasksView getTasksForToday() {
+        return getTasksForToday(null);
+    }
+
+    public DailyTasksView getTasksForToday(Long projectId) {
         User activeUser = requireActiveUser();
         LocalDate today = LocalDate.now(clock);
 
-        List<TaskListItemView> activeTasks = taskRepository.findActiveTasksDueByDate(activeUser.id(), today).stream()
+        List<TaskListItemView> activeTasks = taskRepository.findActiveTasksDueByDate(activeUser.id(), today).stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, today))
                 .toList();
-        List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream()
+        List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, today))
                 .toList();
 
@@ -139,14 +160,18 @@ public class TaskApplicationService {
     }
 
     public DailyTasksView getTasksForDate(@NotNull LocalDate date) {
+        return getTasksForDate(date, null);
+    }
+
+    public DailyTasksView getTasksForDate(@NotNull LocalDate date, Long projectId) {
         User activeUser = requireActiveUser();
         LocalDate targetDate = requireDate(date);
 
         List<Task> activeTaskSource = findActiveTasksForScreen(activeUser.id(), targetDate);
-        List<TaskListItemView> activeTasks = activeTaskSource.stream()
+        List<TaskListItemView> activeTasks = activeTaskSource.stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, targetDate))
                 .toList();
-        List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream()
+        List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, targetDate))
                 .toList();
 
@@ -154,9 +179,13 @@ public class TaskApplicationService {
     }
 
     public BacklogTasksView getBacklogTasks() {
+        return getBacklogTasks(null);
+    }
+
+    public BacklogTasksView getBacklogTasks(Long projectId) {
         User activeUser = requireActiveUser();
         LocalDate today = LocalDate.now(clock);
-        List<TaskListItemView> backlogTasks = taskRepository.findBacklogTasks(activeUser.id()).stream()
+        List<TaskListItemView> backlogTasks = taskRepository.findBacklogTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, today))
                 .toList();
 
@@ -174,13 +203,17 @@ public class TaskApplicationService {
     }
 
     public KanbanTasksView getKanbanTasksForDate(@NotNull LocalDate date) {
+        return getKanbanTasksForDate(date, null);
+    }
+
+    public KanbanTasksView getKanbanTasksForDate(@NotNull LocalDate date, Long projectId) {
         User activeUser = requireActiveUser();
         LocalDate targetDate = requireDate(date);
 
-        List<TaskListItemView> activeTasks = findActiveTasksForScreen(activeUser.id(), targetDate).stream()
+        List<TaskListItemView> activeTasks = findActiveTasksForScreen(activeUser.id(), targetDate).stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, targetDate))
                 .toList();
-        List<TaskListItemView> finishedTasks = taskRepository.findCompletedOrClosedTasksForDate(activeUser.id(), targetDate).stream()
+        List<TaskListItemView> finishedTasks = taskRepository.findCompletedOrClosedTasksForDate(activeUser.id(), targetDate).stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, targetDate))
                 .toList();
 
@@ -193,6 +226,10 @@ public class TaskApplicationService {
     }
 
     public CalendarMonthView getCalendarMonth(@NotNull YearMonth month) {
+        return getCalendarMonth(month, null);
+    }
+
+    public CalendarMonthView getCalendarMonth(@NotNull YearMonth month, Long projectId) {
         User activeUser = requireActiveUser();
         YearMonth targetMonth = Objects.requireNonNull(month, "month is required");
         LocalDate monthStart = targetMonth.atDay(1);
@@ -203,6 +240,7 @@ public class TaskApplicationService {
         Map<LocalDate, List<CalendarItemView>> itemsByDate = taskRepository
                 .findTasksForCalendarRange(activeUser.id(), gridStart, gridEndExclusive)
                 .stream()
+                .filter(t -> matches(t, projectId))
                 .flatMap(task -> calendarItems(task).stream())
                 .collect(Collectors.groupingBy(CalendarItemView::date));
 
@@ -236,12 +274,14 @@ public class TaskApplicationService {
                 task.plannedForAt(),
                 task.deadlineAt(),
                 task.isBacklog(),
-                true
+                true,
+                task.projectId()
         );
     }
 
     @Transactional
     public TaskListItemView markTaskAsDone(@NotNull Long taskId) {
+        if (projectService != null) getTaskOrThrow(taskId);
         Task task = taskRepository.markDone(requireTaskId(taskId), LocalDateTime.now(clock))
                 .orElseGet(() -> getExistingTaskForStatusAction(taskId));
         return toView(task);
@@ -249,6 +289,7 @@ public class TaskApplicationService {
 
     @Transactional
     public TaskListItemView markTaskAsClosed(@NotNull Long taskId) {
+        if (projectService != null) getTaskOrThrow(taskId);
         Task task = taskRepository.markClosed(requireTaskId(taskId), LocalDateTime.now(clock))
                 .orElseGet(() -> getExistingTaskForStatusAction(taskId));
         return toView(task);
@@ -256,6 +297,7 @@ public class TaskApplicationService {
 
     @Transactional
     public TaskListItemView moveTask(@Valid @NotNull RescheduleTaskCommand command) {
+        if (projectService != null) getTaskOrThrow(command.taskId());
         Task task = taskRepository.reschedule(command.taskId(), command.plannedForAt(), LocalDateTime.now(clock))
                 .orElseThrow(() -> new TaskNotFoundException(command.taskId()));
         return toView(task);
@@ -263,9 +305,17 @@ public class TaskApplicationService {
 
     @Transactional
     public TaskListItemView moveTaskToBacklog(@Valid @NotNull MoveTaskToBacklogCommand command) {
+        if (projectService != null) getTaskOrThrow(command.taskId());
         Task task = taskRepository.moveToBacklog(command.taskId(), LocalDateTime.now(clock))
                 .orElseThrow(() -> new TaskNotFoundException(command.taskId()));
         return toView(task);
+    }
+
+    @Transactional
+    public TaskListItemView moveTaskToProject(Long taskId, Long projectId) {
+        getTaskOrThrow(taskId);
+        requireProjectAccess(projectId);
+        return toView(taskRepository.moveToProject(taskId, projectId, LocalDateTime.now(clock)).orElseThrow(() -> new TaskNotFoundException(taskId)));
     }
 
     @Transactional
@@ -317,12 +367,19 @@ public class TaskApplicationService {
     }
 
     private User requireActiveUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            Optional<User> authenticated = userRepository.findByLogin(authentication.getName());
+            if (authenticated.isPresent()) return authenticated.get();
+        }
         return userRepository.findActiveUser().orElseThrow(ActiveUserNotFoundException::new);
     }
 
     private Task getTaskOrThrow(Long taskId) {
-        return taskRepository.findById(requireTaskId(taskId))
+        Task task = taskRepository.findById(requireTaskId(taskId))
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
+        if (projectService != null && !projectService.canAccess(task.projectId())) throw new TaskNotFoundException(taskId);
+        return task;
     }
 
     private Task getExistingTaskForStatusAction(Long taskId) {
@@ -359,5 +416,13 @@ public class TaskApplicationService {
             throw new IllegalArgumentException("taskId is required");
         }
         return taskId;
+    }
+
+    private static boolean matches(Task task, Long projectId) {
+        return projectId == null || projectId.equals(task.projectId());
+    }
+
+    private void requireProjectAccess(Long projectId) {
+        if (projectId != null && projectService != null && !projectService.canAccess(projectId)) throw new IllegalArgumentException(\u0022Project is not accessible\u0022);
     }
 }

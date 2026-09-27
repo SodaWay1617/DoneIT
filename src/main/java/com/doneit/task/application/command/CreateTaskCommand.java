@@ -8,8 +8,12 @@ public record CreateTaskCommand(
         @NotBlank(message = "Task title is required") String title,
         String description,
         LocalDateTime plannedForAt,
-        LocalDateTime deadlineAt
+        LocalDateTime deadlineAt,
+        Long projectId
 ) {
+    public CreateTaskCommand(String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt) {
+        this(title,description,plannedForAt,deadlineAt,null);
+    }
 
     public CreateTaskCommand {
         if (title == null || title.isBlank()) {

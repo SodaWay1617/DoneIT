@@ -9,8 +9,10 @@ public record TaskFormView(
         LocalDateTime plannedForAt,
         LocalDateTime deadlineAt,
         boolean backlog,
-        boolean editMode
+        boolean editMode,
+        Long projectId
 ) {
+    public TaskFormView(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean edit){this(id,title,description,planned,deadline,backlog,edit,null);}
 
     public static TaskFormView forCreate(LocalDateTime plannedForAt) {
         return new TaskFormView(null, "", "", plannedForAt, null, false, false);

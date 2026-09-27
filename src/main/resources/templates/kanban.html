@@ -66,6 +66,7 @@
     </style>
 </head>
 <body>
+<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value=''>All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects'>Manage projects</a></form>
 <div class="shell">
     <section class="hero">
         <div>

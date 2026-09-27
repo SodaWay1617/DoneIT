@@ -10,8 +10,12 @@ public record EditTaskCommand(
         @NotBlank(message = "Task title is required") String title,
         String description,
         LocalDateTime plannedForAt,
-        LocalDateTime deadlineAt
+        LocalDateTime deadlineAt,
+        Long projectId
 ) {
+    public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt) {
+        this(taskId,title,description,plannedForAt,deadlineAt,null);
+    }
 
     public EditTaskCommand {
         if (taskId == null) {

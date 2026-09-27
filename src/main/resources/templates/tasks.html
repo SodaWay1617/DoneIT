@@ -267,6 +267,7 @@
     </style>
 </head>
 <body>
+<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value=''>All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects'>Manage projects</a></form>
 <div class="shell">
     <section class="hero">
         <div>
@@ -363,6 +364,7 @@
                             <button class="secondary" type="submit">To backlog</button>
                         </form>
                     </div>
+                    <form method='post' th:action='@{/tasks/{id}/project(id=${task.id})}'><input type='hidden' th:name='${_csrf.parameterName}' th:value='${_csrf.token}'><input type='hidden' name='redirectTo' value='/'><select name='projectId'><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == task.projectId}'>Project</option></select><button class='secondary'>Move project</button></form>
                 </article>
             </div>
             <p class="empty" th:if="${#lists.isEmpty(daily.activeTasks)}">No dated open tasks for this screen yet.</p>

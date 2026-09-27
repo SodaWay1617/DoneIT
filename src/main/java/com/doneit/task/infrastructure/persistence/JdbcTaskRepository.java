@@ -16,15 +16,17 @@ public class JdbcTaskRepository implements TaskRepository {
 
     private static final String BASE_SELECT = """
             SELECT id, user_id, title, description, status, planned_for_at, deadline_at,
-                   created_at, updated_at, completed_at, closed_at
+                   created_at, updated_at, completed_at, closed_at,
+                   project_id, task_number, task_key
             FROM tasks
             """;
 
     private static final String INSERT_SQL = """
             INSERT INTO tasks (
                 user_id, title, description, status, planned_for_at, deadline_at,
-                created_at, updated_at, completed_at, closed_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                created_at, updated_at, completed_at, closed_at,
+                project_id, task_number, task_key
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             """;
 
@@ -35,6 +37,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 status = ?,
                 planned_for_at = ?,
                 deadline_at = ?,
+                project_id = ?,
                 updated_at = ?,
                 completed_at = ?,
                 closed_at = ?
@@ -44,7 +47,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String FIND_BY_ID_SQL = BASE_SELECT + "WHERE id = ?";
 
     private static final String FIND_ACTIVE_FOR_DATE_SQL = BASE_SELECT + """
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
               AND (
                   planned_for_at IS NULL
@@ -54,7 +57,7 @@ public class JdbcTaskRepository implements TaskRepository {
             """;
 
     private static final String FIND_ACTIVE_DUE_BY_DATE_SQL = BASE_SELECT + """
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
               AND (
                   planned_for_at IS NULL
@@ -64,19 +67,19 @@ public class JdbcTaskRepository implements TaskRepository {
             """;
 
     private static final String FIND_BACKLOG_SQL = BASE_SELECT + """
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'BACKLOG'
             ORDER BY updated_at DESC, id DESC
             """;
 
     private static final String FIND_COMPLETED_OR_CLOSED_SQL = BASE_SELECT + """
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status IN ('DONE', 'CLOSED')
             ORDER BY updated_at DESC, id DESC
             """;
 
     private static final String FIND_COMPLETED_OR_CLOSED_FOR_DATE_SQL = BASE_SELECT + """
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status IN ('DONE', 'CLOSED')
               AND planned_for_at >= ?
               AND planned_for_at < ?
@@ -84,7 +87,7 @@ public class JdbcTaskRepository implements TaskRepository {
             """;
 
     private static final String FIND_FOR_CALENDAR_RANGE_SQL = BASE_SELECT + """
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND (
                   (planned_for_at IS NOT NULL AND planned_for_at >= ? AND planned_for_at < ?)
                   OR (deadline_at IS NOT NULL AND deadline_at >= ? AND deadline_at < ?)
@@ -132,7 +135,7 @@ public class JdbcTaskRepository implements TaskRepository {
             UPDATE tasks
             SET planned_for_at = planned_for_at + INTERVAL '1 day',
                 updated_at = ?
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
               AND planned_for_at IS NOT NULL
               AND planned_for_at < ?
@@ -142,7 +145,7 @@ public class JdbcTaskRepository implements TaskRepository {
             UPDATE tasks
             SET planned_for_at = CAST(? AS date) + CAST(planned_for_at AS time),
                 updated_at = ?
-            WHERE user_id = ?
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
               AND planned_for_at IS NOT NULL
               AND planned_for_at < ?
@@ -158,6 +161,13 @@ public class JdbcTaskRepository implements TaskRepository {
 
     @Override
     public Task create(Task task) {
+        Long projectId = task.projectId();
+        if (projectId == null) {
+            projectId = jdbcTemplate.queryForObject(\u0022SELECT id FROM projects WHERE owner_user_id=? AND default_project\u0022, Long.class, task.userId());
+        }
+        String code = jdbcTemplate.queryForObject(\u0022SELECT code FROM projects p JOIN project_members m ON m.project_id=p.id WHERE p.id=? AND m.user_id=?\u0022, String.class, projectId, task.userId());
+        Long number = jdbcTemplate.queryForObject(\u0022UPDATE projects SET next_task_number=next_task_number+1 WHERE id=? RETURNING next_task_number-1\u0022, Long.class, projectId);
+        String login = jdbcTemplate.queryForObject(\u0022SELECT login FROM users WHERE id=?\u0022, String.class, task.userId());
         Long id = jdbcTemplate.queryForObject(
                 INSERT_SQL,
                 Long.class,
@@ -170,7 +180,8 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.createdAt(),
                 task.updatedAt(),
                 task.completedAt(),
-                task.closedAt()
+                task.closedAt(), projectId, number,
+                code + \u0022-\u0022 + number + \u0022___\u0022 + login
         );
         return findById(Objects.requireNonNull(id)).orElseThrow();
     }
@@ -184,6 +195,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.status().name(),
                 task.plannedForAt(),
                 task.deadlineAt(),
+                task.projectId(),
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(),
@@ -268,6 +280,12 @@ public class JdbcTaskRepository implements TaskRepository {
             return Optional.empty();
         }
         return findById(taskId);
+    }
+
+    @Override
+    public Optional<Task> moveToProject(Long taskId, Long projectId, LocalDateTime updatedAt) {
+        int updated = jdbcTemplate.update(\u0022UPDATE tasks SET project_id=?,updated_at=? WHERE id=?\u0022, projectId, updatedAt, taskId);
+        return updated == 0 ? Optional.empty() : findById(taskId);
     }
 
     @Override

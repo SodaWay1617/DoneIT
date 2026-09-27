@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/0003-data-integrity.yaml
   - include:
       file: db/changelog/changes/0004-backlog-status.yaml
+  - include:
+      file: db/changelog/changes/0005-projects.yaml

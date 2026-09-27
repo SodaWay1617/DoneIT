@@ -25,6 +25,9 @@ public class TaskRowMapper implements RowMapper<Task> {
                 rs.getTimestamp("updated_at").toLocalDateTime(),
                 toLocalDateTime(rs.getTimestamp("completed_at")),
                 toLocalDateTime(rs.getTimestamp("closed_at"))
+                ,rs.getLong(\u0022project_id\u0022)
+                ,rs.getLong(\u0022task_number\u0022)
+                ,rs.getString(\u0022task_key\u0022)
         );
     }
 

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0005-projects
+      author: codex
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE TABLE projects (id BIGSERIAL PRIMARY KEY,name VARCHAR(120) NOT NULL,code VARCHAR(40) NOT NULL UNIQUE,description TEXT,owner_user_id BIGINT NOT NULL REFERENCES users(id),default_project BOOLEAN NOT NULL DEFAULT FALSE,next_task_number BIGINT NOT NULL DEFAULT 1,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL);
+              CREATE UNIQUE INDEX uq_default_project_owner ON projects(owner_user_id) WHERE default_project;
+              CREATE TABLE project_members (project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,joined_at TIMESTAMP NOT NULL,PRIMARY KEY(project_id,user_id));
+              INSERT INTO projects(name,code,description,owner_user_id,default_project,created_at,updated_at) SELECT 'MAIN','MAIN-' || login,'Default project',id,TRUE,created_at,updated_at FROM users;
+              INSERT INTO project_members SELECT id,owner_user_id,created_at FROM projects;
+              ALTER TABLE tasks ADD COLUMN project_id BIGINT;
+              ALTER TABLE tasks ADD COLUMN task_number BIGINT;
+              ALTER TABLE tasks ADD COLUMN task_key VARCHAR(255);
+              WITH n AS (SELECT t.id,p.id project_id,ROW_NUMBER() OVER(PARTITION BY t.user_id ORDER BY t.id) task_number,p.code,u.login FROM tasks t JOIN users u ON u.id=t.user_id JOIN projects p ON p.owner_user_id=t.user_id AND p.default_project) UPDATE tasks t SET project_id=n.project_id,task_number=n.task_number,task_key=n.code || '-' || n.task_number || '___' || n.login FROM n WHERE t.id=n.id;
+              UPDATE projects p SET next_task_number=COALESCE((SELECT MAX(task_number)+1 FROM tasks t WHERE t.project_id=p.id),1);
+              ALTER TABLE tasks ALTER COLUMN project_id SET NOT NULL;
+              ALTER TABLE tasks ALTER COLUMN task_number SET NOT NULL;
+              ALTER TABLE tasks ALTER COLUMN task_key SET NOT NULL;
+              ALTER TABLE tasks ADD CONSTRAINT fk_tasks_project FOREIGN KEY(project_id) REFERENCES projects(id);
+              ALTER TABLE tasks ADD CONSTRAINT uq_tasks_task_key UNIQUE(task_key);
+              CREATE INDEX idx_project_members_user ON project_members(user_id,project_id);
+              CREATE INDEX idx_tasks_project ON tasks(project_id);
+              CREATE FUNCTION create_default_project_for_user() RETURNS trigger AS $$
+              DECLARE new_project_id BIGINT;
+              BEGIN
+                INSERT INTO projects(name,code,description,owner_user_id,default_project,created_at,updated_at)
+                VALUES('MAIN','MAIN-' || NEW.login,'Default project',NEW.id,TRUE,NEW.created_at,NEW.updated_at)
+                RETURNING id INTO new_project_id;
+                INSERT INTO project_members(project_id,user_id,joined_at) VALUES(new_project_id,NEW.id,NEW.created_at);
+                RETURN NEW;
+              END $$ LANGUAGE plpgsql;
+              CREATE TRIGGER users_default_project AFTER INSERT ON users FOR EACH ROW EXECUTE FUNCTION create_default_project_for_user();

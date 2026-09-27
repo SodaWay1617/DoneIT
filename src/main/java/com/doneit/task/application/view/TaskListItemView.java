@@ -14,8 +14,11 @@ public record TaskListItemView(
         LocalDateTime plannedForAt,
         LocalDateTime deadlineAt,
         boolean backlog,
-        boolean overdue
+        boolean overdue,
+        Long projectId,
+        String taskCode
 ) {
+    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue){this(id,title,description,status,planned,deadline,backlog,overdue,null,null);}
 
     public TaskListItemView {
         if (id == null) {
@@ -40,13 +43,20 @@ public record TaskListItemView(
 
         return new TaskListItemView(
                 task.id(),
-                task.title(),
+                displayTitle(task),
                 task.description(),
                 task.status(),
                 task.plannedForAt(),
                 task.deadlineAt(),
                 task.isBacklog(),
-                overdue
+                overdue,
+                task.projectId(),
+                task.taskKey() == null ? null : task.taskKey().split(\u0022___\u0022, 2)[0]
         );
+    }
+
+    private static String displayTitle(Task task) {
+        if (task.taskKey() == null) return task.title();
+        return task.taskKey().split(\u0022___\u0022, 2)[0] + \u0022  \u0022 + task.title();
     }
 }
