@@ -9,7 +9,8 @@ databaseChangeLog:
               - column:
                   name: planned_date
                   type: DATE
-        - addCheckConstraint:
-            tableName: tasks
-            constraintName: ck_tasks_single_planning_value
-            checkConstraint: planned_date IS NULL OR planned_for_at IS NULL
+        - sql:
+            sql: |
+              ALTER TABLE tasks
+              ADD CONSTRAINT ck_tasks_single_planning_value
+              CHECK (planned_date IS NULL OR planned_for_at IS NULL);

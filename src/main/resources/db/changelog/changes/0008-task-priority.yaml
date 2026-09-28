@@ -12,7 +12,8 @@ databaseChangeLog:
                   defaultValue: NONE
                   constraints:
                     nullable: false
-        - addCheckConstraint:
-            tableName: tasks
-            constraintName: ck_tasks_priority
-            checkConstraint: priority IN ('NONE', 'LOW', 'NORMAL', 'HIGH', 'CRITICAL')
+        - sql:
+            sql: |
+              ALTER TABLE tasks
+              ADD CONSTRAINT ck_tasks_priority
+              CHECK (priority IN ('NONE', 'LOW', 'NORMAL', 'HIGH', 'CRITICAL'));
