@@ -2,6 +2,7 @@ package com.doneit.task.infrastructure.persistence;
 
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskStatus;
+import com.doneit.task.domain.TaskPriority;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -29,6 +30,7 @@ public class TaskRowMapper implements RowMapper<Task> {
                 ,rs.getLong(\u0022task_number\u0022)
                 ,rs.getString(\u0022task_key\u0022)
                 ,rs.getObject(\u0022planned_date\u0022, java.time.LocalDate.class)
+                ,TaskPriority.valueOf(rs.getString("priority"))
         );
     }
 

@@ -12,6 +12,7 @@ import com.doneit.task.application.view.TaskListItemView;
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskRepository;
 import com.doneit.task.domain.TaskStatus;
+import com.doneit.task.domain.TaskPriority;
 import com.doneit.user.domain.User;
 import com.doneit.user.domain.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,6 +108,18 @@ class TaskApplicationServiceTest {
         assertEquals(LocalDate.of(2026, 4, 12), result.plannedDate());
         assertNull(result.plannedForAt());
         assertEquals(TaskStatus.OPEN, result.status());
+    }
+
+    @Test
+    void createTaskPreservesSelectedPriority() {
+        when(taskRepository.create(any(Task.class))).thenAnswer(invocation -> withId(invocation.getArgument(0), 105L));
+        CreateTaskCommand command = new CreateTaskCommand(
+                "Urgent task", null, null, null, null, null, false, TaskPriority.CRITICAL
+        );
+
+        TaskListItemView result = service.createTask(command);
+
+        assertEquals(TaskPriority.CRITICAL, result.priority());
     }
 
     @Test
@@ -399,7 +412,7 @@ class TaskApplicationServiceTest {
                 task.createdAt(),
                 task.updatedAt(),
                 task.completedAt(),
-                task.closedAt(), task.projectId(), task.taskNumber(), task.taskKey(), task.plannedDate()
+                task.closedAt(), task.projectId(), task.taskNumber(), task.taskKey(), task.plannedDate(), task.priority()
         );
     }
 

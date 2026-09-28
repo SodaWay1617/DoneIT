@@ -19,16 +19,19 @@ public record Task(
         Long projectId,
         Long taskNumber,
         String taskKey,
-        LocalDate plannedDate
+        LocalDate plannedDate,
+        TaskPriority priority
 ) {
 
     public Task(Long id, Long userId, String title, String description, TaskStatus status,
                 LocalDateTime plannedForAt, LocalDateTime deadlineAt, LocalDateTime createdAt,
                 LocalDateTime updatedAt, LocalDateTime completedAt, LocalDateTime closedAt) {
-        this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,null,null,null,null);
+        this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,null,null,null,null,TaskPriority.NONE);
     }
 
-    public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey){this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,projectId,taskNumber,taskKey,null);}
+    public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey){this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,projectId,taskNumber,taskKey,null,TaskPriority.NONE);}
+
+    public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey,LocalDate plannedDate){this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,projectId,taskNumber,taskKey,plannedDate,TaskPriority.NONE);}
 
     public Task {
         if (plannedForAt != null && plannedDate != null) {
@@ -42,6 +45,9 @@ public record Task(
         }
         if (status == null) {
             throw new IllegalArgumentException("Task status is required");
+        }
+        if (priority == null) {
+            priority = TaskPriority.NONE;
         }
         if (createdAt == null) {
             throw new IllegalArgumentException("Task createdAt is required");
@@ -96,7 +102,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 transitionAt,
-                null, projectId, taskNumber, taskKey, plannedDate
+                null, projectId, taskNumber, taskKey, plannedDate, priority
         );
     }
 
@@ -114,7 +120,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 null,
-                transitionAt, projectId, taskNumber, taskKey, plannedDate
+                transitionAt, projectId, taskNumber, taskKey, plannedDate, priority
         );
     }
 
@@ -132,7 +138,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null
+                closedAt, projectId, taskNumber, taskKey, null, priority
         );
     }
 
@@ -149,7 +155,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null
+                closedAt, projectId, taskNumber, taskKey, null, priority
         );
     }
 

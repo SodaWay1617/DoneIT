@@ -83,7 +83,7 @@ public class TaskApplicationService {
                 now,
                 null,
                 null,
-                command.projectId(), null, null, command.plannedDate()
+                command.projectId(), null, null, command.plannedDate(), command.priority()
         );
 
         return toView(taskRepository.create(task));
@@ -110,7 +110,7 @@ public class TaskApplicationService {
                 now,
                 null,
                 null,
-                command.projectId(), null, null, null
+                command.projectId(), null, null, null, command.priority()
         );
 
         return toView(taskRepository.create(task));
@@ -136,7 +136,8 @@ public class TaskApplicationService {
                 existingTask.completedAt(),
                 existingTask.closedAt(),
                 command.projectId() == null ? existingTask.projectId() : command.projectId(),
-                existingTask.taskNumber(), existingTask.taskKey(), command.backlog() ? null : command.plannedDate()
+                existingTask.taskNumber(), existingTask.taskKey(), command.backlog() ? null : command.plannedDate(),
+                command.priority()
         );
 
         return toView(taskRepository.update(updatedTask));
@@ -277,7 +278,8 @@ public class TaskApplicationService {
                 task.isBacklog(),
                 true,
                 task.projectId(),
-                task.plannedDate()
+                task.plannedDate(),
+                task.priority()
         );
     }
 

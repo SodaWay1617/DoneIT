@@ -142,6 +142,10 @@
             color: var(--danger);
             border-color: rgba(159, 77, 54, 0.28);
         }
+        .badge.priority-low { color: var(--muted); }
+        .badge.priority-normal { color: var(--accent); border-color: rgba(30, 109, 115, 0.22); }
+        .badge.priority-high { color: var(--danger); border-color: rgba(159, 77, 54, 0.28); }
+        .badge.priority-critical { color: white; background: var(--danger); border-color: var(--danger); }
 
         .guide {
             margin-top: 16px;
@@ -333,6 +337,7 @@
                                 <span class="badge status-open">OPEN</span>
                                 <span class="badge status-today" th:if="${todayPage}">TODAY</span>
                                 <span class="badge status-overdue" th:if="${task.overdue}">OVERDUE</span>
+                                <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                             </div>
                             <h3 class="task-title" th:text="${task.title}">Task title</h3>
                         </div>
@@ -382,6 +387,7 @@
                             <div class="task-top-main">
                                 <div class="badges">
                                     <span class="badge status-backlog">BACKLOG</span>
+                                    <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                                 </div>
                                 <h3 class="task-title" th:text="${task.title}">Backlog task</h3>
                             </div>
@@ -414,6 +420,7 @@
                             <div class="task-top-main">
                                 <div class="badges">
                                     <span class="badge" th:classappend="${task.status.name() == 'DONE'} ? ' status-done' : ' status-closed'" th:text="${task.status}">DONE</span>
+                                    <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                                 </div>
                                 <h3 class="task-title" th:text="${task.title}">Completed task</h3>
                             </div>

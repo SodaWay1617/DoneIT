@@ -2,6 +2,7 @@ package com.doneit.task.application.view;
 
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskStatus;
+import com.doneit.task.domain.TaskPriority;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,10 +18,11 @@ public record TaskListItemView(
         boolean overdue,
         Long projectId,
         String taskCode,
-        LocalDate plannedDate
+        LocalDate plannedDate,
+        TaskPriority priority
 ) {
-    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue){this(id,title,description,status,planned,deadline,backlog,overdue,null,null,null);}
-    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue,Long projectId,String taskCode){this(id,title,description,status,planned,deadline,backlog,overdue,projectId,taskCode,null);}
+    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue){this(id,title,description,status,planned,deadline,backlog,overdue,null,null,null,TaskPriority.NONE);}
+    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue,Long projectId,String taskCode){this(id,title,description,status,planned,deadline,backlog,overdue,projectId,taskCode,null,TaskPriority.NONE);}
 
     public TaskListItemView {
         if (id == null) {
@@ -59,7 +61,8 @@ public record TaskListItemView(
                 overdue,
                 task.projectId(),
                 displayTaskCode(task),
-                task.plannedDate()
+                task.plannedDate(),
+                task.priority()
         );
     }
 

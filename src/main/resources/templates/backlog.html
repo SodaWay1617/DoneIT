@@ -93,6 +93,10 @@
             color: var(--accent);
             border-color: rgba(30, 109, 115, 0.22);
         }
+        .badge.priority-low { color: var(--muted); }
+        .badge.priority-normal { color: var(--accent); }
+        .badge.priority-high { color: #9f4d36; border-color: rgba(159, 77, 54, 0.28); }
+        .badge.priority-critical { color: white; background: #9f4d36; border-color: #9f4d36; }
 
         .guide {
             margin-top: 16px;
@@ -155,6 +159,7 @@
             <div class="task-top">
                 <div class="badges">
                     <span class="badge">BACKLOG</span>
+                    <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                 </div>
                 <h2 th:text="${task.title}">Backlog task</h2>
             </div>

@@ -17,7 +17,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String BASE_SELECT = """
             SELECT id, user_id, title, description, status, planned_for_at, deadline_at,
                    created_at, updated_at, completed_at, closed_at,
-                   project_id, task_number, task_key, planned_date
+                   project_id, task_number, task_key, planned_date, priority
             FROM tasks
             """;
 
@@ -25,8 +25,8 @@ public class JdbcTaskRepository implements TaskRepository {
             INSERT INTO tasks (
                 user_id, title, description, status, planned_for_at, deadline_at,
                 created_at, updated_at, completed_at, closed_at,
-                project_id, task_number, task_key, planned_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                project_id, task_number, task_key, planned_date, priority
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             """;
 
@@ -39,6 +39,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 deadline_at = ?,
                 project_id = ?,
                 planned_date = ?,
+                priority = ?,
                 updated_at = ?,
                 completed_at = ?,
                 closed_at = ?
@@ -55,7 +56,8 @@ public class JdbcTaskRepository implements TaskRepository {
                   OR (planned_for_at >= ? AND planned_for_at < ?)
                   OR planned_date = ?
               )
-            ORDER BY planned_for_at, id
+            ORDER BY CASE priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
+                     planned_for_at, id
             """;
 
     private static final String FIND_ACTIVE_DUE_BY_DATE_SQL = BASE_SELECT + """
@@ -66,13 +68,15 @@ public class JdbcTaskRepository implements TaskRepository {
                   OR planned_for_at < ?
                   OR planned_date <= ?
               )
-            ORDER BY planned_for_at, id
+            ORDER BY CASE priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
+                     planned_for_at, id
             """;
 
     private static final String FIND_BACKLOG_SQL = BASE_SELECT + """
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'BACKLOG'
-            ORDER BY updated_at DESC, id DESC
+            ORDER BY CASE priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
+                     updated_at DESC, id DESC
             """;
 
     private static final String FIND_COMPLETED_OR_CLOSED_SQL = BASE_SELECT + """
@@ -187,7 +191,8 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.completedAt(),
                 task.closedAt(), projectId, number,
                 code + \u0022-\u0022 + number + \u0022___\u0022 + login,
-                task.plannedDate()
+                task.plannedDate(),
+                task.priority().name()
         );
         return findById(Objects.requireNonNull(id)).orElseThrow();
     }
@@ -203,6 +208,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.deadlineAt(),
                 task.projectId(),
                 task.plannedDate(),
+                task.priority().name(),
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(),

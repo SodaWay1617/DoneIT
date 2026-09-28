@@ -38,7 +38,7 @@
         p { color: var(--muted); }
         form { display: grid; gap: 16px; }
         label { display: grid; gap: 8px; }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 12px 14px;
             border-radius: 16px;
@@ -95,6 +95,15 @@
             border-color: #b15c4a;
             background: #fff8f6;
         }
+        .choice {
+            display: flex;
+            grid-template-columns: none;
+            align-items: center;
+            gap: 10px;
+        }
+        .choice input { width: auto; }
+        .date-fields { display: grid; gap: 16px; }
+        .date-fields[hidden] { display: none; }
     </style>
 </head>
 <body>
@@ -125,24 +134,35 @@
             </select>
         </label>
         <label>
-            Planned day (without time)
-            <input id='plannedDate' type='date' th:field='*{plannedDate}' />
+            Priority
+            <select th:field="*{priority}">
+                <option th:each="priorityValue : ${T(com.doneit.task.domain.TaskPriority).values()}"
+                        th:value="${priorityValue}"
+                        th:text="${priorityValue.displayName()}">None</option>
+            </select>
         </label>
-        <label><span><input style='width:auto' type='checkbox' th:field='*{backlog}' /> Put this task in backlog</span></label>
+        <label class="choice"><input type="checkbox" th:field="*{backlog}" /> Put this task in backlog</label>
+        <label class="choice"><input type="checkbox" th:field="*{permanent}" /> Permanent task</label>
         <label>
             Description
             <textarea th:field="*{description}" placeholder="Notes, details, links"></textarea>
         </label>
-        <label>
-            Planned for
-            <input type="datetime-local" th:field="*{plannedForAt}" th:classappend="${#fields.hasErrors('plannedForAt')} ? ' field-invalid'" />
-            <span class="field-error" th:if="${#fields.hasErrors('plannedForAt')}" th:errors="*{plannedForAt}">Planned time error</span>
-        </label>
-        <label>
-            Deadline
-            <input type="datetime-local" th:field="*{deadlineAt}" th:classappend="${#fields.hasErrors('deadlineAt')} ? ' field-invalid'" />
-            <span class="field-error" th:if="${#fields.hasErrors('deadlineAt')}" th:errors="*{deadlineAt}">Deadline error</span>
-        </label>
+        <div id="dateFields" class="date-fields">
+            <label>
+                Planned day (without time)
+                <input id="plannedDate" type="date" th:field="*{plannedDate}" />
+            </label>
+            <label>
+                Planned for
+                <input type="datetime-local" th:field="*{plannedForAt}" th:classappend="${#fields.hasErrors('plannedForAt')} ? ' field-invalid'" />
+                <span class="field-error" th:if="${#fields.hasErrors('plannedForAt')}" th:errors="*{plannedForAt}">Planned time error</span>
+            </label>
+            <label>
+                Deadline
+                <input type="datetime-local" th:field="*{deadlineAt}" th:classappend="${#fields.hasErrors('deadlineAt')} ? ' field-invalid'" />
+                <span class="field-error" th:if="${#fields.hasErrors('deadlineAt')}" th:errors="*{deadlineAt}">Deadline error</span>
+            </label>
+        </div>
         <div class="actions">
             <button class="solid" type="submit" th:text="${submitLabel}">Create task</button>
             <a class="ghost" th:href="@{/}">Back to tasks</a>
@@ -150,6 +170,31 @@
         </div>
     </form>
 </div>
-<script>const day=document.getElementById('plannedDate'),time=document.querySelector('[name=plannedForAt]');day.addEventListener('input',function(){if(day.value)time.value=''});time.addEventListener('input',function(){if(time.value)day.value=''})</script>
+<script>
+    const backlog = document.getElementById('backlog');
+    const permanent = document.getElementById('permanent');
+    const dateFields = document.getElementById('dateFields');
+    const day = document.getElementById('plannedDate');
+    const time = document.querySelector('[name=plannedForAt]');
+    const deadline = document.querySelector('[name=deadlineAt]');
+
+    function updateDateFields(changed) {
+        if (changed === backlog && backlog.checked) permanent.checked = false;
+        if (changed === permanent && permanent.checked) backlog.checked = false;
+        const datesDisabled = backlog.checked || permanent.checked;
+        dateFields.hidden = datesDisabled;
+        if (datesDisabled) {
+            day.value = '';
+            time.value = '';
+            deadline.value = '';
+        }
+    }
+
+    backlog.addEventListener('change', () => updateDateFields(backlog));
+    permanent.addEventListener('change', () => updateDateFields(permanent));
+    day.addEventListener('input', () => { if (day.value) time.value = ''; });
+    time.addEventListener('input', () => { if (time.value) day.value = ''; });
+    updateDateFields();
+</script>
 </body>
 </html>

@@ -54,6 +54,10 @@
         .badge.open { background: var(--accent-soft); color: var(--accent); }
         .badge.done { background: rgba(30, 109, 115, 0.12); }
         .badge.closed { background: var(--danger-soft); color: var(--danger); }
+        .badge.priority-low { color: var(--muted); }
+        .badge.priority-normal { color: var(--accent); }
+        .badge.priority-high { color: var(--danger); border-color: rgba(159, 77, 54, 0.28); }
+        .badge.priority-critical { color: white; background: var(--danger); border-color: var(--danger); }
         .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
         .column h2 { margin: 0 0 12px; font-size: 1.1rem; }
         .stack { display: grid; gap: 12px; }
@@ -92,7 +96,7 @@
             <h2 th:text="'Open (' + ${kanban.openTasks.size()} + ')'">Open</h2>
             <div class="stack" th:if="!${#lists.isEmpty(kanban.openTasks)}">
                 <article class="task" th:each="task : ${kanban.openTasks}">
-                    <div class="badges"><span class="badge open">OPEN</span></div>
+                    <div class="badges"><span class="badge open">OPEN</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
                     <h3 th:text="${task.title}">Task</h3>
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="${#temporals.format(task.plannedForAt, 'HH:mm')}">09:00</p>
                     <p class='meta' th:if='${task.plannedDate != null}' th:text='${task.plannedDate}'>Planned day</p>
@@ -119,7 +123,7 @@
             <h2 th:text="'Done (' + ${kanban.doneTasks.size()} + ')'">Done</h2>
             <div class="stack" th:if="!${#lists.isEmpty(kanban.doneTasks)}">
                 <article class="task" th:each="task : ${kanban.doneTasks}">
-                    <div class="badges"><span class="badge done">DONE</span></div>
+                    <div class="badges"><span class="badge done">DONE</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
                     <h3 th:text="${task.title}">Task</h3>
                 </article>
             </div>
@@ -130,7 +134,7 @@
             <h2 th:text="'Closed (' + ${kanban.closedTasks.size()} + ')'">Closed</h2>
             <div class="stack" th:if="!${#lists.isEmpty(kanban.closedTasks)}">
                 <article class="task" th:each="task : ${kanban.closedTasks}">
-                    <div class="badges"><span class="badge closed">CLOSED</span></div>
+                    <div class="badges"><span class="badge closed">CLOSED</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
                     <h3 th:text="${task.title}">Task</h3>
                 </article>
             </div>

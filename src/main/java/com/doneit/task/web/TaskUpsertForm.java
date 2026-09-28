@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import com.doneit.task.domain.TaskPriority;
 
 public class TaskUpsertForm {
 
@@ -25,8 +26,10 @@ public class TaskUpsertForm {
 
     private boolean editMode;
     private boolean backlog;
+    private boolean permanent;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate plannedDate;
+    private TaskPriority priority = TaskPriority.NONE;
 
     public static TaskUpsertForm from(TaskFormView taskFormView) {
         TaskUpsertForm form = new TaskUpsertForm();
@@ -38,7 +41,11 @@ public class TaskUpsertForm {
         form.setDeadlineAt(taskFormView.deadlineAt());
         form.setEditMode(taskFormView.editMode());
         form.setBacklog(taskFormView.backlog());
+        form.setPermanent(!taskFormView.backlog()
+                && taskFormView.plannedForAt() == null
+                && taskFormView.plannedDate() == null);
         form.setPlannedDate(taskFormView.plannedDate());
+        form.setPriority(taskFormView.priority());
         return form;
     }
 
@@ -95,6 +102,10 @@ public class TaskUpsertForm {
 
     public boolean isBacklog() { return backlog; }
     public void setBacklog(boolean backlog) { this.backlog = backlog; }
+    public boolean isPermanent() { return permanent; }
+    public void setPermanent(boolean permanent) { this.permanent = permanent; }
     public LocalDate getPlannedDate() { return plannedDate; }
     public void setPlannedDate(LocalDate plannedDate) { this.plannedDate = plannedDate; }
+    public TaskPriority getPriority() { return priority; }
+    public void setPriority(TaskPriority priority) { this.priority = priority == null ? TaskPriority.NONE : priority; }
 }

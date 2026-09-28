@@ -119,12 +119,13 @@ public class HomeController {
             return "task-form";
         }
 
+        boolean withoutDates = form.isBacklog() || form.isPermanent();
         CreateTaskCommand command = new CreateTaskCommand(
                 form.getTitle(),
                 form.getDescription(),
-                form.isBacklog() ? null : form.getPlannedForAt(),
-                form.getDeadlineAt(), form.getProjectId(),
-                form.isBacklog() ? null : form.getPlannedDate(), form.isBacklog()
+                withoutDates ? null : form.getPlannedForAt(),
+                withoutDates ? null : form.getDeadlineAt(), form.getProjectId(),
+                withoutDates ? null : form.getPlannedDate(), form.isBacklog(), form.getPriority()
         );
 
         if (form.isBacklog()) {
@@ -165,13 +166,14 @@ public class HomeController {
             return "task-form";
         }
 
+        boolean withoutDates = form.isBacklog() || form.isPermanent();
         EditTaskCommand command = new EditTaskCommand(
                 taskId,
                 form.getTitle(),
                 form.getDescription(),
-                form.isBacklog() ? null : form.getPlannedForAt(),
-                form.getDeadlineAt(), form.getProjectId(),
-                form.isBacklog() ? null : form.getPlannedDate(), form.isBacklog()
+                withoutDates ? null : form.getPlannedForAt(),
+                withoutDates ? null : form.getDeadlineAt(), form.getProjectId(),
+                withoutDates ? null : form.getPlannedDate(), form.isBacklog(), form.getPriority()
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");

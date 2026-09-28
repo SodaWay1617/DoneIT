@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import com.doneit.task.domain.TaskPriority;
 
 public record EditTaskCommand(
         @NotNull(message = "Task id is required") Long taskId,
@@ -14,12 +15,14 @@ public record EditTaskCommand(
         LocalDateTime deadlineAt,
         Long projectId,
         LocalDate plannedDate,
-        boolean backlog
+        boolean backlog,
+        TaskPriority priority
 ) {
     public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt) {
-        this(taskId,title,description,plannedForAt,deadlineAt,null,null,false);
+        this(taskId,title,description,plannedForAt,deadlineAt,null,null,false,TaskPriority.NONE);
     }
-    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId){this(id,title,description,planned,deadline,projectId,null,false);}
+    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId){this(id,title,description,planned,deadline,projectId,null,false,TaskPriority.NONE);}
+    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId,LocalDate plannedDate,boolean backlog){this(id,title,description,planned,deadline,projectId,plannedDate,backlog,TaskPriority.NONE);}
 
     public EditTaskCommand {
         if (taskId == null) {
@@ -28,5 +31,6 @@ public record EditTaskCommand(
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Task title is required");
         }
+        if (priority == null) priority = TaskPriority.NONE;
     }
 }
