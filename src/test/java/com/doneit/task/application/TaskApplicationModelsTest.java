@@ -25,8 +25,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class TaskApplicationModelsTest {
+
+    @Test
+    void workflowStatusesFollowConfiguredOrder() {
+        assertArrayEquals(new TaskStatus[] {
+                TaskStatus.NEW,
+                TaskStatus.BACKLOG,
+                TaskStatus.PAUSED,
+                TaskStatus.SPECIFICATION,
+                TaskStatus.TODO,
+                TaskStatus.IN_PROGRESS,
+                TaskStatus.DOCUMENTATION,
+                TaskStatus.DONE,
+                TaskStatus.CLOSED
+        }, TaskStatus.workflowValues());
+    }
 
     @Test
     void createTaskCommandRequiresTitle() {
@@ -80,7 +96,7 @@ class TaskApplicationModelsTest {
                 1L,
                 "Pay bill",
                 null,
-                TaskStatus.OPEN,
+                TaskStatus.IN_PROGRESS,
                 LocalDateTime.of(2026, 4, 5, 10, 0),
                 LocalDateTime.of(2026, 4, 4, 18, 0),
                 LocalDateTime.of(2026, 4, 1, 9, 0),
@@ -102,7 +118,7 @@ class TaskApplicationModelsTest {
                 1L,
                 "Day task",
                 null,
-                TaskStatus.OPEN,
+                TaskStatus.IN_PROGRESS,
                 null,
                 null,
                 LocalDateTime.of(2026, 4, 1, 9, 0),
@@ -143,10 +159,10 @@ class TaskApplicationModelsTest {
     @Test
     void dailyTasksViewDefensivelyCopiesCollections() {
         List<TaskListItemView> activeTasks = new ArrayList<>();
-        activeTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.OPEN, null, null, false, false));
+        activeTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.IN_PROGRESS, null, null, false, false));
         DailyTasksView view = new DailyTasksView(LocalDate.of(2026, 4, 5), activeTasks, List.of());
 
-        activeTasks.add(new TaskListItemView(2L, "Other task", null, TaskStatus.OPEN, null, null, false, false));
+        activeTasks.add(new TaskListItemView(2L, "Other task", null, TaskStatus.IN_PROGRESS, null, null, false, false));
 
         assertEquals(1, view.activeTasks().size());
         assertEquals(1, view.activeTaskCount());
@@ -167,7 +183,7 @@ class TaskApplicationModelsTest {
         List<TaskListItemView> openTasks = new ArrayList<>();
         KanbanTasksView view = new KanbanTasksView(LocalDate.of(2026, 4, 5), openTasks, List.of(), List.of());
 
-        openTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.OPEN, null, null, false, false));
+        openTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.IN_PROGRESS, null, null, false, false));
 
         assertTrue(view.openTasks().isEmpty());
     }
@@ -201,7 +217,7 @@ class TaskApplicationModelsTest {
                 LocalDate.of(2026, 4, 1),
                 LocalDateTime.of(2026, 4, 1, 9, 0),
                 "Task",
-                TaskStatus.OPEN,
+                TaskStatus.IN_PROGRESS,
                 false
         ));
 
@@ -214,7 +230,7 @@ class TaskApplicationModelsTest {
                 1L,
                 "Task name",
                 null,
-                TaskStatus.OPEN,
+                TaskStatus.IN_PROGRESS,
                 LocalDateTime.of(2026, 4, 5, 10, 0),
                 null,
                 LocalDateTime.of(2026, 4, 1, 9, 0),

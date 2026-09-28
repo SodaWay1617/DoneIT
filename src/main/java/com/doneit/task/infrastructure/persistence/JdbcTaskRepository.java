@@ -50,7 +50,7 @@ public class JdbcTaskRepository implements TaskRepository {
 
     private static final String FIND_ACTIVE_FOR_DATE_SQL = BASE_SELECT + """
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
-              AND status = 'OPEN'
+              AND status IN ('NEW', 'PAUSED', 'SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND (
                   (planned_for_at IS NULL AND planned_date IS NULL)
                   OR (planned_for_at >= ? AND planned_for_at < ?)
@@ -62,7 +62,7 @@ public class JdbcTaskRepository implements TaskRepository {
 
     private static final String FIND_ACTIVE_DUE_BY_DATE_SQL = BASE_SELECT + """
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
-              AND status = 'OPEN'
+              AND status IN ('NEW', 'PAUSED', 'SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND (
                   (planned_for_at IS NULL AND planned_date IS NULL)
                   OR planned_for_at < ?
@@ -109,7 +109,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 completed_at = ?,
                 closed_at = NULL
             WHERE id = ?
-              AND status IN ('OPEN', 'BACKLOG')
+              AND status NOT IN ('DONE', 'CLOSED')
             """;
 
     private static final String MARK_CLOSED_SQL = """
@@ -119,12 +119,12 @@ public class JdbcTaskRepository implements TaskRepository {
                 completed_at = NULL,
                 closed_at = ?
             WHERE id = ?
-              AND status IN ('OPEN', 'BACKLOG')
+              AND status NOT IN ('DONE', 'CLOSED')
             """;
 
     private static final String RESCHEDULE_SQL = """
             UPDATE tasks
-            SET status = 'OPEN',
+            SET status = CASE WHEN status IN ('NEW', 'BACKLOG') THEN 'TODO' ELSE status END,
                 planned_for_at = ?,
                 planned_date = NULL,
                 updated_at = ?
@@ -146,7 +146,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 planned_date = planned_date + 1,
                 updated_at = ?
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
-              AND status = 'OPEN'
+              AND status IN ('NEW', 'PAUSED', 'SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
             """;
 
@@ -156,7 +156,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 planned_date = CASE WHEN planned_date IS NULL THEN NULL ELSE CAST(? AS date) END,
                 updated_at = ?
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
-              AND status = 'OPEN'
+              AND status IN ('NEW', 'PAUSED', 'SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
             """;
 

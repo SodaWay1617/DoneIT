@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import com.doneit.task.domain.TaskPriority;
+import com.doneit.task.domain.TaskStatus;
 
 public class TaskUpsertForm {
 
@@ -30,6 +31,7 @@ public class TaskUpsertForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate plannedDate;
     private TaskPriority priority = TaskPriority.NONE;
+    private TaskStatus status = TaskStatus.NEW;
 
     public static TaskUpsertForm from(TaskFormView taskFormView) {
         TaskUpsertForm form = new TaskUpsertForm();
@@ -46,6 +48,7 @@ public class TaskUpsertForm {
                 && taskFormView.plannedDate() == null);
         form.setPlannedDate(taskFormView.plannedDate());
         form.setPriority(taskFormView.priority());
+        form.setStatus(taskFormView.status());
         return form;
     }
 
@@ -108,4 +111,6 @@ public class TaskUpsertForm {
     public void setPlannedDate(LocalDate plannedDate) { this.plannedDate = plannedDate; }
     public TaskPriority getPriority() { return priority; }
     public void setPriority(TaskPriority priority) { this.priority = priority == null ? TaskPriority.NONE : priority; }
+    public TaskStatus getStatus() { return status; }
+    public void setStatus(TaskStatus status) { this.status = status == null ? TaskStatus.NEW : status; }
 }

@@ -141,7 +141,14 @@
                         th:text="${priorityValue.displayName()}">None</option>
             </select>
         </label>
-        <label class="choice"><input type="checkbox" th:field="*{backlog}" /> Put this task in backlog</label>
+        <label>
+            Status
+            <select th:field="*{status}">
+                <option th:each="statusValue : ${T(com.doneit.task.domain.TaskStatus).workflowValues()}"
+                        th:value="${statusValue}"
+                        th:text="${statusValue.displayName()}">New</option>
+            </select>
+        </label>
         <label class="choice"><input type="checkbox" th:field="*{permanent}" /> Permanent task</label>
         <label>
             Description
@@ -171,7 +178,7 @@
     </form>
 </div>
 <script>
-    const backlog = document.getElementById('backlog');
+    const status = document.getElementById('status');
     const permanent = document.getElementById('permanent');
     const dateFields = document.getElementById('dateFields');
     const day = document.getElementById('plannedDate');
@@ -179,9 +186,9 @@
     const deadline = document.querySelector('[name=deadlineAt]');
 
     function updateDateFields(changed) {
-        if (changed === backlog && backlog.checked) permanent.checked = false;
-        if (changed === permanent && permanent.checked) backlog.checked = false;
-        const datesDisabled = backlog.checked || permanent.checked;
+        if (changed === status && status.value === 'BACKLOG') permanent.checked = false;
+        if (changed === permanent && permanent.checked && status.value === 'BACKLOG') status.value = 'IN_PROGRESS';
+        const datesDisabled = status.value === 'BACKLOG' || permanent.checked;
         dateFields.hidden = datesDisabled;
         if (datesDisabled) {
             day.value = '';
@@ -190,7 +197,7 @@
         }
     }
 
-    backlog.addEventListener('change', () => updateDateFields(backlog));
+    status.addEventListener('change', () => updateDateFields(status));
     permanent.addEventListener('change', () => updateDateFields(permanent));
     day.addEventListener('input', () => { if (day.value) time.value = ''; });
     time.addEventListener('input', () => { if (time.value) day.value = ''; });

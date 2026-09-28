@@ -55,7 +55,7 @@ public record Task(
         if (updatedAt == null) {
             throw new IllegalArgumentException("Task updatedAt is required");
         }
-        if ((status == TaskStatus.OPEN || status == TaskStatus.BACKLOG) && (completedAt != null || closedAt != null)) {
+        if (!status.isFinished() && (completedAt != null || closedAt != null)) {
             throw new IllegalArgumentException("Unfinished task cannot have completion timestamps");
         }
         if (status == TaskStatus.DONE && completedAt == null) {
@@ -73,11 +73,11 @@ public record Task(
     }
 
     public boolean isBacklog() {
-        return status == TaskStatus.BACKLOG;
+        return status.isBacklog();
     }
 
     public boolean isActive() {
-        return status == TaskStatus.OPEN;
+        return status.isActiveFlow();
     }
 
     public boolean isVisibleInActiveDatedList() {
@@ -132,7 +132,7 @@ public record Task(
                 userId,
                 title,
                 description,
-                TaskStatus.OPEN,
+                status == TaskStatus.BACKLOG || status == TaskStatus.NEW ? TaskStatus.TODO : status,
                 plannedForAt,
                 deadlineAt,
                 createdAt,
@@ -160,7 +160,7 @@ public record Task(
     }
 
     private void ensureOpenForTransition(String action) {
-        if (status != TaskStatus.OPEN && status != TaskStatus.BACKLOG) {
+        if (status.isFinished()) {
             throw new IllegalStateException("Only unfinished task can " + action);
         }
     }

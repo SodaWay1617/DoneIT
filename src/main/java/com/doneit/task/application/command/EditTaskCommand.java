@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import com.doneit.task.domain.TaskPriority;
+import com.doneit.task.domain.TaskStatus;
 
 public record EditTaskCommand(
         @NotNull(message = "Task id is required") Long taskId,
@@ -16,13 +17,15 @@ public record EditTaskCommand(
         Long projectId,
         LocalDate plannedDate,
         boolean backlog,
-        TaskPriority priority
+        TaskPriority priority,
+        TaskStatus status
 ) {
     public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt) {
-        this(taskId,title,description,plannedForAt,deadlineAt,null,null,false,TaskPriority.NONE);
+        this(taskId,title,description,plannedForAt,deadlineAt,null,null,false,TaskPriority.NONE,null);
     }
-    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId){this(id,title,description,planned,deadline,projectId,null,false,TaskPriority.NONE);}
-    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId,LocalDate plannedDate,boolean backlog){this(id,title,description,planned,deadline,projectId,plannedDate,backlog,TaskPriority.NONE);}
+    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId){this(id,title,description,planned,deadline,projectId,null,false,TaskPriority.NONE,null);}
+    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId,LocalDate plannedDate,boolean backlog){this(id,title,description,planned,deadline,projectId,plannedDate,backlog,TaskPriority.NONE,backlog?TaskStatus.BACKLOG:null);}
+    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority){this(id,title,description,planned,deadline,projectId,plannedDate,backlog,priority,backlog?TaskStatus.BACKLOG:null);}
 
     public EditTaskCommand {
         if (taskId == null) {

@@ -93,10 +93,10 @@
 
     <main class="board">
         <section class="column">
-            <h2 th:text="'Open (' + ${kanban.openTasks.size()} + ')'">Open</h2>
+            <h2 th:text="'Active (' + ${kanban.openTasks.size()} + ')'">Active</h2>
             <div class="stack" th:if="!${#lists.isEmpty(kanban.openTasks)}">
                 <article class="task" th:each="task : ${kanban.openTasks}">
-                    <div class="badges"><span class="badge open">OPEN</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
+                    <div class="badges"><span class="badge open" th:text="${task.status.displayName()}">Status</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
                     <h3 th:text="${task.title}">Task</h3>
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="${#temporals.format(task.plannedForAt, 'HH:mm')}">09:00</p>
                     <p class='meta' th:if='${task.plannedDate != null}' th:text='${task.plannedDate}'>Planned day</p>
@@ -116,7 +116,7 @@
                     </div>
                 </article>
             </div>
-            <p class="meta" th:if="${#lists.isEmpty(kanban.openTasks)}">No open tasks.</p>
+            <p class="meta" th:if="${#lists.isEmpty(kanban.openTasks)}">No active tasks.</p>
         </section>
 
         <section class="column">

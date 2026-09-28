@@ -82,7 +82,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 Long.class,
                 "Today task",
                 "Visible on the daily page",
-                "OPEN",
+                "IN_PROGRESS",
                 LocalDateTime.of(2026, 4, 8, 10, 0),
                 LocalDateTime.of(2026, 4, 8, 18, 0),
                 userId,
@@ -100,7 +100,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 Long.class,
                 "Overdue planned task",
                 "Should stay visible on today",
-                "OPEN",
+                "IN_PROGRESS",
                 LocalDateTime.of(2026, 4, 7, 10, 0),
                 null,
                 userId,
@@ -118,7 +118,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 Long.class,
                 "Tomorrow task",
                 "Visible on selected date page",
-                "OPEN",
+                "IN_PROGRESS",
                 LocalDateTime.of(2026, 4, 9, 11, 0),
                 null,
                 userId,
@@ -181,7 +181,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'Already done')]").doesNotExist())
                 .andExpect(xpath("//form[@class='date-picker']//input[@type='date' and @name='date']").exists())
                 .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'TODAY')]").exists())
-                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'OPEN')]").exists())
+                .andExpect(xpath("//*[@id='active-tasks']//*[contains(text(),'IN-PROGRESS')]").exists())
                 .andExpect(xpath("//*[@id='backlog-preview']//*[contains(text(),'BACKLOG')]").exists())
                 .andExpect(xpath("//*[@id='completed-tasks']//*[contains(text(),'DONE')]").exists())
                 .andExpect(xpath("//form[@class='bulk-action']//input[@name='redirectTo']/@value").string("/"))
@@ -268,7 +268,7 @@ class HomeControllerTest extends IntegrationTestSupport {
                   AND description = ?
                   AND planned_for_at = ?
                   AND deadline_at = ?
-                  AND status = 'OPEN'
+                  AND status = 'IN_PROGRESS'
                 """,
                 Integer.class,
                 "Write architecture note",

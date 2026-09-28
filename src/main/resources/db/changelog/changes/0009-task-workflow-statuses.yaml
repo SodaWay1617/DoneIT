@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0009-task-workflow-statuses
+      author: codex
+      changes:
+        - sql:
+            sql: ALTER TABLE tasks DROP CONSTRAINT chk_tasks_status
+        - sql:
+            sql: UPDATE tasks SET status = 'IN_PROGRESS' WHERE status = 'OPEN'
+        - sql:
+            sql: ALTER TABLE tasks ADD CONSTRAINT chk_tasks_status CHECK (status IN ('NEW', 'BACKLOG', 'PAUSED', 'SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION', 'DONE', 'CLOSED'))

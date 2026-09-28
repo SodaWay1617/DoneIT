@@ -1,6 +1,7 @@
 package com.doneit.task.web;
 
 import com.doneit.task.application.view.TaskFormView;
+import com.doneit.task.domain.TaskStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,6 +19,7 @@ class TaskUpsertFormTest {
 
         assertTrue(form.isPermanent());
         assertFalse(form.isBacklog());
+        assertTrue(form.getStatus() == TaskStatus.IN_PROGRESS);
     }
 
     @Test
@@ -30,5 +32,13 @@ class TaskUpsertFormTest {
 
         assertTrue(form.isBacklog());
         assertFalse(form.isPermanent());
+        assertTrue(form.getStatus() == TaskStatus.BACKLOG);
+    }
+
+    @Test
+    void newTaskFormDefaultsToNewStatus() {
+        TaskUpsertForm form = TaskUpsertForm.from(TaskFormView.forCreate(null));
+
+        assertTrue(form.getStatus() == TaskStatus.NEW);
     }
 }

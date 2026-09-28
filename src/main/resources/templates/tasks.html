@@ -328,13 +328,13 @@
     <div class="grid">
         <section id="active-tasks" class="card">
             <h2 th:text="'Active tasks (' + ${daily.activeTaskCount()} + ')'">Active tasks (0)</h2>
-            <p class="section-note">Only dated OPEN tasks stay in the main flow.</p>
+            <p class="section-note">Unfinished tasks stay in the main flow until they are done, closed, or moved to backlog.</p>
             <div class="stack" th:if="!${#lists.isEmpty(daily.activeTasks)}">
                 <article class="task" th:each="task : ${daily.activeTasks}" th:classappend="${task.overdue} ? ' overdue'">
                     <div class="task-top">
                         <div class="task-top-main">
                             <div class="badges">
-                                <span class="badge status-open">OPEN</span>
+                                <span class="badge status-open" th:text="${task.status.displayName()}">Status</span>
                                 <span class="badge status-today" th:if="${todayPage}">TODAY</span>
                                 <span class="badge status-overdue" th:if="${task.overdue}">OVERDUE</span>
                                 <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
@@ -374,7 +374,7 @@
                     <form method='post' th:action='@{/tasks/{id}/project(id=${task.id})}'><input type='hidden' th:name='${_csrf.parameterName}' th:value='${_csrf.token}'><input type='hidden' name='redirectTo' value='/'><select name='projectId'><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == task.projectId}'>Project</option></select><button class='secondary'>Move project</button></form>
                 </article>
             </div>
-            <p class="empty" th:if="${#lists.isEmpty(daily.activeTasks)}">No dated open tasks for this screen yet.</p>
+            <p class="empty" th:if="${#lists.isEmpty(daily.activeTasks)}">No active tasks for this screen yet.</p>
         </section>
 
         <aside class="stack">

@@ -119,16 +119,17 @@ public class HomeController {
             return "task-form";
         }
 
-        boolean withoutDates = form.isBacklog() || form.isPermanent();
+        boolean backlog = form.getStatus() == com.doneit.task.domain.TaskStatus.BACKLOG;
+        boolean withoutDates = backlog || form.isPermanent();
         CreateTaskCommand command = new CreateTaskCommand(
                 form.getTitle(),
                 form.getDescription(),
                 withoutDates ? null : form.getPlannedForAt(),
                 withoutDates ? null : form.getDeadlineAt(), form.getProjectId(),
-                withoutDates ? null : form.getPlannedDate(), form.isBacklog(), form.getPriority()
+                withoutDates ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus()
         );
 
-        if (form.isBacklog()) {
+        if (backlog) {
             taskApplicationService.createBacklogTask(command);
             redirectAttributes.addFlashAttribute("flashMessage", "Task added to backlog.");
             return "redirect:/backlog";
@@ -166,18 +167,19 @@ public class HomeController {
             return "task-form";
         }
 
-        boolean withoutDates = form.isBacklog() || form.isPermanent();
+        boolean backlog = form.getStatus() == com.doneit.task.domain.TaskStatus.BACKLOG;
+        boolean withoutDates = backlog || form.isPermanent();
         EditTaskCommand command = new EditTaskCommand(
                 taskId,
                 form.getTitle(),
                 form.getDescription(),
                 withoutDates ? null : form.getPlannedForAt(),
                 withoutDates ? null : form.getDeadlineAt(), form.getProjectId(),
-                withoutDates ? null : form.getPlannedDate(), form.isBacklog(), form.getPriority()
+                withoutDates ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus()
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
-        if (form.isBacklog()) return "redirect:/backlog";
+        if (backlog) return "redirect:/backlog";
         LocalDate plannedDate = form.getPlannedDate() != null ? form.getPlannedDate() : form.getPlannedForAt() == null ? null : form.getPlannedForAt().toLocalDate();
         return "redirect:" + (plannedDate == null ? "/" : resolveDateRedirect(plannedDate));
     }

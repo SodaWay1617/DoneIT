@@ -76,13 +76,13 @@ public class TaskApplicationService {
                 activeUser.id(),
                 command.title(),
                 normalizeDescription(command.description()),
-                TaskStatus.OPEN,
+                command.status(),
                 command.plannedForAt(),
                 command.deadlineAt(),
                 now,
                 now,
-                null,
-                null,
+                command.status() == TaskStatus.DONE ? now : null,
+                command.status() == TaskStatus.CLOSED ? now : null,
                 command.projectId(), null, null, command.plannedDate(), command.priority()
         );
 
@@ -128,13 +128,13 @@ public class TaskApplicationService {
                 existingTask.userId(),
                 command.title(),
                 normalizeDescription(command.description()),
-                statusForEdit(existingTask, command.backlog()),
+                command.status() == null ? existingTask.status() : command.status(),
                 command.plannedForAt(),
                 command.deadlineAt(),
                 existingTask.createdAt(),
                 now,
-                existingTask.completedAt(),
-                existingTask.closedAt(),
+                completionTime(command.status(), existingTask, now),
+                closingTime(command.status(), existingTask, now),
                 command.projectId() == null ? existingTask.projectId() : command.projectId(),
                 existingTask.taskNumber(), existingTask.taskKey(), command.backlog() ? null : command.plannedDate(),
                 command.priority()
@@ -279,7 +279,8 @@ public class TaskApplicationService {
                 true,
                 task.projectId(),
                 task.plannedDate(),
-                task.priority()
+                task.priority(),
+                task.status()
         );
     }
 
@@ -401,11 +402,14 @@ public class TaskApplicationService {
         return description == null || description.isBlank() ? null : description;
     }
 
-    private static TaskStatus statusForEdit(Task existingTask, boolean backlog) {
-        if (existingTask.status() == TaskStatus.OPEN || existingTask.status() == TaskStatus.BACKLOG) {
-            return backlog ? TaskStatus.BACKLOG : TaskStatus.OPEN;
-        }
-        return existingTask.status();
+    private static LocalDateTime completionTime(TaskStatus requested, Task existing, LocalDateTime now) {
+        TaskStatus status = requested == null ? existing.status() : requested;
+        return status == TaskStatus.DONE ? (existing.completedAt() == null ? now : existing.completedAt()) : null;
+    }
+
+    private static LocalDateTime closingTime(TaskStatus requested, Task existing, LocalDateTime now) {
+        TaskStatus status = requested == null ? existing.status() : requested;
+        return status == TaskStatus.CLOSED ? (existing.closedAt() == null ? now : existing.closedAt()) : null;
     }
 
     private static LocalDate requireDate(LocalDate date) {

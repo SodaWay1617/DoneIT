@@ -47,7 +47,7 @@ public record TaskListItemView(
         boolean plannedDateBeforeReferenceDate = task.plannedDate() != null && task.plannedDate().isBefore(referenceDate);
         boolean deadlineBeforeReferenceDate = task.deadlineAt() != null
                 && task.deadlineAt().toLocalDate().isBefore(referenceDate);
-        boolean overdue = task.status() == TaskStatus.OPEN
+        boolean overdue = task.status().isActiveFlow()
                 && (plannedBeforeReferenceDate || plannedDateBeforeReferenceDate || deadlineBeforeReferenceDate);
 
         return new TaskListItemView(

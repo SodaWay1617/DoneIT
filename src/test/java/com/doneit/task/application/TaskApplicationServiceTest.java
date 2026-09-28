@@ -94,7 +94,7 @@ class TaskApplicationServiceTest {
     void createTaskAllowsPermanentOpenTaskWithoutDate() {
         when(taskRepository.create(any(Task.class))).thenAnswer(invocation -> withId(invocation.getArgument(0), 103L));
         TaskListItemView result = service.createTask(new CreateTaskCommand("Task", null, null, null));
-        assertEquals(TaskStatus.OPEN, result.status());
+        assertEquals(TaskStatus.IN_PROGRESS, result.status());
         assertNull(result.plannedForAt());
     }
 
@@ -107,7 +107,7 @@ class TaskApplicationServiceTest {
 
         assertEquals(LocalDate.of(2026, 4, 12), result.plannedDate());
         assertNull(result.plannedForAt());
-        assertEquals(TaskStatus.OPEN, result.status());
+        assertEquals(TaskStatus.IN_PROGRESS, result.status());
     }
 
     @Test
@@ -120,6 +120,19 @@ class TaskApplicationServiceTest {
         TaskListItemView result = service.createTask(command);
 
         assertEquals(TaskPriority.CRITICAL, result.priority());
+    }
+
+    @Test
+    void createTaskUsesSelectedWorkflowStatus() {
+        when(taskRepository.create(any(Task.class))).thenAnswer(invocation -> withId(invocation.getArgument(0), 106L));
+        CreateTaskCommand command = new CreateTaskCommand(
+                "Needs analysis", null, null, null, null, null, false,
+                TaskPriority.NORMAL, TaskStatus.NEW
+        );
+
+        TaskListItemView result = service.createTask(command);
+
+        assertEquals(TaskStatus.NEW, result.status());
     }
 
     @Test
@@ -422,7 +435,7 @@ class TaskApplicationServiceTest {
                 ACTIVE_USER.id(),
                 "Task " + id,
                 null,
-                TaskStatus.OPEN,
+                TaskStatus.IN_PROGRESS,
                 plannedForAt,
                 deadlineAt,
                 LocalDateTime.of(2026, 4, 1, 9, 0),

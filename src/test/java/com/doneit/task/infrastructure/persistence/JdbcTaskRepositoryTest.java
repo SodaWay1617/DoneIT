@@ -77,7 +77,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
                 created.userId(),
                 "New title",
                 "Updated description",
-                TaskStatus.OPEN,
+                TaskStatus.IN_PROGRESS,
                 LocalDateTime.of(2026, 4, 6, 12, 0),
                 LocalDateTime.of(2026, 4, 7, 18, 0),
                 created.createdAt(),
@@ -145,7 +145,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
         List<Task> completed = taskRepository.findCompletedOrClosedTasks(userId);
 
         assertEquals(2, completed.size());
-        assertTrue(completed.stream().allMatch(task -> task.status() != TaskStatus.OPEN));
+        assertTrue(completed.stream().allMatch(task -> task.status() != TaskStatus.IN_PROGRESS));
     }
 
     @Test
@@ -171,7 +171,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
         ).orElseThrow();
 
         assertFalse(rescheduled.isBacklog());
-        assertEquals(TaskStatus.OPEN, rescheduled.status());
+        assertEquals(TaskStatus.IN_PROGRESS, rescheduled.status());
         assertEquals(LocalDateTime.of(2026, 4, 6, 16, 0), rescheduled.plannedForAt());
     }
 
@@ -245,7 +245,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
                 userId,
                 title,
                 title + " description",
-                TaskStatus.OPEN,
+                TaskStatus.IN_PROGRESS,
                 plannedForAt,
                 LocalDateTime.of(2026, 4, 10, 18, 0),
                 createdAt,
