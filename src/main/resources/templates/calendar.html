@@ -108,7 +108,7 @@
                    th:each="item : ${day.items}"
                    th:classappend="${item.deadlineHighlighted} ? ' deadline' : (${item.taskStatus.name() == 'DONE'} ? ' done' : (${item.taskStatus.name() == 'CLOSED'} ? ' closed' : ''))"
                    th:href="@{/tasks/{id}/edit(id=${item.taskId})}"
-                   th:text="${#temporals.format(item.dateTime, 'HH:mm')} + ' ' + ${item.title}">09:00 Task</a>
+                   th:text="${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') + ' ' + item.title : item.title}">09:00 Task</a>
             </div>
         </article>
     </section>

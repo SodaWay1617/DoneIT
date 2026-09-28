@@ -2,6 +2,7 @@ package com.doneit.task.application.view;
 
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskStatus;
+import com.doneit.task.domain.TaskPriority;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,8 +14,16 @@ public record CalendarItemView(
         LocalDateTime dateTime,
         String title,
         TaskStatus taskStatus,
-        boolean deadlineHighlighted
+        boolean deadlineHighlighted,
+        TaskPriority priority,
+        boolean exactTime
 ) {
+    public CalendarItemView(Long taskId, CalendarOccurrenceType occurrenceType, LocalDate date,
+                            LocalDateTime dateTime, String title, TaskStatus taskStatus,
+                            boolean deadlineHighlighted) {
+        this(taskId, occurrenceType, date, dateTime, title, taskStatus, deadlineHighlighted,
+                TaskPriority.NONE, true);
+    }
 
     public static CalendarItemView planned(Task task) {
         return planned(task, true);
@@ -28,7 +37,9 @@ public record CalendarItemView(
                 task.plannedForAt(),
                 displayTitle(task, showProjectInTitle),
                 task.status(),
-                task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate())
+                task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate()),
+                task.priority(),
+                true
         );
     }
 
@@ -39,7 +50,8 @@ public record CalendarItemView(
     public static CalendarItemView plannedDate(Task task, boolean showProjectInTitle) {
         return new CalendarItemView(task.id(), CalendarOccurrenceType.PLANNED, task.plannedDate(),
                 task.plannedDate().atStartOfDay(), displayTitle(task, showProjectInTitle), task.status(),
-                task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedDate()));
+                task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedDate()),
+                task.priority(), false);
     }
 
     public static CalendarItemView deadline(Task task) {
@@ -54,6 +66,8 @@ public record CalendarItemView(
                 task.deadlineAt(),
                 displayTitle(task, showProjectInTitle),
                 task.status(),
+                true,
+                task.priority(),
                 true
         );
     }

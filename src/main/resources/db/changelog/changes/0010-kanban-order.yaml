@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0010-kanban-order
+      author: codex
+      changes:
+        - addColumn:
+            tableName: tasks
+            columns:
+              - column:
+                  name: status_position
+                  type: BIGINT
+        - sql:
+            sql: |
+              WITH ranked AS (
+                  SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id, status ORDER BY id) AS position
+                  FROM tasks
+              )
+              UPDATE tasks
+              SET status_position = ranked.position
+              FROM ranked
+              WHERE tasks.id = ranked.id;
+        - addNotNullConstraint:
+            tableName: tasks
+            columnName: status_position
+            columnDataType: BIGINT
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE OR REPLACE FUNCTION assign_task_status_position()
+              RETURNS TRIGGER AS $$
+              BEGIN
+                  IF TG_OP = 'INSERT' OR
+                     (NEW.status IS DISTINCT FROM OLD.status AND NEW.status_position IS NOT DISTINCT FROM OLD.status_position) THEN
+                      SELECT COALESCE(MAX(status_position), 0) + 1
+                      INTO NEW.status_position
+                      FROM tasks
+                      WHERE user_id = NEW.user_id AND status = NEW.status;
+                  END IF;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+        - sql:
+            sql: |
+              CREATE TRIGGER tasks_status_position
+              BEFORE INSERT OR UPDATE OF status ON tasks
+              FOR EACH ROW EXECUTE FUNCTION assign_task_status_position()

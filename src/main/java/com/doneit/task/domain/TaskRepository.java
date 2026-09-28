@@ -25,6 +25,10 @@ public interface TaskRepository {
 
     List<Task> findTasksForCalendarRange(Long userId, LocalDate startDate, LocalDate endDateExclusive);
 
+    List<Task> findTasksForKanban(Long userId, LocalDate date);
+
+    void reorderKanban(Long userId, TaskStatus status, List<Long> orderedTaskIds, LocalDateTime updatedAt);
+
     Optional<Task> markDone(Long taskId, LocalDateTime completedAt);
 
     Optional<Task> markClosed(Long taskId, LocalDateTime closedAt);

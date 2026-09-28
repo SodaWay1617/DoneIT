@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title>DoneIt Kanban</title>
     <style>
         :root {
@@ -58,15 +60,18 @@
         .badge.priority-normal { color: var(--accent); }
         .badge.priority-high { color: var(--danger); border-color: rgba(159, 77, 54, 0.28); }
         .badge.priority-critical { color: white; background: var(--danger); border-color: var(--danger); }
-        .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+        .board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(270px, 1fr); gap: 16px; margin-top: 18px; overflow-x: auto; padding-bottom: 10px; }
         .column h2 { margin: 0 0 12px; font-size: 1.1rem; }
-        .stack { display: grid; gap: 12px; }
+        .stack { display: grid; align-content: start; gap: 12px; min-height: 80px; }
         .task { padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: white; }
+        .task[draggable="true"] { cursor: grab; }
+        .task.dragging { opacity: 0.42; }
+        .stack.drag-target { outline: 2px dashed var(--accent); outline-offset: 6px; }
         .task h3 { margin: 8px 0 0; font-size: 1rem; }
         .meta { margin: 8px 0 0; color: var(--muted); }
         .task-actions { margin-top: 12px; }
         form.inline { margin: 0; }
-        @media (max-width: 940px) { .board { grid-template-columns: 1fr; } }
+        @media (max-width: 940px) { .board { grid-auto-columns: minmax(250px, 82vw); } }
     </style>
 </head>
 <body>
@@ -92,55 +97,72 @@
     </section>
 
     <main class="board">
-        <section class="column">
-            <h2 th:text="'Active (' + ${kanban.openTasks.size()} + ')'">Active</h2>
-            <div class="stack" th:if="!${#lists.isEmpty(kanban.openTasks)}">
-                <article class="task" th:each="task : ${kanban.openTasks}">
-                    <div class="badges"><span class="badge open" th:text="${task.status.displayName()}">Status</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
+        <section class="column" th:each="column : ${kanban.columns}">
+            <h2 th:text="${column.status.displayName() + ' (' + column.tasks.size() + ')'}">STATUS (0)</h2>
+            <div class="stack" th:attr="data-status=${column.status.name()}">
+                <article class="task" draggable="true" th:each="task : ${column.tasks}" th:attr="data-task-id=${task.id}">
+                    <div class="badges">
+                        <span class="badge open" th:text="${task.status.displayName()}">Status</span>
+                        <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
+                    </div>
                     <h3 th:text="${task.title}">Task</h3>
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="${#temporals.format(task.plannedForAt, 'HH:mm')}">09:00</p>
-                    <p class='meta' th:if='${task.plannedDate != null}' th:text='${task.plannedDate}'>Planned day</p>
+                    <p class="meta" th:if="${task.plannedDate != null}" th:text="${task.plannedDate}">Planned day</p>
                     <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
-                    <div class="task-actions">
-                        <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>
-                        <form class="inline" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <input type="hidden" name="redirectTo" th:value="'/kanban?date=' + ${#temporals.format(kanban.selectedDate, 'yyyy-MM-dd')}" />
-                            <button class="solid" type="submit">Done</button>
-                        </form>
-                        <form class="inline" method="post" th:action="@{/tasks/{id}/closed(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <input type="hidden" name="redirectTo" th:value="'/kanban?date=' + ${#temporals.format(kanban.selectedDate, 'yyyy-MM-dd')}" />
-                            <button class="secondary" type="submit">Close</button>
-                        </form>
-                    </div>
+                    <div class="task-actions"><a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a></div>
                 </article>
             </div>
-            <p class="meta" th:if="${#lists.isEmpty(kanban.openTasks)}">No active tasks.</p>
-        </section>
-
-        <section class="column">
-            <h2 th:text="'Done (' + ${kanban.doneTasks.size()} + ')'">Done</h2>
-            <div class="stack" th:if="!${#lists.isEmpty(kanban.doneTasks)}">
-                <article class="task" th:each="task : ${kanban.doneTasks}">
-                    <div class="badges"><span class="badge done">DONE</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
-                    <h3 th:text="${task.title}">Task</h3>
-                </article>
-            </div>
-            <p class="meta" th:if="${#lists.isEmpty(kanban.doneTasks)}">No done tasks.</p>
-        </section>
-
-        <section class="column">
-            <h2 th:text="'Closed (' + ${kanban.closedTasks.size()} + ')'">Closed</h2>
-            <div class="stack" th:if="!${#lists.isEmpty(kanban.closedTasks)}">
-                <article class="task" th:each="task : ${kanban.closedTasks}">
-                    <div class="badges"><span class="badge closed">CLOSED</span><span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span></div>
-                    <h3 th:text="${task.title}">Task</h3>
-                </article>
-            </div>
-            <p class="meta" th:if="${#lists.isEmpty(kanban.closedTasks)}">No closed tasks.</p>
         </section>
     </main>
 </div>
+<script>
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    let draggedTask = null;
+    let sourceColumn = null;
+
+    document.querySelectorAll('.task[draggable="true"]').forEach(task => {
+        task.addEventListener('dragstart', () => {
+            draggedTask = task;
+            sourceColumn = task.parentElement;
+            task.classList.add('dragging');
+        });
+        task.addEventListener('dragend', () => {
+            task.classList.remove('dragging');
+            document.querySelectorAll('.stack').forEach(stack => stack.classList.remove('drag-target'));
+        });
+    });
+
+    document.querySelectorAll('.stack[data-status]').forEach(stack => {
+        stack.addEventListener('dragover', event => {
+            event.preventDefault();
+            stack.classList.add('drag-target');
+            const next = [...stack.querySelectorAll('.task:not(.dragging)')]
+                .find(task => event.clientY < task.getBoundingClientRect().top + task.offsetHeight / 2);
+            stack.insertBefore(draggedTask, next || null);
+        });
+        stack.addEventListener('dragleave', () => stack.classList.remove('drag-target'));
+        stack.addEventListener('drop', async event => {
+            event.preventDefault();
+            stack.classList.remove('drag-target');
+            if (sourceColumn && sourceColumn !== stack) await saveColumn(sourceColumn);
+            await saveColumn(stack);
+            sourceColumn = stack;
+        });
+    });
+
+    async function saveColumn(stack) {
+        const body = new URLSearchParams();
+        body.append('status', stack.dataset.status);
+        stack.querySelectorAll('.task').forEach(task => body.append('taskIds', task.dataset.taskId));
+        if (![...stack.querySelectorAll('.task')].length) return;
+        const response = await fetch('/kanban/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', [csrfHeader]: csrfToken },
+            body
+        });
+        if (!response.ok) window.location.reload();
+    }
+</script>
 </body>
 </html>

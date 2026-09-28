@@ -30,6 +30,7 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -212,19 +213,28 @@ public class TaskApplicationService {
         User activeUser = requireActiveUser();
         LocalDate targetDate = requireDate(date);
 
-        List<TaskListItemView> activeTasks = findActiveTasksForScreen(activeUser.id(), targetDate).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
-                .toList();
-        List<TaskListItemView> finishedTasks = taskRepository.findCompletedOrClosedTasksForDate(activeUser.id(), targetDate).stream().filter(t -> matches(t, projectId))
+        List<TaskListItemView> tasks = taskRepository.findTasksForKanban(activeUser.id(), targetDate).stream()
+                .filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
                 .toList();
 
         return new KanbanTasksView(
                 targetDate,
-                activeTasks,
-                finishedTasks.stream().filter(task -> task.status() == TaskStatus.DONE).toList(),
-                finishedTasks.stream().filter(task -> task.status() == TaskStatus.CLOSED).toList()
+                tasks.stream().filter(task -> !task.status().isFinished()).toList(),
+                tasks.stream().filter(task -> task.status() == TaskStatus.DONE).toList(),
+                tasks.stream().filter(task -> task.status() == TaskStatus.CLOSED).toList()
         );
+    }
+
+    @Transactional
+    public void reorderKanban(@NotNull TaskStatus status, @NotNull List<Long> orderedTaskIds) {
+        User activeUser = requireActiveUser();
+        List<Long> taskIds = orderedTaskIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (taskIds.isEmpty()) {
+            return;
+        }
+        taskIds.forEach(this::getTaskOrThrow);
+        taskRepository.reorderKanban(activeUser.id(), status, taskIds, LocalDateTime.now(clock));
     }
 
     public CalendarMonthView getCalendarMonth(@NotNull YearMonth month) {
@@ -250,7 +260,14 @@ public class TaskApplicationService {
         List<CalendarDayView> days = new ArrayList<>();
         for (LocalDate date = gridStart; date.isBefore(gridEndExclusive); date = date.plusDays(1)) {
             List<CalendarItemView> items = itemsByDate.getOrDefault(date, List.of()).stream()
-                    .sorted(Comparator.comparing(CalendarItemView::dateTime).thenComparing(CalendarItemView::taskId))
+                    .sorted(Comparator.comparing(CalendarItemView::exactTime).reversed()
+                            .thenComparing(item -> item.exactTime()
+                                    ? item.dateTime().toLocalTime()
+                                    : LocalTime.MAX)
+                            .thenComparing(Comparator.comparingInt(
+                                    (CalendarItemView item) -> item.priority().ordinal()).reversed())
+                            .thenComparing(CalendarItemView::title, String.CASE_INSENSITIVE_ORDER)
+                            .thenComparing(CalendarItemView::taskId))
                     .toList();
             days.add(new CalendarDayView(date, YearMonth.from(date).equals(targetMonth), date.equals(today), items));
         }

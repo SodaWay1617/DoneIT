@@ -17,3 +17,5 @@ databaseChangeLog:
       file: db/changelog/changes/0008-task-priority.yaml
   - include:
       file: db/changelog/changes/0009-task-workflow-statuses.yaml
+  - include:
+      file: db/changelog/changes/0010-kanban-order.yaml

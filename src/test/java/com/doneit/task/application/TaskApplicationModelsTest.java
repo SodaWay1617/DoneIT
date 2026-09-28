@@ -186,6 +186,7 @@ class TaskApplicationModelsTest {
         openTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.IN_PROGRESS, null, null, false, false));
 
         assertTrue(view.openTasks().isEmpty());
+        assertEquals(9, view.columns().size());
     }
 
     @Test
@@ -222,6 +223,24 @@ class TaskApplicationModelsTest {
         ));
 
         assertTrue(view.items().isEmpty());
+    }
+
+    @Test
+    void calendarItemDistinguishesExactTimeFromDayOnlyPlanning() {
+        Task exactTask = taskWithKey("WORK-7___doneit");
+        Task dayTask = new Task(
+                21L, 1L, "Day task", null, TaskStatus.TODO,
+                null, null,
+                LocalDateTime.of(2026, 4, 1, 9, 0),
+                LocalDateTime.of(2026, 4, 1, 9, 0),
+                null, null, 2L, 10L, "WORK-10___doneit",
+                LocalDate.of(2026, 4, 5), com.doneit.task.domain.TaskPriority.CRITICAL
+        );
+
+        assertTrue(CalendarItemView.planned(exactTask).exactTime());
+        assertFalse(CalendarItemView.plannedDate(dayTask).exactTime());
+        assertEquals(com.doneit.task.domain.TaskPriority.CRITICAL,
+                CalendarItemView.plannedDate(dayTask).priority());
     }
 
     private static Task taskWithKey(String taskKey) {

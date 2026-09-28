@@ -255,10 +255,12 @@ class TaskApplicationServiceTest {
     @Test
     void getKanbanTasksForDateSplitsTasksByColumn() {
         LocalDate date = LocalDate.of(2026, 4, 7);
-        when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), date))
-                .thenReturn(List.of(openTask(10L, LocalDateTime.of(2026, 4, 6, 9, 0), null)));
-        when(taskRepository.findCompletedOrClosedTasksForDate(ACTIVE_USER.id(), date))
-                .thenReturn(List.of(doneTask(11L), closedTask(12L)));
+        when(taskRepository.findTasksForKanban(ACTIVE_USER.id(), date))
+                .thenReturn(List.of(
+                        openTask(10L, LocalDateTime.of(2026, 4, 6, 9, 0), null),
+                        doneTask(11L),
+                        closedTask(12L)
+                ));
 
         KanbanTasksView result = service.getKanbanTasksForDate(date);
 
@@ -266,8 +268,21 @@ class TaskApplicationServiceTest {
         assertEquals(1, result.openTasks().size());
         assertEquals(1, result.doneTasks().size());
         assertEquals(1, result.closedTasks().size());
+        assertEquals(9, result.columns().size());
         assertTrue(result.openTasks().getFirst().overdue());
-        verify(taskRepository).findCompletedOrClosedTasksForDate(ACTIVE_USER.id(), date);
+        verify(taskRepository).findTasksForKanban(ACTIVE_USER.id(), date);
+    }
+
+    @Test
+    void reorderKanbanPersistsCompleteColumnOrder() {
+        when(taskRepository.findById(10L)).thenReturn(Optional.of(openTask(10L, null, null)));
+        when(taskRepository.findById(11L)).thenReturn(Optional.of(openTask(11L, null, null)));
+
+        service.reorderKanban(TaskStatus.TODO, List.of(11L, 10L));
+
+        verify(taskRepository).reorderKanban(
+                eq(ACTIVE_USER.id()), eq(TaskStatus.TODO), eq(List.of(11L, 10L)), any(LocalDateTime.class)
+        );
     }
 
     @Test

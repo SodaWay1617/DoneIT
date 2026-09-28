@@ -57,7 +57,11 @@ public class JdbcTaskRepository implements TaskRepository {
                   OR planned_date = ?
               )
             ORDER BY CASE priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
-                     planned_for_at, id
+                     CASE WHEN planned_for_at IS NULL THEN 1 ELSE 0 END,
+                     CAST(planned_for_at AS time),
+                     CASE status WHEN 'IN_PROGRESS' THEN 0 WHEN 'TODO' THEN 1 WHEN 'DOCUMENTATION' THEN 2
+                         WHEN 'SPECIFICATION' THEN 3 WHEN 'NEW' THEN 4 WHEN 'PAUSED' THEN 5 ELSE 6 END,
+                     LOWER(title), id
             """;
 
     private static final String FIND_ACTIVE_DUE_BY_DATE_SQL = BASE_SELECT + """
@@ -69,7 +73,11 @@ public class JdbcTaskRepository implements TaskRepository {
                   OR planned_date <= ?
               )
             ORDER BY CASE priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
-                     planned_for_at, id
+                     CASE WHEN planned_for_at IS NULL THEN 1 ELSE 0 END,
+                     CAST(planned_for_at AS time),
+                     CASE status WHEN 'IN_PROGRESS' THEN 0 WHEN 'TODO' THEN 1 WHEN 'DOCUMENTATION' THEN 2
+                         WHEN 'SPECIFICATION' THEN 3 WHEN 'NEW' THEN 4 WHEN 'PAUSED' THEN 5 ELSE 6 END,
+                     LOWER(title), id
             """;
 
     private static final String FIND_BACKLOG_SQL = BASE_SELECT + """
@@ -100,6 +108,28 @@ public class JdbcTaskRepository implements TaskRepository {
                   OR (deadline_at IS NOT NULL AND deadline_at >= ? AND deadline_at < ?)
               )
             ORDER BY COALESCE(planned_for_at, deadline_at), id
+            """;
+
+    private static final String FIND_FOR_KANBAN_SQL = BASE_SELECT + """
+            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+              AND (
+                  status = 'BACKLOG'
+                  OR (status NOT IN ('DONE', 'CLOSED') AND (
+                      (planned_for_at IS NULL AND planned_date IS NULL)
+                      OR (planned_for_at >= ? AND planned_for_at < ?)
+                      OR planned_date = ?
+                  ))
+                  OR (status IN ('DONE', 'CLOSED') AND (
+                      (planned_for_at >= ? AND planned_for_at < ?)
+                      OR planned_date = ?
+                  ))
+              )
+            ORDER BY CASE status
+                         WHEN 'NEW' THEN 0 WHEN 'BACKLOG' THEN 1 WHEN 'PAUSED' THEN 2
+                         WHEN 'SPECIFICATION' THEN 3 WHEN 'TODO' THEN 4 WHEN 'IN_PROGRESS' THEN 5
+                         WHEN 'DOCUMENTATION' THEN 6 WHEN 'DONE' THEN 7 ELSE 8
+                     END,
+                     status_position, id
             """;
 
     private static final String MARK_DONE_SQL = """
@@ -257,6 +287,51 @@ public class JdbcTaskRepository implements TaskRepository {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDateExclusive.atStartOfDay();
         return jdbcTemplate.query(FIND_FOR_CALENDAR_RANGE_SQL, taskRowMapper, userId, start, end, startDate, endDateExclusive, start, end);
+    }
+
+    @Override
+    public List<Task> findTasksForKanban(Long userId, LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+        return jdbcTemplate.query(
+                FIND_FOR_KANBAN_SQL,
+                taskRowMapper,
+                userId, start, end, date, start, end, date
+        );
+    }
+
+    @Override
+    public void reorderKanban(Long userId, com.doneit.task.domain.TaskStatus status, List<Long> orderedTaskIds,
+                              LocalDateTime updatedAt) {
+        for (Long taskId : orderedTaskIds) {
+            jdbcTemplate.update("""
+                    UPDATE tasks
+                    SET status = ?,
+                        planned_for_at = CASE WHEN ? = 'BACKLOG' THEN NULL ELSE planned_for_at END,
+                        planned_date = CASE WHEN ? = 'BACKLOG' THEN NULL ELSE planned_date END,
+                        completed_at = CASE WHEN ? = 'DONE' THEN COALESCE(completed_at, ?) ELSE NULL END,
+                        closed_at = CASE WHEN ? = 'CLOSED' THEN COALESCE(closed_at, ?) ELSE NULL END,
+                        updated_at = ?
+                    WHERE id = ?
+                      AND EXISTS (
+                          SELECT 1 FROM project_members pm
+                          WHERE pm.project_id = tasks.project_id AND pm.user_id = ?
+                      )
+                    """, status.name(), status.name(), status.name(), status.name(), updatedAt, status.name(), updatedAt,
+                    updatedAt, taskId, userId);
+        }
+        for (int index = 0; index < orderedTaskIds.size(); index++) {
+            jdbcTemplate.update("""
+                    UPDATE tasks
+                    SET status_position = ?
+                    WHERE id = ?
+                      AND status = ?
+                      AND EXISTS (
+                          SELECT 1 FROM project_members pm
+                          WHERE pm.project_id = tasks.project_id AND pm.user_id = ?
+                      )
+                    """, index + 1L, orderedTaskIds.get(index), status.name(), userId);
+        }
     }
 
     @Override

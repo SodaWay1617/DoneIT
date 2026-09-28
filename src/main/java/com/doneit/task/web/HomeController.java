@@ -8,6 +8,7 @@ import com.doneit.task.application.command.MoveTaskToBacklogCommand;
 import com.doneit.task.application.command.RescheduleTaskCommand;
 import com.doneit.task.application.view.BacklogTasksView;
 import com.doneit.task.application.view.DailyTasksView;
+import com.doneit.task.domain.TaskStatus;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -19,12 +20,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.List;
 
 @Controller
 public class HomeController {
@@ -94,6 +97,12 @@ public class HomeController {
         model.addAttribute("username", principal.getName());
         model.addAttribute("calendar", taskApplicationService.getCalendarMonth(selectedMonth,projectId));
         return "calendar";
+    }
+
+    @PostMapping("/kanban/reorder")
+    @ResponseBody
+    public void reorderKanban(@RequestParam TaskStatus status, @RequestParam List<Long> taskIds) {
+        taskApplicationService.reorderKanban(status, taskIds);
     }
 
     @GetMapping("/tasks/new")
