@@ -151,10 +151,10 @@ public class TaskApplicationService {
         LocalDate today = LocalDate.now(clock);
 
         List<TaskListItemView> activeTasks = taskRepository.findActiveTasksDueByDate(activeUser.id(), today).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, today))
+                .map(task -> TaskListItemView.from(task, today, activeUser.showProjectInTaskTitle()))
                 .toList();
         List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, today))
+                .map(task -> TaskListItemView.from(task, today, activeUser.showProjectInTaskTitle()))
                 .toList();
 
         return new DailyTasksView(today, activeTasks, completedTasks);
@@ -170,10 +170,10 @@ public class TaskApplicationService {
 
         List<Task> activeTaskSource = findActiveTasksForScreen(activeUser.id(), targetDate);
         List<TaskListItemView> activeTasks = activeTaskSource.stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, targetDate))
+                .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
                 .toList();
         List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, targetDate))
+                .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
                 .toList();
 
         return new DailyTasksView(targetDate, activeTasks, completedTasks);
@@ -187,7 +187,7 @@ public class TaskApplicationService {
         User activeUser = requireActiveUser();
         LocalDate today = LocalDate.now(clock);
         List<TaskListItemView> backlogTasks = taskRepository.findBacklogTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, today))
+                .map(task -> TaskListItemView.from(task, today, activeUser.showProjectInTaskTitle()))
                 .toList();
 
         return new BacklogTasksView(backlogTasks);
@@ -212,10 +212,10 @@ public class TaskApplicationService {
         LocalDate targetDate = requireDate(date);
 
         List<TaskListItemView> activeTasks = findActiveTasksForScreen(activeUser.id(), targetDate).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, targetDate))
+                .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
                 .toList();
         List<TaskListItemView> finishedTasks = taskRepository.findCompletedOrClosedTasksForDate(activeUser.id(), targetDate).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, targetDate))
+                .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
                 .toList();
 
         return new KanbanTasksView(
@@ -242,7 +242,7 @@ public class TaskApplicationService {
                 .findTasksForCalendarRange(activeUser.id(), gridStart, gridEndExclusive)
                 .stream()
                 .filter(t -> matches(t, projectId))
-                .flatMap(task -> calendarItems(task).stream())
+                .flatMap(task -> calendarItems(task, activeUser.showProjectInTaskTitle()).stream())
                 .collect(Collectors.groupingBy(CalendarItemView::date));
 
         LocalDate today = LocalDate.now(clock);
@@ -348,17 +348,17 @@ public class TaskApplicationService {
         return taskRepository.findActiveTasksDueByDate(userId, targetDate);
     }
 
-    private static List<CalendarItemView> calendarItems(Task task) {
+    private static List<CalendarItemView> calendarItems(Task task, boolean showProjectInTitle) {
         List<CalendarItemView> items = new ArrayList<>();
         if (task.plannedForAt() != null) {
-            items.add(CalendarItemView.planned(task));
+            items.add(CalendarItemView.planned(task, showProjectInTitle));
         } else if (task.plannedDate() != null) {
-            items.add(CalendarItemView.plannedDate(task));
+            items.add(CalendarItemView.plannedDate(task, showProjectInTitle));
         }
         if (task.deadlineAt() != null && (task.plannedForAt() == null
                 || !task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate()))
                 && (task.plannedDate() == null || !task.deadlineAt().toLocalDate().equals(task.plannedDate()))) {
-            items.add(CalendarItemView.deadline(task));
+            items.add(CalendarItemView.deadline(task, showProjectInTitle));
         }
         return items;
     }
@@ -392,7 +392,7 @@ public class TaskApplicationService {
     }
 
     private TaskListItemView toView(Task task) {
-        return TaskListItemView.from(task, LocalDate.now(clock));
+        return TaskListItemView.from(task, LocalDate.now(clock), requireActiveUser().showProjectInTaskTitle());
     }
 
     private static String normalizeDescription(String description) {

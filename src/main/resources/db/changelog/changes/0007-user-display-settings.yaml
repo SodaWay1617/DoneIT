@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0007-user-display-settings
+      author: codex
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: show_project_in_task_title
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

@@ -8,6 +8,11 @@ public record User(
         String passwordHash,
         String displayName,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        boolean showProjectInTaskTitle
 ) {
+    public User(Long id, String login, String passwordHash, String displayName,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, login, passwordHash, displayName, createdAt, updatedAt, false);
+    }
 }

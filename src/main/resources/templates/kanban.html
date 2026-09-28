@@ -77,6 +77,7 @@
                 <a class="pill" th:href="@{/kanban(date=${kanban.selectedDate})}">Kanban</a>
                 <a class="pill" th:href="@{/calendar(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}">Calendar</a>
                 <a class="ghost" th:href="@{/backlog}">Backlog</a>
+                <a class="ghost" th:href="@{/settings}">Settings</a>
             </div>
             <form class="date-picker" method="get" th:action="@{/kanban}">
                 <input class="date-input" type="date" name="date" th:value="${#temporals.format(kanban.selectedDate, 'yyyy-MM-dd')}" />

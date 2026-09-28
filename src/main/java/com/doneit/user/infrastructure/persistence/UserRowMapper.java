@@ -17,7 +17,8 @@ public class UserRowMapper implements RowMapper<User> {
                 rs.getString("password_hash"),
                 rs.getString("display_name"),
                 rs.getTimestamp("created_at").toLocalDateTime(),
-                rs.getTimestamp("updated_at").toLocalDateTime()
+                rs.getTimestamp("updated_at").toLocalDateTime(),
+                rs.getBoolean("show_project_in_task_title")
         );
     }
 }

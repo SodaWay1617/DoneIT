@@ -35,6 +35,10 @@ public record TaskListItemView(
     }
 
     public static TaskListItemView from(Task task, LocalDate today) {
+        return from(task, today, true);
+    }
+
+    public static TaskListItemView from(Task task, LocalDate today, boolean showProjectInTitle) {
         LocalDate referenceDate = today == null ? LocalDate.now() : today;
         boolean plannedBeforeReferenceDate = task.plannedForAt() != null
                 && task.plannedForAt().toLocalDate().isBefore(referenceDate);
@@ -46,7 +50,7 @@ public record TaskListItemView(
 
         return new TaskListItemView(
                 task.id(),
-                displayTitle(task),
+                displayTitle(task, showProjectInTitle),
                 task.description(),
                 task.status(),
                 task.plannedForAt(),
@@ -54,13 +58,23 @@ public record TaskListItemView(
                 task.isBacklog(),
                 overdue,
                 task.projectId(),
-                task.taskKey() == null ? null : task.taskKey().split(\u0022___\u0022, 2)[0],
+                displayTaskCode(task),
                 task.plannedDate()
         );
     }
 
-    private static String displayTitle(Task task) {
-        if (task.taskKey() == null) return task.title();
-        return task.taskKey().split(\u0022___\u0022, 2)[0] + \u0022  \u0022 + task.title();
+    private static String displayTitle(Task task, boolean showProjectInTitle) {
+        String taskCode = displayTaskCode(task);
+        return showProjectInTitle && taskCode != null ? taskCode + "  " + task.title() : task.title();
+    }
+
+    private static String displayTaskCode(Task task) {
+        if (task.taskKey() == null) return null;
+        String[] keyParts = task.taskKey().split("___", 2);
+        String code = keyParts[0];
+        if (keyParts.length == 2 && code.startsWith("MAIN-" + keyParts[1] + "-")) {
+            return "MAIN-" + code.substring(("MAIN-" + keyParts[1] + "-").length());
+        }
+        return code;
     }
 }

@@ -7,4 +7,6 @@ public interface UserRepository {
     Optional<User> findActiveUser();
 
     Optional<User> findByLogin(String login);
+
+    void updateShowProjectInTaskTitle(String login, boolean showProjectInTaskTitle);
 }

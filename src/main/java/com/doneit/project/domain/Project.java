@@ -1,3 +1,8 @@
 package com.doneit.project.domain;
 
-public record Project(Long id,String name,String code,String description,Long ownerUserId,boolean defaultProject,boolean owner) {}
+public record Project(Long id,String name,String code,String description,Long ownerUserId,boolean defaultProject,boolean owner) {
+    @Override
+    public String code() {
+        return defaultProject ? "MAIN" : code;
+    }
+}

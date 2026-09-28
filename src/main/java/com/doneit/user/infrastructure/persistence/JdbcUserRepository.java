@@ -11,7 +11,8 @@ import java.util.Optional;
 public class JdbcUserRepository implements UserRepository {
 
     private static final String BASE_SELECT = """
-            SELECT id, login, password_hash, display_name, created_at, updated_at
+            SELECT id, login, password_hash, display_name, created_at, updated_at,
+                   show_project_in_task_title
             FROM users
             """;
 
@@ -41,5 +42,17 @@ public class JdbcUserRepository implements UserRepository {
                 userRowMapper,
                 login
         ).stream().findFirst();
+    }
+
+    @Override
+    public void updateShowProjectInTaskTitle(String login, boolean showProjectInTaskTitle) {
+        int updated = jdbcTemplate.update("""
+                UPDATE users
+                SET show_project_in_task_title = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE login = ?
+                """, showProjectInTaskTitle, login);
+        if (updated != 1) {
+            throw new IllegalArgumentException("User not found: " + login);
+        }
     }
 }

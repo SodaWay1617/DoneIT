@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DoneIt Settings</title>
+    <style>
+        :root { --bg:#f4efe6; --panel:#fffaf1; --ink:#1f2b2d; --muted:#607074; --accent:#1e6d73; --border:#d8cfbf; }
+        * { box-sizing:border-box; }
+        body { margin:0; background:var(--bg); color:var(--ink); font:17px Georgia,serif; }
+        .shell { width:min(720px,calc(100% - 24px)); margin:24px auto; }
+        .panel { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:22px; }
+        .bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
+        h1 { margin:0; }
+        .setting { display:flex; gap:12px; align-items:flex-start; padding:16px 0; border-top:1px solid var(--border); }
+        .setting input { width:20px; height:20px; flex:0 0 auto; }
+        .setting strong { display:block; }
+        .setting span { display:block; color:var(--muted); margin-top:5px; }
+        button,.button { display:inline-flex; min-height:40px; align-items:center; padding:9px 14px; border:0; border-radius:6px; background:var(--accent); color:white; font:inherit; text-decoration:none; }
+        .flash { color:var(--accent); }
+    </style>
+</head>
+<body><main class="shell"><section class="panel">
+    <header class="bar"><h1>Settings</h1><a class="button" href="/">Tasks</a></header>
+    <p class="flash" th:if="${flashMessage != null}" th:text="${flashMessage}">Settings saved.</p>
+    <form method="post" action="/settings">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <label class="setting">
+            <input type="checkbox" name="showProjectInTaskTitle" value="true" th:checked="${showProjectInTaskTitle}">
+            <span><strong>Show project in task titles</strong><span>Add the project code and task number before task names in lists and calendar.</span></span>
+        </label>
+        <button type="submit">Save</button>
+    </form>
+</section></main></body>
+</html>

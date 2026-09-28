@@ -284,6 +284,7 @@
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.minusDays(1)})}">Previous day</a>
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.plusDays(1)})}">Next day</a>
                 <a class="ghost" th:href="@{/backlog}">Backlog</a>
+                <a class="ghost" th:href="@{/settings}">Settings</a>
             </div>
             <form class="date-picker" method="get" th:action="@{/tasks}">
                 <label for="selectedDate">Jump to date</label>
