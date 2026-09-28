@@ -19,6 +19,8 @@ public interface TaskRepository {
 
     List<Task> findBacklogTasks(Long userId);
 
+    List<Task> findInboxTasks(Long userId);
+
     List<Task> findCompletedOrClosedTasks(Long userId);
 
     List<Task> findCompletedOrClosedTasksForDate(Long userId, LocalDate date);

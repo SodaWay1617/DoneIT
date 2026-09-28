@@ -146,6 +146,8 @@
         </div>
         <div class="actions">
             <a class="ghost" th:href="@{/}">Back to today</a>
+            <a class="ghost" th:href="@{/inbox}">Inbox</a>
+            <a class="ghost" th:href="@{/finished}">Done and closed</a>
             <a class="ghost" th:href="@{/kanban}">Kanban</a>
             <a class="ghost" th:href="@{/calendar}">Calendar</a>
             <a class="ghost" th:href="@{/settings}">Settings</a>
@@ -154,8 +156,8 @@
         </div>
         <p class="meta" th:if="${flashMessage != null}" th:text="${flashMessage}">Task updated.</p>
     </section>
-    <section class="stack" th:if="!${#lists.isEmpty(regularInactive)}">
-        <article class="task" th:each="task : ${regularInactive}">
+    <section class="stack" th:if="!${#lists.isEmpty(regularBacklog)}">
+        <article class="task" th:each="task : ${regularBacklog}">
             <div class="badges"><span class="badge" th:text="${task.status.displayName()}">NEW</span><span class="badge">RECURRING</span><span class="badge" th:text="${task.recurrenceType.displayName()}">Every day</span></div>
             <h2 th:text="${task.title}">Recurring task</h2>
             <p class="meta" th:if="${task.description != null}" th:text="${task.description}">Description</p>
@@ -167,7 +169,7 @@
         <article class="task" th:each="task : ${backlog.tasks}">
             <div class="task-top">
                 <div class="badges">
-                    <span class="badge">BACKLOG</span>
+                    <span class="badge" th:text="${task.status.displayName()}">BACKLOG</span>
                     <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                 </div>
                 <h2 th:text="${task.title}">Backlog task</h2>
@@ -197,7 +199,7 @@
             </article>
     </section>
 
-    <section class="hero" th:if="${#lists.isEmpty(backlog.tasks) and #lists.isEmpty(regularInactive)}">
+    <section class="hero" th:if="${#lists.isEmpty(backlog.tasks) and #lists.isEmpty(regularBacklog)}">
         <p class="meta">No backlog reminders yet.</p>
     </section>
 </div>

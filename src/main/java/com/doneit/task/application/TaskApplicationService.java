@@ -155,11 +155,7 @@ public class TaskApplicationService {
         List<TaskListItemView> activeTasks = taskRepository.findActiveTasksDueByDate(activeUser.id(), today).stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, today, activeUser.showProjectInTaskTitle()))
                 .toList();
-        List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, today, activeUser.showProjectInTaskTitle()))
-                .toList();
-
-        return new DailyTasksView(today, activeTasks, completedTasks);
+        return new DailyTasksView(today, activeTasks, List.of());
     }
 
     public DailyTasksView getTasksForDate(@NotNull LocalDate date) {
@@ -174,11 +170,7 @@ public class TaskApplicationService {
         List<TaskListItemView> activeTasks = activeTaskSource.stream().filter(t -> matches(t, projectId))
                 .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
                 .toList();
-        List<TaskListItemView> completedTasks = taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream().filter(t -> matches(t, projectId))
-                .map(task -> TaskListItemView.from(task, targetDate, activeUser.showProjectInTaskTitle()))
-                .toList();
-
-        return new DailyTasksView(targetDate, activeTasks, completedTasks);
+        return new DailyTasksView(targetDate, activeTasks, List.of());
     }
 
     public BacklogTasksView getBacklogTasks() {
@@ -193,6 +185,24 @@ public class TaskApplicationService {
                 .toList();
 
         return new BacklogTasksView(backlogTasks);
+    }
+
+    public BacklogTasksView getInboxTasks(Long projectId) {
+        User activeUser = requireActiveUser();
+        LocalDate today = LocalDate.now(clock);
+        return new BacklogTasksView(taskRepository.findInboxTasks(activeUser.id()).stream()
+                .filter(t -> matches(t, projectId))
+                .map(task -> TaskListItemView.from(task, today, activeUser.showProjectInTaskTitle()))
+                .toList());
+    }
+
+    public BacklogTasksView getFinishedTasks(Long projectId) {
+        User activeUser = requireActiveUser();
+        LocalDate today = LocalDate.now(clock);
+        return new BacklogTasksView(taskRepository.findCompletedOrClosedTasks(activeUser.id()).stream()
+                .filter(t -> matches(t, projectId))
+                .map(task -> TaskListItemView.from(task, today, activeUser.showProjectInTaskTitle()))
+                .toList());
     }
 
     public Optional<TaskListItemView> getRandomTaskForToday() {
@@ -253,7 +263,7 @@ public class TaskApplicationService {
                 .findTasksForCalendarRange(activeUser.id(), gridStart, gridEndExclusive)
                 .stream()
                 .filter(t -> matches(t, projectId))
-                .flatMap(task -> calendarItems(task, activeUser.showProjectInTaskTitle()).stream())
+                .flatMap(task -> calendarItems(task, activeUser.showProjectInTaskTitle(), gridStart, gridEndExclusive).stream())
                 .collect(Collectors.groupingBy(CalendarItemView::date));
 
         LocalDate today = LocalDate.now(clock);
@@ -368,7 +378,8 @@ public class TaskApplicationService {
         return taskRepository.findActiveTasksDueByDate(userId, targetDate);
     }
 
-    private static List<CalendarItemView> calendarItems(Task task, boolean showProjectInTitle) {
+    private static List<CalendarItemView> calendarItems(Task task, boolean showProjectInTitle,
+                                                        LocalDate start, LocalDate endExclusive) {
         List<CalendarItemView> items = new ArrayList<>();
         if (task.plannedForAt() != null) {
             items.add(CalendarItemView.planned(task, showProjectInTitle));
@@ -379,6 +390,13 @@ public class TaskApplicationService {
                 || !task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate()))
                 && (task.plannedDate() == null || !task.deadlineAt().toLocalDate().equals(task.plannedDate()))) {
             items.add(CalendarItemView.deadline(task, showProjectInTitle));
+        }
+        if (task.plannedForAt() == null && task.plannedDate() == null && task.deadlineAt() == null) {
+            String title = TaskListItemView.from(task, start, showProjectInTitle).title();
+            for (LocalDate date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
+                items.add(new CalendarItemView(task.id(), com.doneit.task.application.view.CalendarOccurrenceType.PLANNED,
+                        date, date.atStartOfDay(), title, task.status(), false, task.priority(), false));
+            }
         }
         return items;
     }

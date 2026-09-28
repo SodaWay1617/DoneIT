@@ -288,6 +288,8 @@
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.minusDays(1)})}">Previous day</a>
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.plusDays(1)})}">Next day</a>
                 <a class="ghost" th:href="@{/backlog}">Backlog</a>
+                <a class="ghost" th:href="@{/inbox}">Inbox</a>
+                <a class="ghost" th:href="@{/finished}">Done and closed</a>
                 <a class="ghost" th:href="@{/settings}">Settings</a>
             </div>
             <form class="date-picker" method="get" th:action="@{/tasks}">
@@ -397,8 +399,23 @@
         </section>
 
         <aside class="stack">
+            <section id="inbox-preview" class="card">
+                <h2><a class="ghost" th:href="@{/inbox}">Inbox</a></h2>
+                <p class="section-note">New tasks waiting for triage.</p>
+                <div class="stack">
+                    <article class="task backlog-task" th:each="task : ${inboxPreview}">
+                        <div class="badges"><span class="badge">NEW</span></div>
+                        <h3 class="task-title" th:text="${task.title}">Task</h3>
+                    </article>
+                    <article class="task backlog-task" th:each="task : ${regularInbox}">
+                        <div class="badges"><span class="badge">NEW</span><span class="badge">RECURRING</span></div>
+                        <h3 class="task-title" th:text="${task.title}">Task</h3>
+                    </article>
+                </div>
+                <p class="empty" th:if="${#lists.isEmpty(inboxPreview) and #lists.isEmpty(regularInbox)}">Inbox is empty.</p>
+            </section>
             <section id="backlog-preview" class="card">
-                <h2>Backlog preview</h2>
+                <h2><a class="ghost" th:href="@{/backlog}">Backlog</a></h2>
                 <p class="section-note">Undated low-priority reminders stay separate until you schedule them.</p>
                 <div class="stack" th:if="!${#lists.isEmpty(backlogPreview)}">
                     <article class="task backlog-task" th:each="task : ${backlogPreview}">
@@ -427,14 +444,15 @@
                         </div>
                     </article>
                 </div>
-                <p class="empty" th:if="${#lists.isEmpty(backlogPreview)}">Backlog is empty for now.</p>
+                <div class="stack" th:if="!${#lists.isEmpty(regularBacklog)}"><article class="task backlog-task" th:each="task:${regularBacklog}"><div class="badges"><span class="badge">BACKLOG</span><span class="badge">RECURRING</span></div><h3 class="task-title" th:text="${task.title}">Task</h3></article></div>
+                <p class="empty" th:if="${#lists.isEmpty(backlogPreview) and #lists.isEmpty(regularBacklog)}">Backlog is empty for now.</p>
             </section>
 
             <section id="completed-tasks" class="card">
-                <h2>Completed and closed</h2>
-                <p class="section-note">Finished work stays visible, but out of the active flow.</p>
-                <div class="stack" th:if="!${#lists.isEmpty(daily.completedTasks)}">
-                    <article class="task completed-task" th:each="task : ${daily.completedTasks}">
+                <h2><a class="ghost" th:href="@{/finished}">Done and closed</a></h2>
+                <p class="section-note">Recently completed and cancelled work.</p>
+                <div class="stack" th:if="!${#lists.isEmpty(finishedPreview)}">
+                    <article class="task completed-task" th:each="task : ${finishedPreview}">
                         <div class="task-top">
                             <div class="task-top-main">
                                 <div class="badges">
@@ -447,7 +465,13 @@
                         <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
                     </article>
                 </div>
-                <p class="empty" th:if="${#lists.isEmpty(daily.completedTasks)}">Completed and closed tasks will appear here.</p>
+                <div class="stack" th:if="!${#lists.isEmpty(regularFinished)}">
+                    <article class="task completed-task" th:each="task : ${regularFinished}">
+                        <div class="badges"><span class="badge" th:text="${task.status.displayName()}">DONE</span><span class="badge">RECURRING</span></div>
+                        <h3 class="task-title" th:text="${task.title}">Task</h3>
+                    </article>
+                </div>
+                <p class="empty" th:if="${#lists.isEmpty(finishedPreview) and #lists.isEmpty(regularFinished)}">Completed and closed tasks will appear here.</p>
             </section>
         </aside>
     </div>

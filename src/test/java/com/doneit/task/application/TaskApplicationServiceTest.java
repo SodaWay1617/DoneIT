@@ -173,21 +173,19 @@ class TaskApplicationServiceTest {
                 openTask(1L, LocalDateTime.of(2026, 4, 7, 12, 0), null),
                 openTask(2L, LocalDateTime.of(2026, 4, 6, 12, 0), null)
         ));
-        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of(doneTask(2L)));
 
         DailyTasksView result = service.getTasksForToday();
 
         assertEquals(today, result.selectedDate());
         assertEquals(2, result.activeTasks().size());
         assertTrue(result.activeTasks().get(1).overdue());
-        assertEquals(1, result.completedTasks().size());
+        assertTrue(result.completedTasks().isEmpty());
     }
 
     @Test
     void getTasksForSelectedDateUsesRepositoryQueries() {
         LocalDate date = LocalDate.of(2026, 4, 10);
         when(taskRepository.findActiveTasksForDate(ACTIVE_USER.id(), date)).thenReturn(List.of(openTask(3L, LocalDateTime.of(2026, 4, 10, 9, 0), null)));
-        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of());
 
         DailyTasksView result = service.getTasksForDate(date);
 
@@ -202,7 +200,6 @@ class TaskApplicationServiceTest {
                 openTask(3L, LocalDateTime.of(2026, 4, 4, 9, 0), null),
                 openTask(4L, LocalDateTime.of(2026, 4, 6, 9, 0), null)
         ));
-        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of());
 
         DailyTasksView result = service.getTasksForDate(date);
 
@@ -233,7 +230,6 @@ class TaskApplicationServiceTest {
         LocalDate today = LocalDate.of(2026, 4, 7);
         when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), today))
                 .thenReturn(List.of(openTask(5L, LocalDateTime.of(2026, 4, 7, 12, 0), null)));
-        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of());
 
         Optional<TaskListItemView> result = service.getRandomTaskForToday();
 
@@ -245,7 +241,6 @@ class TaskApplicationServiceTest {
     void randomTaskForTodayReturnsEmptyWhenTodayHasNoActiveTasks() {
         LocalDate today = LocalDate.of(2026, 4, 7);
         when(taskRepository.findActiveTasksDueByDate(ACTIVE_USER.id(), today)).thenReturn(List.of());
-        when(taskRepository.findCompletedOrClosedTasks(ACTIVE_USER.id())).thenReturn(List.of());
 
         Optional<TaskListItemView> result = service.getRandomTaskForToday();
 

@@ -21,13 +21,13 @@ public class RegularTaskController {
  @PostMapping("/recurring") public String create(@Valid @ModelAttribute("form") RegularTaskForm f,BindingResult errors,Model m,RedirectAttributes flash){
   if(errors.hasErrors())return page(m,f,"Create recurring task","/recurring");
   try{service.create(f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Create recurring task","/recurring");}
-  flash.addFlashAttribute("flashMessage","Recurring task created.");return "redirect:/";
+  flash.addFlashAttribute("flashMessage","Recurring task created.");return "redirect:"+redirect(f.getStatus());
  }
  @GetMapping("/recurring/{id}/edit") public String edit(@PathVariable Long id,Model m){return page(m,service.form(id),"Edit recurring task","/recurring/"+id);}
  @PostMapping("/recurring/{id}") public String edit(@PathVariable Long id,@Valid @ModelAttribute("form") RegularTaskForm f,BindingResult errors,Model m,RedirectAttributes flash){
   if(errors.hasErrors())return page(m,f,"Edit recurring task","/recurring/"+id);
   try{service.update(id,f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Edit recurring task","/recurring/"+id);}
-  flash.addFlashAttribute("flashMessage","Recurring task updated.");return "redirect:/";
+  flash.addFlashAttribute("flashMessage","Recurring task updated.");return "redirect:"+redirect(f.getStatus());
  }
  @PostMapping("/recurring/{id}/done-today") public String done(@PathVariable Long id,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){
   service.complete(id,date);flash.addFlashAttribute("flashMessage","Recurring task completed for this day.");
@@ -38,4 +38,5 @@ public class RegularTaskController {
   m.addAttribute("statuses",new TaskStatus[]{TaskStatus.NEW,TaskStatus.BACKLOG,TaskStatus.SPECIFICATION,TaskStatus.IN_PROGRESS,TaskStatus.DOCUMENTATION,TaskStatus.DONE,TaskStatus.CLOSED});
   m.addAttribute("priorities",TaskPriority.values());m.addAttribute("recurrences",RecurrenceType.values());return "recurring-form";
  }
+ private static String redirect(TaskStatus status){if(status==TaskStatus.NEW)return "/inbox";if(status==TaskStatus.BACKLOG)return "/backlog";if(status.isFinished())return "/finished";return "/";}
 }

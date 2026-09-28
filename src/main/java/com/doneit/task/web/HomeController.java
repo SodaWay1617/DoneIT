@@ -55,7 +55,8 @@ public class HomeController {
     public String today(@RequestParam(required=false) Long projectId, Model model, Principal principal) {
         DailyTasksView dailyTasksView = taskApplicationService.getTasksForToday(projectId);
         BacklogTasksView backlogTasksView = taskApplicationService.getBacklogTasks(projectId);
-        populateDailyModel(model, principal, dailyTasksView, backlogTasksView, true);
+        populateDailyModel(model, principal, dailyTasksView, backlogTasksView,
+                taskApplicationService.getInboxTasks(projectId), taskApplicationService.getFinishedTasks(projectId), true);
         return "tasks";
     }
 
@@ -66,7 +67,8 @@ public class HomeController {
                                Principal principal) {
         DailyTasksView dailyTasksView = taskApplicationService.getTasksForDate(date,projectId);
         BacklogTasksView backlogTasksView = taskApplicationService.getBacklogTasks(projectId);
-        populateDailyModel(model, principal, dailyTasksView, backlogTasksView, false);
+        populateDailyModel(model, principal, dailyTasksView, backlogTasksView,
+                taskApplicationService.getInboxTasks(projectId), taskApplicationService.getFinishedTasks(projectId), false);
         return "tasks";
     }
 
@@ -75,6 +77,26 @@ public class HomeController {
         model.addAttribute("username", principal.getName());
         model.addAttribute("backlog", taskApplicationService.getBacklogTasks(projectId));
         return "backlog";
+    }
+
+    @GetMapping("/inbox")
+    public String inbox(@RequestParam(required=false) Long projectId, Model model, Principal principal) {
+        model.addAttribute("username", principal.getName());
+        model.addAttribute("taskCollection", taskApplicationService.getInboxTasks(projectId));
+        model.addAttribute("pageTitle", "Inbox");
+        model.addAttribute("pageNote", "New tasks waiting for triage.");
+        model.addAttribute("listKind", "inbox");
+        return "status-list";
+    }
+
+    @GetMapping("/finished")
+    public String finished(@RequestParam(required=false) Long projectId, Model model, Principal principal) {
+        model.addAttribute("username", principal.getName());
+        model.addAttribute("taskCollection", taskApplicationService.getFinishedTasks(projectId));
+        model.addAttribute("pageTitle", "Done and closed");
+        model.addAttribute("pageNote", "Completed and cancelled tasks.");
+        model.addAttribute("listKind", "finished");
+        return "status-list";
     }
 
     @GetMapping("/kanban")
@@ -146,6 +168,8 @@ public class HomeController {
 
         taskApplicationService.createTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task created.");
+        String statusRedirect = statusListRedirect(form.getStatus());
+        if (statusRedirect != null) return "redirect:" + statusRedirect;
         LocalDate plannedDate = form.getPlannedDate() != null ? form.getPlannedDate() : form.getPlannedForAt() == null ? null : form.getPlannedForAt().toLocalDate();
         return "redirect:" + (plannedDate == null ? "/" : resolveDateRedirect(plannedDate));
     }
@@ -188,7 +212,8 @@ public class HomeController {
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
-        if (backlog) return "redirect:/backlog";
+        String statusRedirect = statusListRedirect(form.getStatus());
+        if (statusRedirect != null) return "redirect:" + statusRedirect;
         LocalDate plannedDate = form.getPlannedDate() != null ? form.getPlannedDate() : form.getPlannedForAt() == null ? null : form.getPlannedForAt().toLocalDate();
         return "redirect:" + (plannedDate == null ? "/" : resolveDateRedirect(plannedDate));
     }
@@ -266,11 +291,15 @@ public class HomeController {
                                            Principal principal,
                                            DailyTasksView dailyTasksView,
                                            BacklogTasksView backlogTasksView,
+                                           BacklogTasksView inboxTasksView,
+                                           BacklogTasksView finishedTasksView,
                                            boolean todayPage) {
         model.addAttribute("appName", "DoneIt");
         model.addAttribute("username", principal.getName());
         model.addAttribute("daily", dailyTasksView);
-        model.addAttribute("backlogPreview", backlogTasksView.tasks());
+        model.addAttribute("backlogPreview", backlogTasksView.tasks().stream().limit(3).toList());
+        model.addAttribute("inboxPreview", inboxTasksView.tasks().stream().limit(3).toList());
+        model.addAttribute("finishedPreview", finishedTasksView.tasks().stream().limit(3).toList());
         model.addAttribute("todayPage", todayPage);
     }
 
@@ -285,6 +314,13 @@ public class HomeController {
             return fallback;
         }
         return redirectTo;
+    }
+
+    private static String statusListRedirect(TaskStatus status) {
+        if (status == TaskStatus.NEW) return "/inbox";
+        if (status == TaskStatus.BACKLOG || status == TaskStatus.PAUSED) return "/backlog";
+        if (status == TaskStatus.DONE || status == TaskStatus.CLOSED) return "/finished";
+        return null;
     }
 
     private String resolveEditRedirect(LocalDateTime plannedForAt) {
