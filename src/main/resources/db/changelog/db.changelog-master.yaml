@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/changes/0009-task-workflow-statuses.yaml
   - include:
       file: db/changelog/changes/0010-kanban-order.yaml
+  - include:
+      file: db/changelog/changes/0011-recurring-tasks.yaml

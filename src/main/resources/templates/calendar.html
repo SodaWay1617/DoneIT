@@ -110,6 +110,11 @@
                    th:href="@{/tasks/{id}/edit(id=${item.taskId})}"
                    th:text="${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') + ' ' + item.title : item.title}">09:00 Task</a>
             </div>
+            <div class="items">
+                <th:block th:each="occ : ${regularCalendar}">
+                    <a class="item" th:if="${occ.date == day.date}" th:classappend="${occ.completed} ? ' done'" th:href="@{/recurring/{id}/edit(id=${occ.task.id})}" th:text="${occ.task.occurrenceTime != null ? occ.task.occurrenceTime + ' ' + occ.task.title : occ.task.title}">Recurring task</a>
+                </th:block>
+            </div>
         </article>
     </section>
 </div>

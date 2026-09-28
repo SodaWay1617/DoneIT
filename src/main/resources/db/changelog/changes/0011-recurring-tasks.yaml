@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0011-recurring-tasks
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE regular_tasks (
+                  id BIGSERIAL PRIMARY KEY,
+                  user_id BIGINT NOT NULL REFERENCES users(id),
+                  project_id BIGINT NOT NULL REFERENCES projects(id),
+                  task_number BIGINT NOT NULL,
+                  task_key VARCHAR(255) NOT NULL UNIQUE,
+                  title VARCHAR(255) NOT NULL,
+                  description TEXT,
+                  status VARCHAR(20) NOT NULL,
+                  priority VARCHAR(16) NOT NULL DEFAULT 'NONE',
+                  recurrence_type VARCHAR(16) NOT NULL,
+                  occurrence_time TIME,
+                  anchor_date DATE,
+                  regular_status VARCHAR(16) NOT NULL,
+                  activated_at TIMESTAMP,
+                  finished_at TIMESTAMP,
+                  created_at TIMESTAMP NOT NULL,
+                  updated_at TIMESTAMP NOT NULL,
+                  status_position BIGINT NOT NULL,
+                  CONSTRAINT chk_regular_task_status CHECK (
+                      status IN ('NEW', 'BACKLOG', 'SPECIFICATION', 'IN_PROGRESS', 'DOCUMENTATION', 'DONE', 'CLOSED')
+                  ),
+                  CONSTRAINT chk_regular_status CHECK (regular_status IN ('ACTIVE', 'INACTIVE')),
+                  CONSTRAINT chk_regular_recurrence CHECK (
+                      recurrence_type IN ('DAILY', 'WEEKDAYS', 'WEEKLY', 'MONTHLY', 'YEARLY')
+                  ),
+                  CONSTRAINT chk_regular_anchor CHECK (
+                      (recurrence_type IN ('DAILY', 'WEEKDAYS') AND anchor_date IS NULL)
+                      OR (recurrence_type IN ('WEEKLY', 'MONTHLY', 'YEARLY') AND anchor_date IS NOT NULL)
+                  ),
+                  CONSTRAINT chk_regular_no_finished_without_terminal CHECK (
+                      finished_at IS NULL OR status IN ('DONE', 'CLOSED')
+                  )
+              );
+
+              CREATE TABLE regular_task_completions (
+                  regular_task_id BIGINT NOT NULL REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                  occurrence_date DATE NOT NULL,
+                  completed_at TIMESTAMP NOT NULL,
+                  PRIMARY KEY (regular_task_id, occurrence_date)
+              );
+
+              CREATE INDEX idx_regular_tasks_user_status
+                  ON regular_tasks(user_id, regular_status, status);
+              CREATE INDEX idx_regular_completions_date
+                  ON regular_task_completions(occurrence_date);

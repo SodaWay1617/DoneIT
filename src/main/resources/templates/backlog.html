@@ -150,8 +150,17 @@
             <a class="ghost" th:href="@{/calendar}">Calendar</a>
             <a class="ghost" th:href="@{/settings}">Settings</a>
             <a class="solid" th:href="@{/tasks/new}">Create task</a>
+            <a class="ghost" th:href="@{/recurring/new}">Create recurring</a>
         </div>
         <p class="meta" th:if="${flashMessage != null}" th:text="${flashMessage}">Task updated.</p>
+    </section>
+    <section class="stack" th:if="!${#lists.isEmpty(regularInactive)}">
+        <article class="task" th:each="task : ${regularInactive}">
+            <div class="badges"><span class="badge" th:text="${task.status.displayName()}">NEW</span><span class="badge">RECURRING</span><span class="badge" th:text="${task.recurrenceType.displayName()}">Every day</span></div>
+            <h2 th:text="${task.title}">Recurring task</h2>
+            <p class="meta" th:if="${task.description != null}" th:text="${task.description}">Description</p>
+            <a class="ghost" th:href="@{/recurring/{id}/edit(id=${task.id})}">Edit</a>
+        </article>
     </section>
 
     <section class="stack" th:if="!${#lists.isEmpty(backlog.tasks)}">
@@ -188,7 +197,7 @@
             </article>
     </section>
 
-    <section class="hero" th:if="${#lists.isEmpty(backlog.tasks)}">
+    <section class="hero" th:if="${#lists.isEmpty(backlog.tasks) and #lists.isEmpty(regularInactive)}">
         <p class="meta">No backlog reminders yet.</p>
     </section>
 </div>

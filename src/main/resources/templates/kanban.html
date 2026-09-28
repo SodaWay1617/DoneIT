@@ -94,6 +94,7 @@
             </form>
         </div>
         <a class="solid" th:href="@{/tasks/new}">Create task</a>
+        <a class="ghost" th:href="@{/recurring/new}">Create recurring</a>
     </section>
 
     <main class="board">
@@ -111,6 +112,17 @@
                     <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
                     <div class="task-actions"><a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a></div>
                 </article>
+                <th:block th:each="task : ${regularKanban}">
+                    <article class="task" th:if="${task.status == column.status}">
+                        <div class="badges"><span class="badge open" th:text="${task.status.displayName()}">Status</span><span class="badge">RECURRING</span></div>
+                        <h3 th:text="${task.title}">Task</h3>
+                        <p class="meta" th:text="${task.recurrenceType.displayName()}">Every day</p>
+                        <div class="task-actions"><a class="ghost" th:href="@{/recurring/{id}/edit(id=${task.id})}">Edit</a>
+                        <form class="inline" method="post" th:if="${task.regularStatus.name() == 'ACTIVE'}" th:action="@{/recurring/{id}/done-today(id=${task.id})}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${kanban.selectedDate}"><input type="hidden" name="redirectTo" th:value="'/kanban?date=' + ${kanban.selectedDate}"><button class="solid">Done today</button>
+                        </form></div>
+                    </article>
+                </th:block>
             </div>
         </section>
     </main>
@@ -154,8 +166,8 @@
     async function saveColumn(stack) {
         const body = new URLSearchParams();
         body.append('status', stack.dataset.status);
-        stack.querySelectorAll('.task').forEach(task => body.append('taskIds', task.dataset.taskId));
-        if (![...stack.querySelectorAll('.task')].length) return;
+        stack.querySelectorAll('.task[data-task-id]').forEach(task => body.append('taskIds', task.dataset.taskId));
+        if (![...stack.querySelectorAll('.task[data-task-id]')].length) return;
         const response = await fetch('/kanban/reorder', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded', [csrfHeader]: csrfToken },
