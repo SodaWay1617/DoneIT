@@ -94,6 +94,7 @@
                     <div class="badges"><span class="badge open">OPEN</span></div>
                     <h3 th:text="${task.title}">Task</h3>
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="${#temporals.format(task.plannedForAt, 'HH:mm')}">09:00</p>
+                    <p class='meta' th:if='${task.plannedDate != null}' th:text='${task.plannedDate}'>Planned day</p>
                     <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
                     <div class="task-actions">
                         <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>

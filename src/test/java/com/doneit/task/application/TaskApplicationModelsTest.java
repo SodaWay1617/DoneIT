@@ -96,6 +96,31 @@ class TaskApplicationModelsTest {
     }
 
     @Test
+    void taskListItemViewMarksPlannedDayBeforeReferenceDateAsOverdue() {
+        Task task = new Task(
+                12L,
+                1L,
+                "Day task",
+                null,
+                TaskStatus.OPEN,
+                null,
+                null,
+                LocalDateTime.of(2026, 4, 1, 9, 0),
+                LocalDateTime.of(2026, 4, 1, 9, 0),
+                null,
+                null,
+                null,
+                null,
+                null,
+                LocalDate.of(2026, 4, 4)
+        );
+
+        TaskListItemView view = TaskListItemView.from(task, LocalDate.of(2026, 4, 5));
+
+        assertTrue(view.overdue());
+    }
+
+    @Test
     void dailyTasksViewDefensivelyCopiesCollections() {
         List<TaskListItemView> activeTasks = new ArrayList<>();
         activeTasks.add(new TaskListItemView(1L, "Task", null, TaskStatus.OPEN, null, null, false, false));

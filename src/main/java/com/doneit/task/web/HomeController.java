@@ -122,11 +122,12 @@ public class HomeController {
         CreateTaskCommand command = new CreateTaskCommand(
                 form.getTitle(),
                 form.getDescription(),
-                form.getPlannedForAt(),
-                form.getDeadlineAt(), form.getProjectId()
+                form.isBacklog() ? null : form.getPlannedForAt(),
+                form.getDeadlineAt(), form.getProjectId(),
+                form.isBacklog() ? null : form.getPlannedDate(), form.isBacklog()
         );
 
-        if (form.getPlannedForAt() == null) {
+        if (form.isBacklog()) {
             taskApplicationService.createBacklogTask(command);
             redirectAttributes.addFlashAttribute("flashMessage", "Task added to backlog.");
             return "redirect:/backlog";
@@ -134,7 +135,8 @@ public class HomeController {
 
         taskApplicationService.createTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task created.");
-        return "redirect:" + resolveDateRedirect(form.getPlannedForAt().toLocalDate());
+        LocalDate plannedDate = form.getPlannedDate() != null ? form.getPlannedDate() : form.getPlannedForAt() == null ? null : form.getPlannedForAt().toLocalDate();
+        return "redirect:" + (plannedDate == null ? "/" : resolveDateRedirect(plannedDate));
     }
 
     @GetMapping("/tasks/{taskId}/edit")
@@ -167,12 +169,15 @@ public class HomeController {
                 taskId,
                 form.getTitle(),
                 form.getDescription(),
-                form.getPlannedForAt(),
-                form.getDeadlineAt(), form.getProjectId()
+                form.isBacklog() ? null : form.getPlannedForAt(),
+                form.getDeadlineAt(), form.getProjectId(),
+                form.isBacklog() ? null : form.getPlannedDate(), form.isBacklog()
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
-        return "redirect:" + resolveEditRedirect(form.getPlannedForAt());
+        if (form.isBacklog()) return "redirect:/backlog";
+        LocalDate plannedDate = form.getPlannedDate() != null ? form.getPlannedDate() : form.getPlannedForAt() == null ? null : form.getPlannedForAt().toLocalDate();
+        return "redirect:" + (plannedDate == null ? "/" : resolveDateRedirect(plannedDate));
     }
 
     @PostMapping("/tasks/{taskId}/done")

@@ -16,9 +16,11 @@ public record TaskListItemView(
         boolean backlog,
         boolean overdue,
         Long projectId,
-        String taskCode
+        String taskCode,
+        LocalDate plannedDate
 ) {
-    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue){this(id,title,description,status,planned,deadline,backlog,overdue,null,null);}
+    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue){this(id,title,description,status,planned,deadline,backlog,overdue,null,null,null);}
+    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue,Long projectId,String taskCode){this(id,title,description,status,planned,deadline,backlog,overdue,projectId,taskCode,null);}
 
     public TaskListItemView {
         if (id == null) {
@@ -36,10 +38,11 @@ public record TaskListItemView(
         LocalDate referenceDate = today == null ? LocalDate.now() : today;
         boolean plannedBeforeReferenceDate = task.plannedForAt() != null
                 && task.plannedForAt().toLocalDate().isBefore(referenceDate);
+        boolean plannedDateBeforeReferenceDate = task.plannedDate() != null && task.plannedDate().isBefore(referenceDate);
         boolean deadlineBeforeReferenceDate = task.deadlineAt() != null
                 && task.deadlineAt().toLocalDate().isBefore(referenceDate);
         boolean overdue = task.status() == TaskStatus.OPEN
-                && (plannedBeforeReferenceDate || deadlineBeforeReferenceDate);
+                && (plannedBeforeReferenceDate || plannedDateBeforeReferenceDate || deadlineBeforeReferenceDate);
 
         return new TaskListItemView(
                 task.id(),
@@ -51,7 +54,8 @@ public record TaskListItemView(
                 task.isBacklog(),
                 overdue,
                 task.projectId(),
-                task.taskKey() == null ? null : task.taskKey().split(\u0022___\u0022, 2)[0]
+                task.taskKey() == null ? null : task.taskKey().split(\u0022___\u0022, 2)[0],
+                task.plannedDate()
         );
     }
 

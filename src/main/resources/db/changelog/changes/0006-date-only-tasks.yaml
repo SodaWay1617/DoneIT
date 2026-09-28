@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0006-planned-date
+      author: codex
+      changes:
+        - addColumn:
+            tableName: tasks
+            columns:
+              - column:
+                  name: planned_date
+                  type: DATE
+        - addCheckConstraint:
+            tableName: tasks
+            constraintName: ck_tasks_single_planning_value
+            checkConstraint: planned_date IS NULL OR planned_for_at IS NULL

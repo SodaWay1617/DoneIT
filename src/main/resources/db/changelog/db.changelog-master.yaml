@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/0004-backlog-status.yaml
   - include:
       file: db/changelog/changes/0005-projects.yaml
+  - include:
+      file: db/changelog/changes/0006-date-only-tasks.yaml

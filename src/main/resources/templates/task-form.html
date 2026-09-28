@@ -103,8 +103,8 @@
     <p th:text="'Signed in as ' + ${username}">Signed in as doneit</p>
 
     <div class="hint">
-        <strong th:text="${form.editMode} ? 'You can reschedule this task or clear the planned time to move it into backlog.' : 'Leave planned time empty to send this task into backlog.'">Leave planned time empty to send this task into backlog.</strong>
-        <p>Backlog tasks stay separate from your dated list and act like low-priority reminders for later.</p>
+        <strong>Choose a day, an exact time, or leave both empty for a permanent active task.</strong>
+        <p>Backlog is selected explicitly and stays outside the active flow.</p>
     </div>
 
     <form method="post" th:action="${formAction}" th:object="${form}">
@@ -124,6 +124,11 @@
                 <option th:each='project : ${projects}' th:value='${project.id}' th:text='${project.name}'>Project</option>
             </select>
         </label>
+        <label>
+            Planned day (without time)
+            <input id='plannedDate' type='date' th:field='*{plannedDate}' />
+        </label>
+        <label><span><input style='width:auto' type='checkbox' th:field='*{backlog}' /> Put this task in backlog</span></label>
         <label>
             Description
             <textarea th:field="*{description}" placeholder="Notes, details, links"></textarea>
@@ -145,5 +150,6 @@
         </div>
     </form>
 </div>
+<script>const day=document.getElementById('plannedDate'),time=document.querySelector('[name=plannedForAt]');day.addEventListener('input',function(){if(day.value)time.value=''});time.addEventListener('input',function(){if(time.value)day.value=''})</script>
 </body>
 </html>

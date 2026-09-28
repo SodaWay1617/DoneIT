@@ -1,6 +1,7 @@
 package com.doneit.task.domain;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Objects;
 
 public record Task(
@@ -17,16 +18,22 @@ public record Task(
         LocalDateTime closedAt,
         Long projectId,
         Long taskNumber,
-        String taskKey
+        String taskKey,
+        LocalDate plannedDate
 ) {
 
     public Task(Long id, Long userId, String title, String description, TaskStatus status,
                 LocalDateTime plannedForAt, LocalDateTime deadlineAt, LocalDateTime createdAt,
                 LocalDateTime updatedAt, LocalDateTime completedAt, LocalDateTime closedAt) {
-        this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,null,null,null);
+        this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,null,null,null,null);
     }
 
+    public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey){this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,projectId,taskNumber,taskKey,null);}
+
     public Task {
+        if (plannedForAt != null && plannedDate != null) {
+            throw new IllegalArgumentException("Choose either planned date or datetime");
+        }
         if (userId == null) {
             throw new IllegalArgumentException("Task userId is required");
         }
@@ -72,7 +79,7 @@ public record Task(
     }
 
     public boolean isEligibleForBulkMove() {
-        return isActive() && plannedForAt != null;
+        return isActive() && (plannedForAt != null || plannedDate != null);
     }
 
     public Task markDone(LocalDateTime completedAt) {
@@ -89,7 +96,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 transitionAt,
-                null, projectId, taskNumber, taskKey
+                null, projectId, taskNumber, taskKey, plannedDate
         );
     }
 
@@ -107,7 +114,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 null,
-                transitionAt, projectId, taskNumber, taskKey
+                transitionAt, projectId, taskNumber, taskKey, plannedDate
         );
     }
 
@@ -125,7 +132,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey
+                closedAt, projectId, taskNumber, taskKey, null
         );
     }
 
@@ -142,7 +149,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey
+                closedAt, projectId, taskNumber, taskKey, null
         );
     }
 

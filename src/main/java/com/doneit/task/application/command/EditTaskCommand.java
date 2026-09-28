@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public record EditTaskCommand(
         @NotNull(message = "Task id is required") Long taskId,
@@ -11,11 +12,14 @@ public record EditTaskCommand(
         String description,
         LocalDateTime plannedForAt,
         LocalDateTime deadlineAt,
-        Long projectId
+        Long projectId,
+        LocalDate plannedDate,
+        boolean backlog
 ) {
     public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt) {
-        this(taskId,title,description,plannedForAt,deadlineAt,null);
+        this(taskId,title,description,plannedForAt,deadlineAt,null,null,false);
     }
+    public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId){this(id,title,description,planned,deadline,projectId,null,false);}
 
     public EditTaskCommand {
         if (taskId == null) {

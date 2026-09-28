@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class TaskUpsertForm {
 
@@ -23,6 +24,9 @@ public class TaskUpsertForm {
     private LocalDateTime deadlineAt;
 
     private boolean editMode;
+    private boolean backlog;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate plannedDate;
 
     public static TaskUpsertForm from(TaskFormView taskFormView) {
         TaskUpsertForm form = new TaskUpsertForm();
@@ -33,6 +37,8 @@ public class TaskUpsertForm {
         form.setPlannedForAt(taskFormView.plannedForAt());
         form.setDeadlineAt(taskFormView.deadlineAt());
         form.setEditMode(taskFormView.editMode());
+        form.setBacklog(taskFormView.backlog());
+        form.setPlannedDate(taskFormView.plannedDate());
         return form;
     }
 
@@ -86,4 +92,9 @@ public class TaskUpsertForm {
     public void setEditMode(boolean editMode) {
         this.editMode = editMode;
     }
+
+    public boolean isBacklog() { return backlog; }
+    public void setBacklog(boolean backlog) { this.backlog = backlog; }
+    public LocalDate getPlannedDate() { return plannedDate; }
+    public void setPlannedDate(LocalDate plannedDate) { this.plannedDate = plannedDate; }
 }

@@ -64,8 +64,8 @@ public class TaskApplicationService {
 
     @Transactional
     public TaskListItemView createTask(@Valid @NotNull CreateTaskCommand command) {
-        if (command.plannedForAt() == null) {
-            throw new IllegalArgumentException("plannedForAt is required for a dated task");
+        if (command.plannedForAt() != null && command.plannedDate() != null) {
+            throw new IllegalArgumentException("Choose either planned date or datetime");
         }
 
         User activeUser = requireActiveUser();
@@ -83,7 +83,7 @@ public class TaskApplicationService {
                 now,
                 null,
                 null,
-                command.projectId(), null, null
+                command.projectId(), null, null, command.plannedDate()
         );
 
         return toView(taskRepository.create(task));
@@ -91,8 +91,8 @@ public class TaskApplicationService {
 
     @Transactional
     public TaskListItemView createBacklogTask(@Valid @NotNull CreateTaskCommand command) {
-        if (command.plannedForAt() != null) {
-            throw new IllegalArgumentException("Backlog task must not have plannedForAt");
+        if (command.plannedForAt() != null || command.plannedDate() != null) {
+            throw new IllegalArgumentException("Backlog task must not have a planned date or datetime");
         }
 
         User activeUser = requireActiveUser();
@@ -110,7 +110,7 @@ public class TaskApplicationService {
                 now,
                 null,
                 null,
-                command.projectId(), null, null
+                command.projectId(), null, null, null
         );
 
         return toView(taskRepository.create(task));
@@ -118,6 +118,7 @@ public class TaskApplicationService {
 
     @Transactional
     public TaskListItemView editTask(@Valid @NotNull EditTaskCommand command) {
+        if (command.plannedForAt() != null && command.plannedDate() != null) throw new IllegalArgumentException(\u0022Choose either planned date or datetime\u0022);
         Task existingTask = getTaskOrThrow(command.taskId());
         requireProjectAccess(command.projectId());
         LocalDateTime now = LocalDateTime.now(clock);
@@ -127,7 +128,7 @@ public class TaskApplicationService {
                 existingTask.userId(),
                 command.title(),
                 normalizeDescription(command.description()),
-                statusForEdit(existingTask, command.plannedForAt()),
+                statusForEdit(existingTask, command.backlog()),
                 command.plannedForAt(),
                 command.deadlineAt(),
                 existingTask.createdAt(),
@@ -135,7 +136,7 @@ public class TaskApplicationService {
                 existingTask.completedAt(),
                 existingTask.closedAt(),
                 command.projectId() == null ? existingTask.projectId() : command.projectId(),
-                existingTask.taskNumber(), existingTask.taskKey()
+                existingTask.taskNumber(), existingTask.taskKey(), command.backlog() ? null : command.plannedDate()
         );
 
         return toView(taskRepository.update(updatedTask));
@@ -262,7 +263,7 @@ public class TaskApplicationService {
     }
 
     public TaskFormView getCreateTaskForm() {
-        return TaskFormView.forCreate(LocalDateTime.now(clock).withSecond(0).withNano(0));
+        return TaskFormView.forCreate(null);
     }
 
     public TaskFormView getTaskForEdit(@NotNull Long taskId) {
@@ -275,7 +276,8 @@ public class TaskApplicationService {
                 task.deadlineAt(),
                 task.isBacklog(),
                 true,
-                task.projectId()
+                task.projectId(),
+                task.plannedDate()
         );
     }
 
@@ -350,9 +352,12 @@ public class TaskApplicationService {
         List<CalendarItemView> items = new ArrayList<>();
         if (task.plannedForAt() != null) {
             items.add(CalendarItemView.planned(task));
+        } else if (task.plannedDate() != null) {
+            items.add(CalendarItemView.plannedDate(task));
         }
         if (task.deadlineAt() != null && (task.plannedForAt() == null
-                || !task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate()))) {
+                || !task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate()))
+                && (task.plannedDate() == null || !task.deadlineAt().toLocalDate().equals(task.plannedDate()))) {
             items.add(CalendarItemView.deadline(task));
         }
         return items;
@@ -394,12 +399,9 @@ public class TaskApplicationService {
         return description == null || description.isBlank() ? null : description;
     }
 
-    private static TaskStatus statusForEdit(Task existingTask, LocalDateTime plannedForAt) {
+    private static TaskStatus statusForEdit(Task existingTask, boolean backlog) {
         if (existingTask.status() == TaskStatus.OPEN || existingTask.status() == TaskStatus.BACKLOG) {
-            if (plannedForAt == null) {
-                return TaskStatus.BACKLOG;
-            }
-            return TaskStatus.OPEN;
+            return backlog ? TaskStatus.BACKLOG : TaskStatus.OPEN;
         }
         return existingTask.status();
     }

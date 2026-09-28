@@ -28,6 +28,7 @@ public class TaskRowMapper implements RowMapper<Task> {
                 ,rs.getLong(\u0022project_id\u0022)
                 ,rs.getLong(\u0022task_number\u0022)
                 ,rs.getString(\u0022task_key\u0022)
+                ,rs.getObject(\u0022planned_date\u0022, java.time.LocalDate.class)
         );
     }
 

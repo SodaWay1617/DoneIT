@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 class TaskTest {
@@ -45,6 +46,27 @@ class TaskTest {
                 UPDATED_AT,
                 null,
                 null
+        ));
+    }
+
+    @Test
+    void taskCannotHavePlannedDateAndDatetimeTogether() {
+        assertThrows(IllegalArgumentException.class, () -> new Task(
+                1L,
+                1L,
+                "Conflicting schedule",
+                null,
+                TaskStatus.OPEN,
+                LocalDateTime.of(2026, 4, 5, 10, 0),
+                null,
+                CREATED_AT,
+                UPDATED_AT,
+                null,
+                null,
+                null,
+                null,
+                null,
+                LocalDate.of(2026, 4, 5)
         ));
     }
 

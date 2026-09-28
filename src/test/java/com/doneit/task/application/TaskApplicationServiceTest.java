@@ -90,9 +90,23 @@ class TaskApplicationServiceTest {
     }
 
     @Test
-    void createTaskRequiresPlannedDate() {
-        assertThrows(IllegalArgumentException.class, () -> service.createTask(new CreateTaskCommand("Task", null, null, null)));
-        verifyNoInteractions(taskRepository);
+    void createTaskAllowsPermanentOpenTaskWithoutDate() {
+        when(taskRepository.create(any(Task.class))).thenAnswer(invocation -> withId(invocation.getArgument(0), 103L));
+        TaskListItemView result = service.createTask(new CreateTaskCommand("Task", null, null, null));
+        assertEquals(TaskStatus.OPEN, result.status());
+        assertNull(result.plannedForAt());
+    }
+
+    @Test
+    void createTaskAllowsPlannedDayWithoutTime() {
+        when(taskRepository.create(any(Task.class))).thenAnswer(invocation -> withId(invocation.getArgument(0), 104L));
+        CreateTaskCommand command = new CreateTaskCommand("Day task", null, null, null, null, LocalDate.of(2026, 4, 12), false);
+
+        TaskListItemView result = service.createTask(command);
+
+        assertEquals(LocalDate.of(2026, 4, 12), result.plannedDate());
+        assertNull(result.plannedForAt());
+        assertEquals(TaskStatus.OPEN, result.status());
     }
 
     @Test
@@ -122,7 +136,7 @@ class TaskApplicationServiceTest {
         ));
 
         assertEquals("Updated title", result.title());
-        assertTrue(result.backlog());
+        assertFalse(result.backlog());
         verify(taskRepository).update(any(Task.class));
     }
 
@@ -385,7 +399,7 @@ class TaskApplicationServiceTest {
                 task.createdAt(),
                 task.updatedAt(),
                 task.completedAt(),
-                task.closedAt()
+                task.closedAt(), task.projectId(), task.taskNumber(), task.taskKey(), task.plannedDate()
         );
     }
 

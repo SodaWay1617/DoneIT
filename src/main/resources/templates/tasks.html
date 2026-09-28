@@ -339,7 +339,7 @@
                     </div>
                     <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="'Planned: ' + ${#temporals.format(task.plannedForAt, 'dd MMM yyyy HH:mm')}">Planned time</p>
-                    <p class="meta" th:if="${task.plannedForAt == null}">Always active</p>
+                    <p class="meta" th:if="${task.plannedForAt == null and task.plannedDate == null}">Always active</p>
                     <p class="meta" th:if="${task.deadlineAt != null}" th:text="'Deadline: ' + ${#temporals.format(task.deadlineAt, 'dd MMM yyyy HH:mm')}">Deadline</p>
                     <form class="reschedule-form" method="post" th:action="@{/tasks/{id}/reschedule(id=${task.id})}">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -364,6 +364,7 @@
                             <button class="secondary" type="submit">To backlog</button>
                         </form>
                     </div>
+                    <p class='meta' th:if='${task.plannedDate != null}' th:text='${task.plannedDate}'>Planned day</p>
                     <form method='post' th:action='@{/tasks/{id}/project(id=${task.id})}'><input type='hidden' th:name='${_csrf.parameterName}' th:value='${_csrf.token}'><input type='hidden' name='redirectTo' value='/'><select name='projectId'><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == task.projectId}'>Project</option></select><button class='secondary'>Move project</button></form>
                 </article>
             </div>

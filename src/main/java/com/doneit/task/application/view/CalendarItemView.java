@@ -28,6 +28,12 @@ public record CalendarItemView(
         );
     }
 
+    public static CalendarItemView plannedDate(Task task) {
+        return new CalendarItemView(task.id(), CalendarOccurrenceType.PLANNED, task.plannedDate(),
+                task.plannedDate().atStartOfDay(), displayTitle(task), task.status(),
+                task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedDate()));
+    }
+
     public static CalendarItemView deadline(Task task) {
         return new CalendarItemView(
                 task.id(),

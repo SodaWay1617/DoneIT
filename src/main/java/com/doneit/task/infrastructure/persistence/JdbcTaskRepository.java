@@ -17,7 +17,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String BASE_SELECT = """
             SELECT id, user_id, title, description, status, planned_for_at, deadline_at,
                    created_at, updated_at, completed_at, closed_at,
-                   project_id, task_number, task_key
+                   project_id, task_number, task_key, planned_date
             FROM tasks
             """;
 
@@ -25,8 +25,8 @@ public class JdbcTaskRepository implements TaskRepository {
             INSERT INTO tasks (
                 user_id, title, description, status, planned_for_at, deadline_at,
                 created_at, updated_at, completed_at, closed_at,
-                project_id, task_number, task_key
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                project_id, task_number, task_key, planned_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             """;
 
@@ -38,6 +38,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 planned_for_at = ?,
                 deadline_at = ?,
                 project_id = ?,
+                planned_date = ?,
                 updated_at = ?,
                 completed_at = ?,
                 closed_at = ?
@@ -50,8 +51,9 @@ public class JdbcTaskRepository implements TaskRepository {
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
               AND (
-                  planned_for_at IS NULL
+                  (planned_for_at IS NULL AND planned_date IS NULL)
                   OR (planned_for_at >= ? AND planned_for_at < ?)
+                  OR planned_date = ?
               )
             ORDER BY planned_for_at, id
             """;
@@ -60,8 +62,9 @@ public class JdbcTaskRepository implements TaskRepository {
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
               AND (
-                  planned_for_at IS NULL
+                  (planned_for_at IS NULL AND planned_date IS NULL)
                   OR planned_for_at < ?
+                  OR planned_date <= ?
               )
             ORDER BY planned_for_at, id
             """;
@@ -81,8 +84,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String FIND_COMPLETED_OR_CLOSED_FOR_DATE_SQL = BASE_SELECT + """
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status IN ('DONE', 'CLOSED')
-              AND planned_for_at >= ?
-              AND planned_for_at < ?
+              AND ((planned_for_at >= ? AND planned_for_at < ?) OR planned_date = ?)
             ORDER BY planned_for_at, updated_at DESC, id
             """;
 
@@ -90,6 +92,7 @@ public class JdbcTaskRepository implements TaskRepository {
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND (
                   (planned_for_at IS NOT NULL AND planned_for_at >= ? AND planned_for_at < ?)
+                  OR (planned_date IS NOT NULL AND planned_date >= ? AND planned_date < ?)
                   OR (deadline_at IS NOT NULL AND deadline_at >= ? AND deadline_at < ?)
               )
             ORDER BY COALESCE(planned_for_at, deadline_at), id
@@ -119,6 +122,7 @@ public class JdbcTaskRepository implements TaskRepository {
             UPDATE tasks
             SET status = 'OPEN',
                 planned_for_at = ?,
+                planned_date = NULL,
                 updated_at = ?
             WHERE id = ?
             """;
@@ -127,6 +131,7 @@ public class JdbcTaskRepository implements TaskRepository {
             UPDATE tasks
             SET status = 'BACKLOG',
                 planned_for_at = NULL,
+                planned_date = NULL,
                 updated_at = ?
             WHERE id = ?
             """;
@@ -134,21 +139,21 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String BULK_MOVE_SQL = """
             UPDATE tasks
             SET planned_for_at = planned_for_at + INTERVAL '1 day',
+                planned_date = planned_date + 1,
                 updated_at = ?
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
-              AND planned_for_at IS NOT NULL
-              AND planned_for_at < ?
+              AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
             """;
 
     private static final String BULK_MOVE_OVERDUE_TO_DATE_SQL = """
             UPDATE tasks
             SET planned_for_at = CAST(? AS date) + CAST(planned_for_at AS time),
+                planned_date = CASE WHEN planned_date IS NULL THEN NULL ELSE CAST(? AS date) END,
                 updated_at = ?
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
               AND status = 'OPEN'
-              AND planned_for_at IS NOT NULL
-              AND planned_for_at < ?
+              AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -181,7 +186,8 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(), projectId, number,
-                code + \u0022-\u0022 + number + \u0022___\u0022 + login
+                code + \u0022-\u0022 + number + \u0022___\u0022 + login,
+                task.plannedDate()
         );
         return findById(Objects.requireNonNull(id)).orElseThrow();
     }
@@ -196,6 +202,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.plannedForAt(),
                 task.deadlineAt(),
                 task.projectId(),
+                task.plannedDate(),
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(),
@@ -213,13 +220,13 @@ public class JdbcTaskRepository implements TaskRepository {
     public List<Task> findActiveTasksForDate(Long userId, LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = start.plusDays(1);
-        return jdbcTemplate.query(FIND_ACTIVE_FOR_DATE_SQL, taskRowMapper, userId, start, end);
+        return jdbcTemplate.query(FIND_ACTIVE_FOR_DATE_SQL, taskRowMapper, userId, start, end, date);
     }
 
     @Override
     public List<Task> findActiveTasksDueByDate(Long userId, LocalDate date) {
         LocalDateTime end = date.plusDays(1).atStartOfDay();
-        return jdbcTemplate.query(FIND_ACTIVE_DUE_BY_DATE_SQL, taskRowMapper, userId, end);
+        return jdbcTemplate.query(FIND_ACTIVE_DUE_BY_DATE_SQL, taskRowMapper, userId, end, date);
     }
 
     @Override
@@ -236,14 +243,14 @@ public class JdbcTaskRepository implements TaskRepository {
     public List<Task> findCompletedOrClosedTasksForDate(Long userId, LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = start.plusDays(1);
-        return jdbcTemplate.query(FIND_COMPLETED_OR_CLOSED_FOR_DATE_SQL, taskRowMapper, userId, start, end);
+        return jdbcTemplate.query(FIND_COMPLETED_OR_CLOSED_FOR_DATE_SQL, taskRowMapper, userId, start, end, date);
     }
 
     @Override
     public List<Task> findTasksForCalendarRange(Long userId, LocalDate startDate, LocalDate endDateExclusive) {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDateExclusive.atStartOfDay();
-        return jdbcTemplate.query(FIND_FOR_CALENDAR_RANGE_SQL, taskRowMapper, userId, start, end, start, end);
+        return jdbcTemplate.query(FIND_FOR_CALENDAR_RANGE_SQL, taskRowMapper, userId, start, end, startDate, endDateExclusive, start, end);
     }
 
     @Override
@@ -291,12 +298,12 @@ public class JdbcTaskRepository implements TaskRepository {
     @Override
     public int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt) {
         LocalDateTime end = date.plusDays(1).atStartOfDay();
-        return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId, end);
+        return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId, end, end.toLocalDate());
     }
 
     @Override
     public int bulkMoveOverdueOpenDatedTasksToDate(Long userId, LocalDate date, LocalDateTime updatedAt) {
         LocalDateTime start = date.atStartOfDay();
-        return jdbcTemplate.update(BULK_MOVE_OVERDUE_TO_DATE_SQL, date, updatedAt, userId, start);
+        return jdbcTemplate.update(BULK_MOVE_OVERDUE_TO_DATE_SQL, date, date, updatedAt, userId, start, date);
     }
 }
