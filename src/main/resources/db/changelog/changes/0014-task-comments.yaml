@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0014-task-comments
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE task_comments (
+                  id BIGSERIAL PRIMARY KEY,
+                  user_id BIGINT NOT NULL REFERENCES users(id),
+                  task_id BIGINT REFERENCES tasks(id) ON DELETE CASCADE,
+                  regular_task_id BIGINT REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                  body TEXT NOT NULL,
+                  created_at TIMESTAMP NOT NULL,
+                  CONSTRAINT ck_task_comment_target CHECK (
+                      (task_id IS NOT NULL AND regular_task_id IS NULL)
+                      OR (task_id IS NULL AND regular_task_id IS NOT NULL)
+                  ),
+                  CONSTRAINT ck_task_comment_body CHECK (LENGTH(TRIM(body)) > 0)
+              );
+              CREATE INDEX idx_task_comments_task ON task_comments(task_id, created_at);
+              CREATE INDEX idx_task_comments_regular_task ON task_comments(regular_task_id, created_at);

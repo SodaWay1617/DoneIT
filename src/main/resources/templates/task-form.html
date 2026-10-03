@@ -103,6 +103,12 @@
         }
         .choice input { width: auto; }
         .date-fields { display: grid; gap: 16px; }
+        .comments { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .comments h2 { margin-top: 0; }
+        .comment-list { display: grid; gap: 10px; margin-bottom: 16px; }
+        .comment { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: white; }
+        .comment-meta { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
+        .comment p { margin-bottom: 0; white-space: pre-wrap; }
         [hidden] { display: none !important; }
     </style>
 </head>
@@ -163,12 +169,6 @@
             </select>
         </label>
         <label>
-            Estimate, minutes
-            <input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}"
-                   th:classappend="${#fields.hasErrors('estimateMinutes')} ? ' field-invalid'" placeholder="Not estimated" />
-            <span class="field-error" th:if="${#fields.hasErrors('estimateMinutes')}" th:errors="*{estimateMinutes}">Estimate error</span>
-        </label>
-        <label>
             Description
             <textarea th:field="*{description}" placeholder="Notes, details, links"></textarea>
         </label>
@@ -198,6 +198,21 @@
             <a class="ghost" th:href="@{/backlog}">Open backlog</a>
         </div>
     </form>
+    <section class="comments" th:if="${form.editMode}">
+        <h2>Comments</h2>
+        <div class="comment-list" th:if="${comments != null and !#lists.isEmpty(comments)}">
+            <article class="comment" th:each="comment : ${comments}">
+                <div class="comment-meta"><strong th:text="${comment.author}">Author</strong><time th:text="${#temporals.format(comment.createdAt, 'dd MMM yyyy HH:mm')}">01 Jan 2026 12:00</time></div>
+                <p th:text="${comment.body}">Comment</p>
+            </article>
+        </div>
+        <p th:if="${comments == null or #lists.isEmpty(comments)}">No comments yet.</p>
+        <form method="post" th:action="@{/tasks/{id}/comments(id=${form.taskId})}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <label>New comment<textarea name="body" maxlength="5000" required placeholder="Add context or an update"></textarea></label>
+            <div class="actions"><button class="solid" type="submit">Add comment</button></div>
+        </form>
+    </section>
 </div>
 <script>
     const status = document.getElementById('status');
