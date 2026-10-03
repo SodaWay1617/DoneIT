@@ -381,7 +381,15 @@ public class JdbcTaskRepository implements TaskRepository {
         int updated = jdbcTemplate.update(
                 "UPDATE tasks SET spent_minutes=spent_minutes+?,updated_at=? WHERE id=?",
                 minutes, updatedAt, taskId);
+        if (updated > 0) recordTrackedTimeAdjustment(taskId, minutes, updatedAt);
         return updated == 0 ? Optional.empty() : findById(taskId);
+    }
+
+    @Override
+    public void recordTrackedTimeAdjustment(Long taskId, int minutes, LocalDateTime recordedAt) {
+        if (minutes != 0) jdbcTemplate.update(
+                "INSERT INTO task_time_entries(task_id,entry_date,minutes,created_at) VALUES(?,?,?,?)",
+                taskId, recordedAt.toLocalDate(), minutes, recordedAt);
     }
 
     @Override

@@ -85,6 +85,7 @@
                 <a class="pill" th:href="@{/}">List</a>
                 <a class="pill" th:href="@{/kanban(date=${kanban.selectedDate})}">Kanban</a>
                 <a class="pill" th:href="@{/calendar(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}">Calendar</a>
+                <a class="pill" th:href="@{/analytics(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}">Analytics</a>
                 <a class="ghost" th:href="@{/backlog}">Backlog</a>
                 <a class="ghost" th:href="@{/inbox}">Inbox</a>
                 <a class="ghost" th:href="@{/finished}">Done and closed</a>

@@ -141,7 +141,10 @@ public class TaskApplicationService {
                 command.priority(), command.estimateMinutes(), command.spentMinutes()
         );
 
-        return toView(taskRepository.update(updatedTask));
+        Task savedTask = taskRepository.update(updatedTask);
+        int timeAdjustment = command.spentMinutes() - existingTask.spentMinutes();
+        if (timeAdjustment != 0) taskRepository.recordTrackedTimeAdjustment(existingTask.id(), timeAdjustment, now);
+        return toView(savedTask);
     }
 
     public DailyTasksView getTasksForToday() {

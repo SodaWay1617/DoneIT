@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0015-task-time-entries
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE task_time_entries (
+                  id BIGSERIAL PRIMARY KEY,
+                  task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                  entry_date DATE NOT NULL,
+                  minutes INTEGER NOT NULL,
+                  created_at TIMESTAMP NOT NULL,
+                  CONSTRAINT ck_task_time_entry_non_zero CHECK (minutes <> 0)
+              );
+              CREATE INDEX idx_task_time_entries_task_date ON task_time_entries(task_id, entry_date);
+              INSERT INTO task_time_entries(task_id, entry_date, minutes, created_at)
+              SELECT id, COALESCE(completed_at, updated_at)::date, spent_minutes, updated_at
+              FROM tasks WHERE spent_minutes <> 0;
