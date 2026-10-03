@@ -106,20 +106,35 @@
 
         <article class="day" th:each="day : ${calendar.days}" th:classappend="${!day.currentMonth} ? ' outside' : (${day.today} ? ' today' : '')">
             <div class="day-number" th:text="${day.date.dayOfMonth}">1</div>
-            <div class="items" th:if="!${#lists.isEmpty(day.items)}">
+            <div class="items">
                 <a class="item"
                    th:each="item : ${day.items}"
                    th:classappend="${item.deadlineHighlighted} ? ' deadline' : (${item.taskStatus.name() == 'DONE'} ? ' done' : (${item.taskStatus.name() == 'CLOSED'} ? ' closed' : ''))"
                    th:href="@{/tasks/{id}/edit(id=${item.taskId})}"
+                   th:attr="data-exact-time=${item.exactTime},data-time=${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') : ''}"
                    th:text="${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') + ' ' + item.title : item.title}">09:00 Task</a>
-            </div>
-            <div class="items">
                 <th:block th:each="occ : ${regularCalendar}">
-                    <a class="item" th:if="${occ.date == day.date}" th:classappend="${occ.completed} ? ' done'" th:href="@{/recurring/{id}/edit(id=${occ.task.id})}" th:text="${occ.task.occurrenceTime != null ? occ.task.occurrenceTime + ' ' + occ.task.title : occ.task.title}">Recurring task</a>
+                    <a class="item" th:if="${occ.date == day.date}" th:classappend="${occ.completed} ? ' done'"
+                       th:href="@{/recurring/{id}/edit(id=${occ.task.id})}"
+                       th:attr="data-exact-time=${occ.task.occurrenceTime != null},data-time=${occ.task.occurrenceTime != null ? occ.task.occurrenceTime : ''}"
+                       th:text="${occ.task.occurrenceTime != null ? occ.task.occurrenceTime + ' ' + occ.task.title : occ.task.title}">Recurring task</a>
                 </th:block>
             </div>
         </article>
     </section>
 </div>
+<script>
+    document.querySelectorAll('.day .items').forEach(container => {
+        const items = [...container.querySelectorAll(':scope > .item')];
+        items.sort((left, right) => {
+            const leftExact = left.dataset.exactTime === 'true';
+            const rightExact = right.dataset.exactTime === 'true';
+            if (leftExact !== rightExact) return leftExact ? -1 : 1;
+            if (leftExact) return left.dataset.time.localeCompare(right.dataset.time);
+            return 0;
+        });
+        items.forEach(item => container.appendChild(item));
+    });
+</script>
 </body>
 </html>
