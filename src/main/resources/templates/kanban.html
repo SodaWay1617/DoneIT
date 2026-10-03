@@ -112,17 +112,22 @@
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="${#temporals.format(task.plannedForAt, 'HH:mm')}">09:00</p>
                     <p class="meta" th:if="${task.plannedDate != null}" th:text="${task.plannedDate}">Planned day</p>
                     <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
-                    <div class="task-actions"><a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a></div>
+                    <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>
+                    <p class="meta" th:if="${task.spentMinutes > 0}" th:text="'Spent: ' + ${task.spentMinutes} + ' min'">Spent</p>
+                    <div class="task-actions"><a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a><form class="inline track-time" method="post" th:action="@{/tasks/{id}/track-time(id=${task.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="redirectTo" th:value="'/kanban?date=' + ${kanban.selectedDate}"><input type="hidden" name="minutes"><button class="secondary track-time-button" type="button">Track time</button></form></div>
                 </article>
                 <th:block th:each="task : ${regularKanban}">
                     <article class="task" th:if="${task.status == column.status}">
                         <div class="badges"><span class="badge open" th:text="${task.status.displayName()}">Status</span><span class="badge">RECURRING</span></div>
                         <h3 th:text="${task.title}">Task</h3>
                         <p class="meta" th:text="${task.recurrenceType.displayName()}">Every day</p>
+                        <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>
+                        <p class="meta" th:if="${task.spentMinutes > 0}" th:text="'Spent: ' + ${task.spentMinutes} + ' min'">Spent</p>
                         <div class="task-actions"><a class="ghost" th:href="@{/recurring/{id}/edit(id=${task.id})}">Edit</a>
-                        <form class="inline" method="post" th:if="${task.regularStatus.name() == 'ACTIVE'}" th:action="@{/recurring/{id}/done-today(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${kanban.selectedDate}"><input type="hidden" name="redirectTo" th:value="'/kanban?date=' + ${kanban.selectedDate}"><button class="solid">Done today</button>
+                        <form class="inline done-with-time" method="post" th:if="${task.regularStatus.name() == 'ACTIVE'}" th:action="@{/recurring/{id}/done-today(id=${task.id})}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${kanban.selectedDate}"><input type="hidden" name="redirectTo" th:value="'/kanban?date=' + ${kanban.selectedDate}"><input type="hidden" name="spentMinutes"><button class="solid">Done today</button>
                         </form></div>
+                        <form class="inline track-time" method="post" th:action="@{/recurring/{id}/track-time(id=${task.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${kanban.selectedDate}"><input type="hidden" name="redirectTo" th:value="'/kanban?date=' + ${kanban.selectedDate}"><input type="hidden" name="minutes"><button class="secondary track-time-button" type="button">Track time</button></form>
                     </article>
                 </th:block>
             </div>
@@ -178,5 +183,6 @@
         if (!response.ok) window.location.reload();
     }
 </script>
+<script src="/time-tracking.js"></script>
 </body>
 </html>

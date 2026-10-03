@@ -17,7 +17,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String BASE_SELECT = """
             SELECT id, user_id, title, description, status, planned_for_at, deadline_at,
                    created_at, updated_at, completed_at, closed_at,
-                   project_id, task_number, task_key, planned_date, priority
+                   project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes
             FROM tasks
             """;
 
@@ -25,8 +25,8 @@ public class JdbcTaskRepository implements TaskRepository {
             INSERT INTO tasks (
                 user_id, title, description, status, planned_for_at, deadline_at,
                 created_at, updated_at, completed_at, closed_at,
-                project_id, task_number, task_key, planned_date, priority
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             """;
 
@@ -40,6 +40,8 @@ public class JdbcTaskRepository implements TaskRepository {
                 project_id = ?,
                 planned_date = ?,
                 priority = ?,
+                estimate_minutes = ?,
+                spent_minutes = ?,
                 updated_at = ?,
                 completed_at = ?,
                 closed_at = ?
@@ -109,14 +111,17 @@ public class JdbcTaskRepository implements TaskRepository {
 
     private static final String FIND_FOR_CALENDAR_RANGE_SQL = BASE_SELECT + """
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
-              AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND (
-                  (planned_for_at IS NOT NULL AND planned_for_at >= ? AND planned_for_at < ?)
-                  OR (planned_date IS NOT NULL AND planned_date >= ? AND planned_date < ?)
-                  OR (deadline_at IS NOT NULL AND deadline_at >= ? AND deadline_at < ?)
-                  OR (planned_for_at IS NULL AND planned_date IS NULL AND deadline_at IS NULL)
+                  (status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION') AND (
+                      (planned_for_at IS NOT NULL AND planned_for_at >= ? AND planned_for_at < ?)
+                      OR (planned_date IS NOT NULL AND planned_date >= ? AND planned_date < ?)
+                      OR (deadline_at IS NOT NULL AND deadline_at >= ? AND deadline_at < ?)
+                      OR (planned_for_at IS NULL AND planned_date IS NULL AND deadline_at IS NULL)
+                  ))
+                  OR (status = 'DONE' AND completed_at >= ? AND completed_at < ?)
+                  OR (status = 'CLOSED' AND closed_at >= ? AND closed_at < ?)
               )
-            ORDER BY COALESCE(planned_for_at, deadline_at), id
+            ORDER BY COALESCE(completed_at, closed_at, planned_for_at, deadline_at), id
             """;
 
     private static final String FIND_FOR_KANBAN_SQL = BASE_SELECT + """
@@ -232,6 +237,8 @@ public class JdbcTaskRepository implements TaskRepository {
                 code + \u0022-\u0022 + number + \u0022___\u0022 + login,
                 task.plannedDate(),
                 task.priority().name()
+                ,task.estimateMinutes()
+                ,task.spentMinutes()
         );
         return findById(Objects.requireNonNull(id)).orElseThrow();
     }
@@ -248,6 +255,8 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.projectId(),
                 task.plannedDate(),
                 task.priority().name(),
+                task.estimateMinutes(),
+                task.spentMinutes(),
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(),
@@ -300,7 +309,8 @@ public class JdbcTaskRepository implements TaskRepository {
     public List<Task> findTasksForCalendarRange(Long userId, LocalDate startDate, LocalDate endDateExclusive) {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDateExclusive.atStartOfDay();
-        return jdbcTemplate.query(FIND_FOR_CALENDAR_RANGE_SQL, taskRowMapper, userId, start, end, startDate, endDateExclusive, start, end);
+        return jdbcTemplate.query(FIND_FOR_CALENDAR_RANGE_SQL, taskRowMapper,
+                userId, start, end, startDate, endDateExclusive, start, end, start, end, start, end);
     }
 
     @Override
@@ -364,6 +374,14 @@ public class JdbcTaskRepository implements TaskRepository {
             return Optional.empty();
         }
         return findById(taskId);
+    }
+
+    @Override
+    public Optional<Task> addTrackedTime(Long taskId, int minutes, LocalDateTime updatedAt) {
+        int updated = jdbcTemplate.update(
+                "UPDATE tasks SET spent_minutes=spent_minutes+?,updated_at=? WHERE id=?",
+                minutes, updatedAt, taskId);
+        return updated == 0 ? Optional.empty() : findById(taskId);
     }
 
     @Override

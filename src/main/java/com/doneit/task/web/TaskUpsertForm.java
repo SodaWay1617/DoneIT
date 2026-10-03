@@ -2,6 +2,7 @@ package com.doneit.task.web;
 
 import com.doneit.task.application.view.TaskFormView;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
@@ -27,11 +28,16 @@ public class TaskUpsertForm {
 
     private boolean editMode;
     private boolean backlog;
-    private boolean permanent;
+    private boolean withoutPlannedDate;
+    private boolean withoutDeadline;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate plannedDate;
     private TaskPriority priority = TaskPriority.NONE;
     private TaskStatus status = TaskStatus.NEW;
+    @Min(value = 1, message = "Estimate must be at least one minute")
+    private Integer estimateMinutes;
+    @Min(value = 0, message = "Spent time cannot be negative")
+    private int spentMinutes;
 
     public static TaskUpsertForm from(TaskFormView taskFormView) {
         TaskUpsertForm form = new TaskUpsertForm();
@@ -43,12 +49,15 @@ public class TaskUpsertForm {
         form.setDeadlineAt(taskFormView.deadlineAt());
         form.setEditMode(taskFormView.editMode());
         form.setBacklog(taskFormView.backlog());
-        form.setPermanent(!taskFormView.backlog()
+        form.setWithoutPlannedDate(taskFormView.editMode()
                 && taskFormView.plannedForAt() == null
                 && taskFormView.plannedDate() == null);
+        form.setWithoutDeadline(taskFormView.editMode() && taskFormView.deadlineAt() == null);
         form.setPlannedDate(taskFormView.plannedDate());
         form.setPriority(taskFormView.priority());
         form.setStatus(taskFormView.status());
+        form.setEstimateMinutes(taskFormView.estimateMinutes());
+        form.setSpentMinutes(taskFormView.spentMinutes());
         return form;
     }
 
@@ -105,12 +114,18 @@ public class TaskUpsertForm {
 
     public boolean isBacklog() { return backlog; }
     public void setBacklog(boolean backlog) { this.backlog = backlog; }
-    public boolean isPermanent() { return permanent; }
-    public void setPermanent(boolean permanent) { this.permanent = permanent; }
+    public boolean isWithoutPlannedDate() { return withoutPlannedDate; }
+    public void setWithoutPlannedDate(boolean withoutPlannedDate) { this.withoutPlannedDate = withoutPlannedDate; }
+    public boolean isWithoutDeadline() { return withoutDeadline; }
+    public void setWithoutDeadline(boolean withoutDeadline) { this.withoutDeadline = withoutDeadline; }
     public LocalDate getPlannedDate() { return plannedDate; }
     public void setPlannedDate(LocalDate plannedDate) { this.plannedDate = plannedDate; }
     public TaskPriority getPriority() { return priority; }
     public void setPriority(TaskPriority priority) { this.priority = priority == null ? TaskPriority.NONE : priority; }
     public TaskStatus getStatus() { return status; }
     public void setStatus(TaskStatus status) { this.status = status == null ? TaskStatus.NEW : status; }
+    public Integer getEstimateMinutes() { return estimateMinutes; }
+    public void setEstimateMinutes(Integer estimateMinutes) { this.estimateMinutes = estimateMinutes; }
+    public int getSpentMinutes() { return spentMinutes; }
+    public void setSpentMinutes(int spentMinutes) { this.spentMinutes = spentMinutes; }
 }

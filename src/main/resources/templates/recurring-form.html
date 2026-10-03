@@ -12,6 +12,9 @@
 <label class="field">Status<select th:field="*{status}"><option th:each="s:${statuses}" th:value="${s}" th:text="${s.displayName()}">Status</option></select></label></div>
 <div class="row"><label class="field">Repeat<select id="recurrence" th:field="*{recurrenceType}"><option th:each="r:${recurrences}" th:value="${r}" th:text="${r.displayName()}">Repeat</option></select></label>
 <label class="field">Priority<select th:field="*{priority}"><option th:each="p:${priorities}" th:value="${p}" th:text="${p.displayName()}">Priority</option></select></label></div>
+<label class="field">Estimate, minutes<input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}" placeholder="Not estimated"></label>
+<label class="field" th:if="*{id != null}">Total spent, minutes<input type="number" min="0" inputmode="numeric" th:field="*{spentMinutes}"></label>
+<label class="field">Estimate, minutes<input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}" placeholder="Not estimated"></label>
 <div class="row"><label class="field">Time (optional)<input type="time" th:field="*{occurrenceTime}"></label>
 <label class="field" id="anchorField">First date / schedule anchor<input type="date" th:field="*{anchorDate}"><small>Its weekday, day of month, or month and day define the schedule.</small></label></div>
 <div class="actions"><button type="submit">Save</button><a href="/">Cancel</a></div></form></section></main>

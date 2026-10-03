@@ -24,8 +24,27 @@ public record RegularTask(
         LocalDateTime finishedAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        long statusPosition
+        long statusPosition,
+        Integer estimateMinutes,
+        int spentMinutes
 ) {
+    public RegularTask(Long id,Long userId,Long projectId,Long taskNumber,String taskKey,String title,
+                       String description,TaskStatus status,TaskPriority priority,RecurrenceType recurrenceType,
+                       LocalTime occurrenceTime,LocalDate anchorDate,RegularStatus regularStatus,
+                       LocalDateTime activatedAt,LocalDateTime finishedAt,LocalDateTime createdAt,
+                       LocalDateTime updatedAt,long statusPosition,Integer estimateMinutes) {
+        this(id,userId,projectId,taskNumber,taskKey,title,description,status,priority,recurrenceType,
+                occurrenceTime,anchorDate,regularStatus,activatedAt,finishedAt,createdAt,updatedAt,statusPosition,
+                estimateMinutes,0);
+    }
+    public RegularTask(Long id,Long userId,Long projectId,Long taskNumber,String taskKey,String title,
+                       String description,TaskStatus status,TaskPriority priority,RecurrenceType recurrenceType,
+                       LocalTime occurrenceTime,LocalDate anchorDate,RegularStatus regularStatus,
+                       LocalDateTime activatedAt,LocalDateTime finishedAt,LocalDateTime createdAt,
+                       LocalDateTime updatedAt,long statusPosition) {
+        this(id,userId,projectId,taskNumber,taskKey,title,description,status,priority,recurrenceType,
+                occurrenceTime,anchorDate,regularStatus,activatedAt,finishedAt,createdAt,updatedAt,statusPosition,null);
+    }
     public RegularTask {
         if (status == TaskStatus.TODO || status == TaskStatus.PAUSED) {
             throw new IllegalArgumentException("TODO and PAUSED are not available for recurring tasks");
@@ -39,6 +58,10 @@ public record RegularTask(
         if (status.isFinished() && finishedAt == null) {
             throw new IllegalArgumentException("Finished recurring task requires finishedAt");
         }
+        if (estimateMinutes != null && estimateMinutes <= 0) {
+            throw new IllegalArgumentException("Task estimate must be positive");
+        }
+        if (spentMinutes < 0) throw new IllegalArgumentException("Spent time cannot be negative");
     }
 
     public boolean occursOn(LocalDate date) {

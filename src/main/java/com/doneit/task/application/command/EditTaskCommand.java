@@ -18,8 +18,19 @@ public record EditTaskCommand(
         LocalDate plannedDate,
         boolean backlog,
         TaskPriority priority,
-        TaskStatus status
+        TaskStatus status,
+        Integer estimateMinutes,
+        int spentMinutes
 ) {
+    public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt,
+                           Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority,TaskStatus status,
+                           Integer estimateMinutes) {
+        this(taskId,title,description,plannedForAt,deadlineAt,projectId,plannedDate,backlog,priority,status,estimateMinutes,0);
+    }
+    public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt,
+                           Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority,TaskStatus status) {
+        this(taskId,title,description,plannedForAt,deadlineAt,projectId,plannedDate,backlog,priority,status,null);
+    }
     public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt) {
         this(taskId,title,description,plannedForAt,deadlineAt,null,null,false,TaskPriority.NONE,null);
     }
@@ -35,5 +46,7 @@ public record EditTaskCommand(
             throw new IllegalArgumentException("Task title is required");
         }
         if (priority == null) priority = TaskPriority.NONE;
+        if (estimateMinutes != null && estimateMinutes <= 0) throw new IllegalArgumentException("Estimate must be positive");
+        if (spentMinutes < 0) throw new IllegalArgumentException("Spent time cannot be negative");
     }
 }

@@ -20,8 +20,25 @@ public record Task(
         Long taskNumber,
         String taskKey,
         LocalDate plannedDate,
-        TaskPriority priority
+        TaskPriority priority,
+        Integer estimateMinutes,
+        int spentMinutes
 ) {
+    public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,
+                LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,
+                LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey,LocalDate plannedDate,
+                TaskPriority priority,Integer estimateMinutes) {
+        this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,
+                projectId,taskNumber,taskKey,plannedDate,priority,estimateMinutes,0);
+    }
+
+    public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,
+                LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,
+                LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey,LocalDate plannedDate,
+                TaskPriority priority) {
+        this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,
+                projectId,taskNumber,taskKey,plannedDate,priority,null);
+    }
 
     public Task(Long id, Long userId, String title, String description, TaskStatus status,
                 LocalDateTime plannedForAt, LocalDateTime deadlineAt, LocalDateTime createdAt,
@@ -49,6 +66,10 @@ public record Task(
         if (priority == null) {
             priority = TaskPriority.NONE;
         }
+        if (estimateMinutes != null && estimateMinutes <= 0) {
+            throw new IllegalArgumentException("Task estimate must be positive");
+        }
+        if (spentMinutes < 0) throw new IllegalArgumentException("Spent time cannot be negative");
         if (createdAt == null) {
             throw new IllegalArgumentException("Task createdAt is required");
         }
@@ -102,7 +123,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 transitionAt,
-                null, projectId, taskNumber, taskKey, plannedDate, priority
+                null, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes
         );
     }
 
@@ -120,7 +141,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 null,
-                transitionAt, projectId, taskNumber, taskKey, plannedDate, priority
+                transitionAt, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes
         );
     }
 
@@ -138,7 +159,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null, priority
+                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes
         );
     }
 
@@ -155,7 +176,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null, priority
+                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes
         );
     }
 

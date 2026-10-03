@@ -29,10 +29,11 @@ public class RegularTaskController {
   try{service.update(id,f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Edit recurring task","/recurring/"+id);}
   flash.addFlashAttribute("flashMessage","Recurring task updated.");return "redirect:"+redirect(f.getStatus());
  }
- @PostMapping("/recurring/{id}/done-today") public String done(@PathVariable Long id,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){
-  service.complete(id,date);flash.addFlashAttribute("flashMessage","Recurring task completed for this day.");
+ @PostMapping("/recurring/{id}/done-today") public String done(@PathVariable Long id,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(required=false) Integer spentMinutes,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){
+  service.complete(id,date,spentMinutes);flash.addFlashAttribute("flashMessage","Recurring task completed for this day.");
   return "redirect:"+(redirectTo.startsWith("/")&&!redirectTo.startsWith("//")?redirectTo:"/");
  }
+ @PostMapping("/recurring/{id}/track-time") public String track(@PathVariable Long id,@RequestParam int minutes,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){service.track(id,date,minutes);flash.addFlashAttribute("flashMessage","Time tracked.");return "redirect:"+(redirectTo.startsWith("/")&&!redirectTo.startsWith("//")?redirectTo:"/");}
  private String page(Model m,RegularTaskForm f,String title,String action){
   m.addAttribute("form",f);m.addAttribute("pageTitle",title);m.addAttribute("formAction",action);m.addAttribute("projects",projects.list());
   m.addAttribute("statuses",new TaskStatus[]{TaskStatus.NEW,TaskStatus.BACKLOG,TaskStatus.SPECIFICATION,TaskStatus.IN_PROGRESS,TaskStatus.DOCUMENTATION,TaskStatus.DONE,TaskStatus.CLOSED});

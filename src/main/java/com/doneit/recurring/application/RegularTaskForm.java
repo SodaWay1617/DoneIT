@@ -5,6 +5,7 @@ import com.doneit.task.domain.TaskPriority;
 import com.doneit.task.domain.TaskStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -18,6 +19,10 @@ public class RegularTaskForm {
     @NotNull private RecurrenceType recurrenceType = RecurrenceType.DAILY;
     private LocalTime occurrenceTime;
     private LocalDate anchorDate;
+    @Min(value = 1, message = "Estimate must be at least one minute")
+    private Integer estimateMinutes;
+    @Min(value = 0, message = "Spent time cannot be negative")
+    private int spentMinutes;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -37,4 +42,8 @@ public class RegularTaskForm {
     public void setOccurrenceTime(LocalTime occurrenceTime) { this.occurrenceTime = occurrenceTime; }
     public LocalDate getAnchorDate() { return anchorDate; }
     public void setAnchorDate(LocalDate anchorDate) { this.anchorDate = anchorDate; }
+    public Integer getEstimateMinutes() { return estimateMinutes; }
+    public void setEstimateMinutes(Integer estimateMinutes) { this.estimateMinutes = estimateMinutes; }
+    public int getSpentMinutes() { return spentMinutes; }
+    public void setSpentMinutes(int spentMinutes) { this.spentMinutes = spentMinutes; }
 }

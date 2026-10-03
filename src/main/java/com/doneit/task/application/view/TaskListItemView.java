@@ -19,8 +19,21 @@ public record TaskListItemView(
         Long projectId,
         String taskCode,
         LocalDate plannedDate,
-        TaskPriority priority
+        TaskPriority priority,
+        Integer estimateMinutes,
+        int spentMinutes
 ) {
+    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime plannedForAt,
+                            LocalDateTime deadlineAt,boolean backlog,boolean overdue,Long projectId,String taskCode,
+                            LocalDate plannedDate,TaskPriority priority,Integer estimateMinutes) {
+        this(id,title,description,status,plannedForAt,deadlineAt,backlog,overdue,projectId,taskCode,plannedDate,
+                priority,estimateMinutes,0);
+    }
+    public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime plannedForAt,
+                            LocalDateTime deadlineAt,boolean backlog,boolean overdue,Long projectId,String taskCode,
+                            LocalDate plannedDate,TaskPriority priority) {
+        this(id,title,description,status,plannedForAt,deadlineAt,backlog,overdue,projectId,taskCode,plannedDate,priority,null);
+    }
     public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue){this(id,title,description,status,planned,deadline,backlog,overdue,null,null,null,TaskPriority.NONE);}
     public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue,Long projectId,String taskCode){this(id,title,description,status,planned,deadline,backlog,overdue,projectId,taskCode,null,TaskPriority.NONE);}
 
@@ -62,7 +75,9 @@ public record TaskListItemView(
                 task.projectId(),
                 displayTaskCode(task),
                 task.plannedDate(),
-                task.priority()
+                task.priority(),
+                task.estimateMinutes(),
+                task.spentMinutes()
         );
     }
 

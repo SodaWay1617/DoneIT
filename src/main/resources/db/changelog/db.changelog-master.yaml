@@ -21,3 +21,7 @@ databaseChangeLog:
       file: db/changelog/changes/0010-kanban-order.yaml
   - include:
       file: db/changelog/changes/0011-recurring-tasks.yaml
+  - include:
+      file: db/changelog/changes/0012-task-estimates.yaml
+  - include:
+      file: db/changelog/changes/0013-task-time-tracking.yaml

@@ -350,6 +350,9 @@
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="'Planned: ' + ${#temporals.format(task.plannedForAt, 'dd MMM yyyy HH:mm')}">Planned time</p>
                     <p class="meta" th:if="${task.plannedForAt == null and task.plannedDate == null}">Always active</p>
                     <p class="meta" th:if="${task.deadlineAt != null}" th:text="'Deadline: ' + ${#temporals.format(task.deadlineAt, 'dd MMM yyyy HH:mm')}">Deadline</p>
+                    <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>
+                    <p class="meta" th:if="${task.spentMinutes > 0}" th:text="'Spent: ' + ${task.spentMinutes} + ' min'">Spent</p>
+                    <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>
                     <form class="reschedule-form" method="post" th:action="@{/tasks/{id}/reschedule(id=${task.id})}">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
@@ -357,10 +360,14 @@
                         <button class="secondary" type="submit">Move</button>
                     </form>
                     <div class="task-actions">
-                        <form class="inline" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
+                        <form class="inline done-with-time" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                             <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
+                            <input type="hidden" name="spentMinutes" />
                             <button class="solid" type="submit">Done</button>
+                        </form>
+                        <form class="inline track-time" method="post" th:action="@{/tasks/{id}/track-time(id=${task.id})}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + daily.selectedDate}" /><input type="hidden" name="minutes" /><button class="secondary track-time-button" type="button">Track time</button>
                         </form>
                         <form class="inline" method="post" th:action="@{/tasks/{id}/closed(id=${task.id})}">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -387,12 +394,17 @@
                     <a class="ghost" th:href="@{/recurring/{id}/edit(id=${task.id})}">Edit</a></div>
                     <p class="meta" th:if="${task.description != null}" th:text="${task.description}">Description</p>
                     <p class="meta" th:if="${task.occurrenceTime != null}" th:text="'At ' + ${task.occurrenceTime}">At 10:00</p>
-                    <form class="inline" method="post" th:action="@{/recurring/{id}/done-today(id=${task.id})}">
+                    <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>
+                    <p class="meta" th:if="${task.spentMinutes > 0}" th:text="'Spent: ' + ${task.spentMinutes} + ' min'">Spent</p>
+                    <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>
+                    <form class="inline done-with-time" method="post" th:action="@{/recurring/{id}/done-today(id=${task.id})}">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" name="date" th:value="${daily.selectedDate}">
                         <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + daily.selectedDate}">
+                        <input type="hidden" name="spentMinutes">
                         <button class="solid" type="submit">Done today</button>
                     </form>
+                    <form class="inline track-time" method="post" th:action="@{/recurring/{id}/track-time(id=${task.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${daily.selectedDate}"><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + daily.selectedDate}"><input type="hidden" name="minutes"><button class="secondary track-time-button" type="button">Track time</button></form>
                 </article>
             </div>
             <p class="empty" th:if="${#lists.isEmpty(daily.activeTasks) and #lists.isEmpty(regularActive)}">No active tasks for this screen yet.</p>
@@ -431,9 +443,10 @@
                         </div>
                         <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
                         <div class="task-actions">
-                            <form class="inline" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
+                            <form class="inline done-with-time" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                 <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
+                                <input type="hidden" name="spentMinutes" />
                                 <button class="solid" type="submit">Done</button>
                             </form>
                             <form class="inline" method="post" th:action="@{/tasks/{id}/closed(id=${task.id})}">
@@ -476,5 +489,28 @@
         </aside>
     </div>
 </div>
+<script>
+document.querySelectorAll('.track-time-button').forEach(button => button.addEventListener('click', () => {
+    const form = button.closest('form');
+    const value = window.prompt('Time spent, minutes');
+    if (value === null) return;
+    const minutes = Number(value);
+    if (!Number.isInteger(minutes) || minutes <= 0) return window.alert('Enter a positive whole number of minutes.');
+    form.querySelector('[name=minutes]').value = minutes;
+    form.submit();
+}));
+document.querySelectorAll('.done-with-time').forEach(form => form.addEventListener('submit', event => {
+    if (form.dataset.confirmed) return;
+    event.preventDefault();
+    const value = window.prompt('Time spent, minutes (optional)');
+    if (value !== null && value.trim() !== '') {
+        const minutes = Number(value);
+        if (!Number.isInteger(minutes) || minutes <= 0) return window.alert('Enter a positive whole number of minutes.');
+        form.querySelector('[name=spentMinutes]').value = minutes;
+    }
+    form.dataset.confirmed = 'true';
+    form.requestSubmit();
+}));
+</script>
 </body>
 </html>

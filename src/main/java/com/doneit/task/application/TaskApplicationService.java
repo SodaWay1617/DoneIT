@@ -84,7 +84,7 @@ public class TaskApplicationService {
                 now,
                 command.status() == TaskStatus.DONE ? now : null,
                 command.status() == TaskStatus.CLOSED ? now : null,
-                command.projectId(), null, null, command.plannedDate(), command.priority()
+                command.projectId(), null, null, command.plannedDate(), command.priority(), command.estimateMinutes()
         );
 
         return toView(taskRepository.create(task));
@@ -111,7 +111,7 @@ public class TaskApplicationService {
                 now,
                 null,
                 null,
-                command.projectId(), null, null, null, command.priority()
+                command.projectId(), null, null, null, command.priority(), command.estimateMinutes()
         );
 
         return toView(taskRepository.create(task));
@@ -138,7 +138,7 @@ public class TaskApplicationService {
                 closingTime(command.status(), existingTask, now),
                 command.projectId() == null ? existingTask.projectId() : command.projectId(),
                 existingTask.taskNumber(), existingTask.taskKey(), command.backlog() ? null : command.plannedDate(),
-                command.priority()
+                command.priority(), command.estimateMinutes(), command.spentMinutes()
         );
 
         return toView(taskRepository.update(updatedTask));
@@ -307,16 +307,36 @@ public class TaskApplicationService {
                 task.projectId(),
                 task.plannedDate(),
                 task.priority(),
-                task.status()
+                task.status(),
+                task.estimateMinutes(),
+                task.spentMinutes()
         );
     }
 
     @Transactional
     public TaskListItemView markTaskAsDone(@NotNull Long taskId) {
+        return markTaskAsDone(taskId, null);
+    }
+
+    @Transactional
+    public TaskListItemView markTaskAsDone(@NotNull Long taskId, Integer spentMinutes) {
+        validateTrackedMinutes(spentMinutes);
         if (projectService != null) getTaskOrThrow(taskId);
         Task task = taskRepository.markDone(requireTaskId(taskId), LocalDateTime.now(clock))
                 .orElseGet(() -> getExistingTaskForStatusAction(taskId));
+        if (spentMinutes != null) {
+            task = taskRepository.addTrackedTime(taskId, spentMinutes, LocalDateTime.now(clock))
+                    .orElseThrow(() -> new TaskNotFoundException(taskId));
+        }
         return toView(task);
+    }
+
+    @Transactional
+    public TaskListItemView trackTime(@NotNull Long taskId, int minutes) {
+        validateTrackedMinutes(minutes);
+        getTaskOrThrow(taskId);
+        return toView(taskRepository.addTrackedTime(taskId, minutes, LocalDateTime.now(clock))
+                .orElseThrow(() -> new TaskNotFoundException(taskId)));
     }
 
     @Transactional
@@ -381,6 +401,12 @@ public class TaskApplicationService {
     private static List<CalendarItemView> calendarItems(Task task, boolean showProjectInTitle,
                                                         LocalDate start, LocalDate endExclusive) {
         List<CalendarItemView> items = new ArrayList<>();
+        if (task.status() == TaskStatus.DONE) {
+            return task.completedAt() == null ? items : List.of(CalendarItemView.completed(task, showProjectInTitle));
+        }
+        if (task.status() == TaskStatus.CLOSED) {
+            return task.closedAt() == null ? items : List.of(CalendarItemView.closed(task, showProjectInTitle));
+        }
         if (task.plannedForAt() != null) {
             items.add(CalendarItemView.planned(task, showProjectInTitle));
         } else if (task.plannedDate() != null) {
@@ -459,6 +485,10 @@ public class TaskApplicationService {
             throw new IllegalArgumentException("taskId is required");
         }
         return taskId;
+    }
+
+    private static void validateTrackedMinutes(Integer minutes) {
+        if (minutes != null && minutes <= 0) throw new IllegalArgumentException("Tracked time must be positive");
     }
 
     private static boolean matches(Task task, Long projectId) {

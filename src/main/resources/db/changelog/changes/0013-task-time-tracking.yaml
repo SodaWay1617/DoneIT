@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0013-task-time-tracking
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE tasks ADD COLUMN spent_minutes INTEGER NOT NULL DEFAULT 0;
+              ALTER TABLE tasks ADD CONSTRAINT ck_tasks_spent_non_negative CHECK (spent_minutes >= 0);
+              CREATE TABLE regular_task_time_entries (
+                  id BIGSERIAL PRIMARY KEY,
+                  regular_task_id BIGINT NOT NULL REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                  entry_date DATE NOT NULL,
+                  minutes INTEGER NOT NULL,
+                  created_at TIMESTAMP NOT NULL,
+                  CONSTRAINT ck_regular_time_entry_non_zero CHECK (minutes <> 0)
+              );
+              CREATE INDEX idx_regular_time_entries_task_date
+                  ON regular_task_time_entries(regular_task_id, entry_date);

@@ -72,6 +72,21 @@ public record CalendarItemView(
         );
     }
 
+    public static CalendarItemView completed(Task task, boolean showProjectInTitle) {
+        return finished(task, task.completedAt(), CalendarOccurrenceType.COMPLETED, showProjectInTitle);
+    }
+
+    public static CalendarItemView closed(Task task, boolean showProjectInTitle) {
+        return finished(task, task.closedAt(), CalendarOccurrenceType.CLOSED, showProjectInTitle);
+    }
+
+    private static CalendarItemView finished(Task task, LocalDateTime finishedAt,
+                                             CalendarOccurrenceType type, boolean showProjectInTitle) {
+        if (finishedAt == null) throw new IllegalArgumentException("Finished task requires a timestamp");
+        return new CalendarItemView(task.id(), type, finishedAt.toLocalDate(), finishedAt,
+                displayTitle(task, showProjectInTitle), task.status(), false, task.priority(), true);
+    }
+
     private static String displayTitle(Task task, boolean showProjectInTitle) {
         if (!showProjectInTitle || task.taskKey() == null) return task.title();
         String[] keyParts = task.taskKey().split("___", 2);

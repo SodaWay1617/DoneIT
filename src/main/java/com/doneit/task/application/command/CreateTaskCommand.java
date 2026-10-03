@@ -16,8 +16,13 @@ public record CreateTaskCommand(
         LocalDate plannedDate,
         boolean backlog,
         TaskPriority priority,
-        TaskStatus status
+        TaskStatus status,
+        Integer estimateMinutes
 ) {
+    public CreateTaskCommand(String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt,
+                             Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority,TaskStatus status) {
+        this(title,description,plannedForAt,deadlineAt,projectId,plannedDate,backlog,priority,status,null);
+    }
     public CreateTaskCommand(String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt) {
         this(title,description,plannedForAt,deadlineAt,null,null,false,TaskPriority.NONE,TaskStatus.IN_PROGRESS);
     }
@@ -31,5 +36,6 @@ public record CreateTaskCommand(
         }
         if (priority == null) priority = TaskPriority.NONE;
         if (status == null) status = backlog ? TaskStatus.BACKLOG : TaskStatus.NEW;
+        if (estimateMinutes != null && estimateMinutes <= 0) throw new IllegalArgumentException("Estimate must be positive");
     }
 }

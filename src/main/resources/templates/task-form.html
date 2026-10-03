@@ -103,7 +103,7 @@
         }
         .choice input { width: auto; }
         .date-fields { display: grid; gap: 16px; }
-        .date-fields[hidden] { display: none; }
+        [hidden] { display: none !important; }
     </style>
 </head>
 <body>
@@ -113,8 +113,8 @@
     <p th:text="'Signed in as ' + ${username}">Signed in as doneit</p>
 
     <div class="hint">
-        <strong>Choose a day, an exact time, or leave both empty for a permanent active task.</strong>
-        <p>Backlog is selected explicitly and stays outside the active flow.</p>
+        <strong>Choose a day or an exact time for one-time work.</strong>
+        <p>New, backlog, and paused tasks do not use planning dates. Recurring work is created separately.</p>
     </div>
 
     <form method="post" th:action="${formAction}" th:object="${form}">
@@ -143,6 +143,18 @@
             </select>
         </label>
         <label>
+            Estimate, minutes
+            <input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}"
+                   th:classappend="${#fields.hasErrors('estimateMinutes')} ? ' field-invalid'" placeholder="Not estimated" />
+            <span class="field-error" th:if="${#fields.hasErrors('estimateMinutes')}" th:errors="*{estimateMinutes}">Estimate error</span>
+        </label>
+        <label th:if="*{editMode}">
+            Total spent, minutes
+            <input type="number" min="0" inputmode="numeric" th:field="*{spentMinutes}"
+                   th:classappend="${#fields.hasErrors('spentMinutes')} ? ' field-invalid'" />
+            <span class="field-error" th:if="${#fields.hasErrors('spentMinutes')}" th:errors="*{spentMinutes}">Spent time error</span>
+        </label>
+        <label>
             Status
             <select th:field="*{status}">
                 <option th:each="statusValue : ${T(com.doneit.task.domain.TaskStatus).workflowValues()}"
@@ -150,12 +162,21 @@
                         th:text="${statusValue.displayName()}">New</option>
             </select>
         </label>
-        <label class="choice"><input type="checkbox" th:field="*{permanent}" /> Permanent task</label>
+        <label>
+            Estimate, minutes
+            <input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}"
+                   th:classappend="${#fields.hasErrors('estimateMinutes')} ? ' field-invalid'" placeholder="Not estimated" />
+            <span class="field-error" th:if="${#fields.hasErrors('estimateMinutes')}" th:errors="*{estimateMinutes}">Estimate error</span>
+        </label>
         <label>
             Description
             <textarea th:field="*{description}" placeholder="Notes, details, links"></textarea>
         </label>
-        <div id="dateFields" class="date-fields">
+        <div id="dateOptions" class="date-fields">
+            <label class="choice"><input type="checkbox" th:field="*{withoutPlannedDate}" /> Without planned date</label>
+            <label class="choice"><input type="checkbox" th:field="*{withoutDeadline}" /> Without deadline</label>
+        </div>
+        <div id="planningFields" class="date-fields">
             <label>
                 Planned day (without time)
                 <input id="plannedDate" type="date" th:field="*{plannedDate}" />
@@ -165,12 +186,12 @@
                 <input type="datetime-local" th:field="*{plannedForAt}" th:classappend="${#fields.hasErrors('plannedForAt')} ? ' field-invalid'" />
                 <span class="field-error" th:if="${#fields.hasErrors('plannedForAt')}" th:errors="*{plannedForAt}">Planned time error</span>
             </label>
-            <label>
-                Deadline
-                <input type="datetime-local" th:field="*{deadlineAt}" th:classappend="${#fields.hasErrors('deadlineAt')} ? ' field-invalid'" />
-                <span class="field-error" th:if="${#fields.hasErrors('deadlineAt')}" th:errors="*{deadlineAt}">Deadline error</span>
-            </label>
         </div>
+        <label id="deadlineField">
+            Deadline
+            <input type="datetime-local" th:field="*{deadlineAt}" th:classappend="${#fields.hasErrors('deadlineAt')} ? ' field-invalid'" />
+            <span class="field-error" th:if="${#fields.hasErrors('deadlineAt')}" th:errors="*{deadlineAt}">Deadline error</span>
+        </label>
         <div class="actions">
             <button class="solid" type="submit" th:text="${submitLabel}">Create task</button>
             <a class="ghost" th:href="@{/}">Back to tasks</a>
@@ -180,26 +201,32 @@
 </div>
 <script>
     const status = document.getElementById('status');
-    const permanent = document.getElementById('permanent');
-    const dateFields = document.getElementById('dateFields');
+    const withoutPlannedDate = document.getElementById('withoutPlannedDate');
+    const withoutDeadline = document.getElementById('withoutDeadline');
+    const dateOptions = document.getElementById('dateOptions');
+    const planningFields = document.getElementById('planningFields');
+    const deadlineField = document.getElementById('deadlineField');
     const day = document.getElementById('plannedDate');
     const time = document.querySelector('[name=plannedForAt]');
     const deadline = document.querySelector('[name=deadlineAt]');
 
-    function updateDateFields(changed) {
-        if (changed === status && status.value === 'BACKLOG') permanent.checked = false;
-        if (changed === permanent && permanent.checked && status.value === 'BACKLOG') status.value = 'IN_PROGRESS';
-        const datesDisabled = status.value === 'BACKLOG' || permanent.checked;
-        dateFields.hidden = datesDisabled;
-        if (datesDisabled) {
+    function updateDateFields() {
+        const undatedStatus = ['NEW', 'BACKLOG', 'PAUSED'].includes(status.value);
+        dateOptions.hidden = undatedStatus;
+        planningFields.hidden = undatedStatus || withoutPlannedDate.checked;
+        deadlineField.hidden = undatedStatus || withoutDeadline.checked;
+        if (planningFields.hidden) {
             day.value = '';
             time.value = '';
+        }
+        if (deadlineField.hidden) {
             deadline.value = '';
         }
     }
 
-    status.addEventListener('change', () => updateDateFields(status));
-    permanent.addEventListener('change', () => updateDateFields(permanent));
+    status.addEventListener('change', updateDateFields);
+    withoutPlannedDate.addEventListener('change', updateDateFields);
+    withoutDeadline.addEventListener('change', updateDateFields);
     day.addEventListener('input', () => { if (day.value) time.value = ''; });
     time.addEventListener('input', () => { if (time.value) day.value = ''; });
     updateDateFields();

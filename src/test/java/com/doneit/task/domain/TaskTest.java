@@ -11,6 +11,14 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 class TaskTest {
+    @Test
+    void estimateMustBePositiveWhenProvided() {
+        assertThrows(IllegalArgumentException.class, () -> new Task(
+                null, 1L, "Task", null, TaskStatus.IN_PROGRESS, null, null,
+                LocalDateTime.now(), LocalDateTime.now(), null, null,
+                null, null, null, null, TaskPriority.NONE, 0
+        ));
+    }
 
     private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 4, 4, 19, 0);
     private static final LocalDateTime UPDATED_AT = LocalDateTime.of(2026, 4, 4, 19, 5);

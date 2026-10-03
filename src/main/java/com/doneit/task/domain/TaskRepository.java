@@ -35,6 +35,8 @@ public interface TaskRepository {
 
     Optional<Task> markClosed(Long taskId, LocalDateTime closedAt);
 
+    Optional<Task> addTrackedTime(Long taskId, int minutes, LocalDateTime updatedAt);
+
     Optional<Task> reschedule(Long taskId, LocalDateTime plannedForAt, LocalDateTime updatedAt);
 
     Optional<Task> moveToBacklog(Long taskId, LocalDateTime updatedAt);

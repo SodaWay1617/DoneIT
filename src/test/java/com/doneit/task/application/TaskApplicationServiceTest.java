@@ -320,12 +320,64 @@ class TaskApplicationServiceTest {
     }
 
     @Test
+    void getCalendarMonthShowsFinishedTasksOnTheirActualFinishDate() {
+        YearMonth month = YearMonth.of(2026, 4);
+        when(taskRepository.findTasksForCalendarRange(
+                ACTIVE_USER.id(), LocalDate.of(2026, 3, 30), LocalDate.of(2026, 5, 4)
+        )).thenReturn(List.of(doneTask(30L), closedTask(31L)));
+
+        CalendarMonthView result = service.getCalendarMonth(month);
+
+        var items = result.days().stream()
+                .filter(day -> day.date().equals(LocalDate.of(2026, 4, 7)))
+                .findFirst().orElseThrow().items();
+        assertEquals(2, items.size());
+        assertTrue(items.stream().anyMatch(item -> item.occurrenceType()
+                == com.doneit.task.application.view.CalendarOccurrenceType.COMPLETED));
+        assertTrue(items.stream().anyMatch(item -> item.occurrenceType()
+                == com.doneit.task.application.view.CalendarOccurrenceType.CLOSED));
+    }
+
+    @Test
     void markTaskAsDoneUsesRepositoryTransition() {
         when(taskRepository.markDone(eq(300L), any(LocalDateTime.class))).thenReturn(Optional.of(doneTask(300L)));
 
         TaskListItemView result = service.markTaskAsDone(300L);
 
         assertEquals(TaskStatus.DONE, result.status());
+    }
+
+    @Test
+    void trackTimeAddsMinutesToExistingTotal() {
+        Task task = openTask(305L, null, null);
+        Task tracked = new Task(task.id(), task.userId(), task.title(), task.description(), task.status(),
+                task.plannedForAt(), task.deadlineAt(), task.createdAt(), task.updatedAt(), task.completedAt(),
+                task.closedAt(), task.projectId(), task.taskNumber(), task.taskKey(), task.plannedDate(),
+                task.priority(), null, 45);
+        when(taskRepository.findById(305L)).thenReturn(Optional.of(task));
+        when(taskRepository.addTrackedTime(eq(305L), eq(45), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(tracked));
+
+        TaskListItemView result = service.trackTime(305L, 45);
+
+        assertEquals(45, result.spentMinutes());
+    }
+
+    @Test
+    void markDoneCanTrackTimeInSameOperation() {
+        Task done = doneTask(306L);
+        Task tracked = new Task(done.id(), done.userId(), done.title(), done.description(), done.status(),
+                done.plannedForAt(), done.deadlineAt(), done.createdAt(), done.updatedAt(), done.completedAt(),
+                done.closedAt(), done.projectId(), done.taskNumber(), done.taskKey(), done.plannedDate(),
+                done.priority(), null, 30);
+        when(taskRepository.markDone(eq(306L), any(LocalDateTime.class))).thenReturn(Optional.of(done));
+        when(taskRepository.addTrackedTime(eq(306L), eq(30), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(tracked));
+
+        TaskListItemView result = service.markTaskAsDone(306L, 30);
+
+        assertEquals(TaskStatus.DONE, result.status());
+        assertEquals(30, result.spentMinutes());
     }
 
     @Test

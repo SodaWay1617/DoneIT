@@ -151,13 +151,16 @@ public class HomeController {
         }
 
         boolean backlog = form.getStatus() == com.doneit.task.domain.TaskStatus.BACKLOG;
-        boolean withoutDates = backlog || form.isPermanent();
+        boolean undatedStatus = hasNoDates(form.getStatus());
+        boolean withoutPlannedDate = undatedStatus || form.isWithoutPlannedDate();
+        boolean withoutDeadline = undatedStatus || form.isWithoutDeadline();
         CreateTaskCommand command = new CreateTaskCommand(
                 form.getTitle(),
                 form.getDescription(),
-                withoutDates ? null : form.getPlannedForAt(),
-                withoutDates ? null : form.getDeadlineAt(), form.getProjectId(),
-                withoutDates ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus()
+                withoutPlannedDate ? null : form.getPlannedForAt(),
+                withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
+                withoutPlannedDate ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus(),
+                form.getEstimateMinutes()
         );
 
         if (backlog) {
@@ -201,14 +204,17 @@ public class HomeController {
         }
 
         boolean backlog = form.getStatus() == com.doneit.task.domain.TaskStatus.BACKLOG;
-        boolean withoutDates = backlog || form.isPermanent();
+        boolean undatedStatus = hasNoDates(form.getStatus());
+        boolean withoutPlannedDate = undatedStatus || form.isWithoutPlannedDate();
+        boolean withoutDeadline = undatedStatus || form.isWithoutDeadline();
         EditTaskCommand command = new EditTaskCommand(
                 taskId,
                 form.getTitle(),
                 form.getDescription(),
-                withoutDates ? null : form.getPlannedForAt(),
-                withoutDates ? null : form.getDeadlineAt(), form.getProjectId(),
-                withoutDates ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus()
+                withoutPlannedDate ? null : form.getPlannedForAt(),
+                withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
+                withoutPlannedDate ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus(),
+                form.getEstimateMinutes(), form.getSpentMinutes()
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
@@ -220,10 +226,21 @@ public class HomeController {
 
     @PostMapping("/tasks/{taskId}/done")
     public String markTaskAsDone(@PathVariable Long taskId,
+                                 @RequestParam(value = "spentMinutes", required = false) Integer spentMinutes,
                                  @RequestParam(value = "redirectTo", required = false) String redirectTo,
                                  RedirectAttributes redirectAttributes) {
-        taskApplicationService.markTaskAsDone(taskId);
+        taskApplicationService.markTaskAsDone(taskId, spentMinutes);
         redirectAttributes.addFlashAttribute("flashMessage", "Task marked as done.");
+        return "redirect:" + resolveRedirectTarget(redirectTo, "/");
+    }
+
+    @PostMapping("/tasks/{taskId}/track-time")
+    public String trackTime(@PathVariable Long taskId,
+                            @RequestParam int minutes,
+                            @RequestParam(value = "redirectTo", required = false) String redirectTo,
+                            RedirectAttributes redirectAttributes) {
+        taskApplicationService.trackTime(taskId, minutes);
+        redirectAttributes.addFlashAttribute("flashMessage", "Time tracked.");
         return "redirect:" + resolveRedirectTarget(redirectTo, "/");
     }
 
@@ -321,6 +338,10 @@ public class HomeController {
         if (status == TaskStatus.BACKLOG || status == TaskStatus.PAUSED) return "/backlog";
         if (status == TaskStatus.DONE || status == TaskStatus.CLOSED) return "/finished";
         return null;
+    }
+
+    private static boolean hasNoDates(TaskStatus status) {
+        return status == TaskStatus.NEW || status == TaskStatus.BACKLOG || status == TaskStatus.PAUSED;
     }
 
     private String resolveEditRedirect(LocalDateTime plannedForAt) {

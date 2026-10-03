@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0012-task-estimates
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE tasks ADD COLUMN estimate_minutes INTEGER;
+              ALTER TABLE tasks ADD CONSTRAINT ck_tasks_estimate_positive
+                  CHECK (estimate_minutes IS NULL OR estimate_minutes > 0);
+              ALTER TABLE regular_tasks ADD COLUMN estimate_minutes INTEGER;
+              ALTER TABLE regular_tasks ADD CONSTRAINT ck_regular_tasks_estimate_positive
+                  CHECK (estimate_minutes IS NULL OR estimate_minutes > 0);
