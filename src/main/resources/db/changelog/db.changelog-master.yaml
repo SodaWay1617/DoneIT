@@ -29,3 +29,5 @@ databaseChangeLog:
       file: db/changelog/changes/0014-task-comments.yaml
   - include:
       file: db/changelog/changes/0015-task-time-entries.yaml
+  - include:
+      file: db/changelog/changes/0016-workload-thresholds.yaml

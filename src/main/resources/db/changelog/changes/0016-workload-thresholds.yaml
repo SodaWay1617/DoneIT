@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0016-workload-thresholds
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE users ADD COLUMN workload_green_minutes INTEGER NOT NULL DEFAULT 480;
+              ALTER TABLE users ADD COLUMN workload_yellow_minutes INTEGER NOT NULL DEFAULT 720;
+              ALTER TABLE users ADD COLUMN workload_orange_minutes INTEGER NOT NULL DEFAULT 840;
+              ALTER TABLE users ADD CONSTRAINT ck_users_workload_thresholds CHECK (
+                  workload_green_minutes > 0
+                  AND workload_green_minutes < workload_yellow_minutes
+                  AND workload_yellow_minutes < workload_orange_minutes
+              );

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -75,17 +75,17 @@
     </style>
 </head>
 <body>
-<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value=''>All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects'>Manage projects</a></form>
+<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value='' th:text="#{project.all}">All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects' th:text="#{project.manage}">Manage projects</a></form>
 <div class="shell">
     <section class="hero">
         <div>
-            <p class="meta">Signed in as <span th:text="${username}">doneit</span></p>
-            <h1 th:text="'Kanban - ' + ${#temporals.format(kanban.selectedDate, 'dd MMM yyyy')}">Kanban</h1>
+            <p class="meta" th:text="#{common.signedInAs(${username})}">Signed in</p>
+            <h1 th:text="#{kanban.title(${#temporals.format(kanban.selectedDate, 'dd MMM yyyy')})}">Kanban</h1>
             <div class="nav">
-                <a class="pill" th:href="@{/}">List</a>
-                <a class="pill" th:href="@{/kanban(date=${kanban.selectedDate})}">Kanban</a>
-                <a class="pill" th:href="@{/calendar(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}">Calendar</a>
-                <a class="pill" th:href="@{/analytics(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}">Analytics</a>
+                <a class="pill" th:href="@{/}" th:text="#{nav.list}">List</a>
+                <a class="pill" th:href="@{/kanban(date=${kanban.selectedDate})}" th:text="#{nav.kanban}">Kanban</a>
+                <a class="pill" th:href="@{/calendar(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}" th:text="#{nav.calendar}">Calendar</a>
+                <a class="pill" th:href="@{/analytics(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}" th:text="#{nav.analytics}">Analytics</a>
                 <a class="ghost" th:href="@{/backlog}">Backlog</a>
                 <a class="ghost" th:href="@{/inbox}">Inbox</a>
                 <a class="ghost" th:href="@{/finished}">Done and closed</a>
@@ -102,7 +102,7 @@
 
     <main class="board">
         <section class="column" th:each="column : ${kanban.columns}">
-            <h2 th:text="${column.status.displayName() + ' (' + column.tasks.size() + ')'}">STATUS (0)</h2>
+            <h2 th:text="${@labels.status(column.status) + ' (' + column.tasks.size() + ')'}">STATUS (0)</h2>
             <div class="stack" th:attr="data-status=${column.status.name()}">
                 <article class="task" draggable="true" th:each="task : ${column.tasks}" th:attr="data-task-id=${task.id}">
                     <div class="badges">

@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title th:text="${pageTitle}">Recurring task</title><style>
 *{box-sizing:border-box}body{margin:0;background:#f4efe6;color:#1f2b2d;font-family:Georgia,serif}.shell{width:min(760px,calc(100% - 24px));margin:24px auto}.panel{background:#fffaf1;border:1px solid #d8cfbf;border-radius:8px;padding:24px}form,.field{display:grid;gap:14px}.field{gap:6px}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}input,textarea,select,button,a{font:inherit;padding:10px 12px;border:1px solid #d8cfbf;border-radius:6px;background:white;color:inherit}textarea{min-height:110px}.actions{display:flex;gap:10px;flex-wrap:wrap}button{background:#1e6d73;color:white;border-color:#1e6d73}a{text-decoration:none}.error{color:#9f4d36}.comments{margin-top:24px;padding-top:20px;border-top:1px solid #d8cfbf}.comment-list{display:grid;gap:10px;margin-bottom:16px}.comment{padding:12px;border:1px solid #d8cfbf;border-radius:8px;background:white}.comment-meta{display:flex;justify-content:space-between;gap:12px;color:#607074}.comment p{white-space:pre-wrap}@media(max-width:600px){.row{grid-template-columns:1fr}}
-</style></head><body><main class="shell"><section class="panel"><h1 th:text="${pageTitle}">Recurring task</h1>
+</style></head><body><main class="shell"><section class="panel"><h1 th:text="${form.id != null} ? #{task.editRecurringTitle} : #{task.createRecurringTitle}">Recurring task</h1>
 <form method="post" th:action="${formAction}" th:object="${form}">
 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 <p class="error" th:if="${#fields.hasGlobalErrors()}" th:each="e:${#fields.globalErrors()}" th:text="${e}">Error</p>
-<label class="field">Title<input th:field="*{title}" required></label>
-<label class="field">Description<textarea th:field="*{description}"></textarea></label>
-<div class="row"><label class="field">Project<select th:field="*{projectId}" required><option value="">Choose</option><option th:each="p:${projects}" th:value="${p.id}" th:text="${p.name}">Project</option></select></label>
-<label class="field">Status<select th:field="*{status}"><option th:each="s:${statuses}" th:value="${s}" th:text="${s.displayName()}">Status</option></select></label></div>
-<div class="row"><label class="field">Repeat<select id="recurrence" th:field="*{recurrenceType}"><option th:each="r:${recurrences}" th:value="${r}" th:text="${r.displayName()}">Repeat</option></select></label>
-<label class="field">Priority<select th:field="*{priority}"><option th:each="p:${priorities}" th:value="${p}" th:text="${p.displayName()}">Priority</option></select></label></div>
-<label class="field">Estimate, minutes<input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}" placeholder="Not estimated"></label>
-<label class="field" th:if="*{id != null}">Total spent, minutes<input type="number" min="0" inputmode="numeric" th:field="*{spentMinutes}"></label>
-<div class="row"><label class="field">Time (optional)<input type="time" th:field="*{occurrenceTime}"></label>
-<label class="field" id="anchorField">First date / schedule anchor<input type="date" th:field="*{anchorDate}"><small>Its weekday, day of month, or month and day define the schedule.</small></label></div>
-<div class="actions"><button type="submit">Save</button><a href="/">Cancel</a></div></form>
-<section class="comments" th:if="${form.id != null}"><h2>Comments</h2>
+<label class="field"><span th:text="#{task.title}">Title</span><input th:field="*{title}" required></label>
+<label class="field"><span th:text="#{common.description}">Description</span><textarea th:field="*{description}"></textarea></label>
+<div class="row"><label class="field"><span th:text="#{common.project}">Project</span><select th:field="*{projectId}" required><option value="" th:text="#{form.choose}">Choose</option><option th:each="p:${projects}" th:value="${p.id}" th:text="${p.name}">Project</option></select></label>
+<label class="field"><span th:text="#{common.status}">Status</span><select th:field="*{status}"><option th:each="s:${statuses}" th:value="${s}" th:text="${@labels.status(s)}">Status</option></select></label></div>
+<div class="row"><label class="field"><span th:text="#{form.repeat}">Repeat</span><select id="recurrence" th:field="*{recurrenceType}"><option th:each="r:${recurrences}" th:value="${r}" th:text="${@labels.recurrence(r)}">Repeat</option></select></label>
+<label class="field"><span th:text="#{common.priority}">Priority</span><select th:field="*{priority}"><option th:each="p:${priorities}" th:value="${p}" th:text="${@labels.priority(p)}">Priority</option></select></label></div>
+<label class="field"><span th:text="#{task.estimateMinutes}">Estimate, minutes</span><input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}"></label>
+<label class="field" th:if="*{id != null}"><span th:text="#{task.totalSpent}">Total spent, minutes</span><input type="number" min="0" inputmode="numeric" th:field="*{spentMinutes}"></label>
+<div class="row"><label class="field"><span th:text="#{form.timeOptional}">Time (optional)</span><input type="time" th:field="*{occurrenceTime}"></label>
+<label class="field" id="anchorField"><span th:text="#{form.firstDate}">First date</span><input type="date" th:field="*{anchorDate}"><small th:text="#{form.scheduleHint}">Schedule hint.</small></label></div>
+<div class="actions"><button type="submit" th:text="#{common.save}">Save</button><a href="/" th:text="#{common.cancel}">Cancel</a></div></form>
+<section class="comments" th:if="${form.id != null}"><h2 th:text="#{task.comments}">Comments</h2>
 <div class="comment-list" th:if="${comments != null and !#lists.isEmpty(comments)}"><article class="comment" th:each="comment:${comments}"><div class="comment-meta"><strong th:text="${comment.author}">Author</strong><time th:text="${#temporals.format(comment.createdAt,'dd MMM yyyy HH:mm')}">01 Jan 2026 12:00</time></div><p th:text="${comment.body}">Comment</p></article></div>
-<p th:if="${comments == null or #lists.isEmpty(comments)}">No comments yet.</p>
-<form method="post" th:action="@{/recurring/{id}/comments(id=${form.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><label class="field">New comment<textarea name="body" maxlength="5000" required placeholder="Add context or an update"></textarea></label><div class="actions"><button type="submit">Add comment</button></div></form>
+<p th:if="${comments == null or #lists.isEmpty(comments)}" th:text="#{task.noComments}">No comments yet.</p>
+<form method="post" th:action="@{/recurring/{id}/comments(id=${form.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><label class="field"><span th:text="#{task.newComment}">New comment</span><textarea name="body" maxlength="5000" required></textarea></label><div class="actions"><button type="submit" th:text="#{task.addComment}">Add comment</button></div></form>
 </section></section></main>
 <script>const r=document.getElementById('recurrence'),f=document.getElementById('anchorField'),a=f.querySelector('input');function sync(){const needed=!['DAILY','WEEKDAYS'].includes(r.value);f.hidden=!needed;a.required=needed;if(!needed)a.value=''}r.addEventListener('change',sync);sync()</script>
 </body></html>

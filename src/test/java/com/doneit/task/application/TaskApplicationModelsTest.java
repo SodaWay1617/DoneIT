@@ -208,6 +208,22 @@ class TaskApplicationModelsTest {
     }
 
     @Test
+    void dailyViewSumsOnlyEstimatedActiveTasks() {
+        TaskListItemView estimated = new TaskListItemView(
+                1L, "Estimated", null, TaskStatus.IN_PROGRESS, null, null,
+                false, false, null, null, null,
+                com.doneit.task.domain.TaskPriority.NORMAL, 90);
+        TaskListItemView unestimated = new TaskListItemView(
+                2L, "Unestimated", null, TaskStatus.IN_PROGRESS, null, null,
+                false, false);
+
+        DailyTasksView view = new DailyTasksView(
+                LocalDate.of(2026, 10, 4), List.of(estimated, unestimated), List.of());
+
+        assertEquals(90, view.estimatedMinutes());
+    }
+
+    @Test
     void calendarDayViewDefensivelyCopiesCollections() {
         List<CalendarItemView> items = new ArrayList<>();
         CalendarDayView view = new CalendarDayView(LocalDate.of(2026, 4, 1), true, false, items);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -72,37 +72,37 @@
     </style>
 </head>
 <body>
-<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value=''>All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects'>Manage projects</a></form>
+<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value='' th:text="#{project.all}">All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects' th:text="#{project.manage}">Manage projects</a></form>
 <div class="shell">
     <section class="hero">
         <div>
-            <p class="meta">Signed in as <span th:text="${username}">doneit</span></p>
-            <h1 th:text="'Calendar - ' + ${calendar.month}">Calendar</h1>
+            <p class="meta" th:text="#{common.signedInAs(${username})}">Signed in</p>
+            <h1 th:text="#{calendar.title(${calendar.month})}">Calendar</h1>
             <div class="nav">
-                <a class="pill" th:href="@{/}">List</a>
-                <a class="pill" th:href="@{/kanban}">Kanban</a>
-                <a class="pill" th:href="@{/calendar(month=${calendar.monthValue})}">Calendar</a>
-                <a class="pill" th:href="@{/analytics(month=${calendar.monthValue})}">Analytics</a>
-                <a class="ghost" th:href="@{/backlog}">Backlog</a>
-                <a class="ghost" th:href="@{/inbox}">Inbox</a>
-                <a class="ghost" th:href="@{/finished}">Done and closed</a>
-                <a class="ghost" th:href="@{/settings}">Settings</a>
+                <a class="pill" th:href="@{/}" th:text="#{nav.list}">List</a>
+                <a class="pill" th:href="@{/kanban}" th:text="#{nav.kanban}">Kanban</a>
+                <a class="pill" th:href="@{/calendar(month=${calendar.monthValue})}" th:text="#{nav.calendar}">Calendar</a>
+                <a class="pill" th:href="@{/analytics(month=${calendar.monthValue})}" th:text="#{nav.analytics}">Analytics</a>
+                <a class="ghost" th:href="@{/backlog}" th:text="#{nav.backlog}">Backlog</a>
+                <a class="ghost" th:href="@{/inbox}" th:text="#{nav.inbox}">Inbox</a>
+                <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
+                <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
             </div>
         </div>
         <div class="nav">
-            <a class="ghost" th:href="@{/calendar(month=${calendar.previousMonthValue})}">Previous</a>
-            <a class="ghost" th:href="@{/calendar(month=${calendar.nextMonthValue})}">Next</a>
+            <a class="ghost" th:href="@{/calendar(month=${calendar.previousMonthValue})}" th:text="#{nav.previous}">Previous</a>
+            <a class="ghost" th:href="@{/calendar(month=${calendar.nextMonthValue})}" th:text="#{nav.next}">Next</a>
         </div>
     </section>
 
     <section class="calendar">
-        <div class="weekday">Mon</div>
-        <div class="weekday">Tue</div>
-        <div class="weekday">Wed</div>
-        <div class="weekday">Thu</div>
-        <div class="weekday">Fri</div>
-        <div class="weekday">Sat</div>
-        <div class="weekday">Sun</div>
+        <div class="weekday" th:text="#{calendar.mon}">Mon</div>
+        <div class="weekday" th:text="#{calendar.tue}">Tue</div>
+        <div class="weekday" th:text="#{calendar.wed}">Wed</div>
+        <div class="weekday" th:text="#{calendar.thu}">Thu</div>
+        <div class="weekday" th:text="#{calendar.fri}">Fri</div>
+        <div class="weekday" th:text="#{calendar.sat}">Sat</div>
+        <div class="weekday" th:text="#{calendar.sun}">Sun</div>
 
         <article class="day" th:each="day : ${calendar.days}" th:classappend="${!day.currentMonth} ? ' outside' : (${day.today} ? ' today' : '')">
             <div class="day-number" th:text="${day.date.dayOfMonth}">1</div>

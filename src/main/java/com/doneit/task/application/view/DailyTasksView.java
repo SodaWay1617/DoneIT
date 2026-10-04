@@ -19,4 +19,12 @@ public record DailyTasksView(
     public int activeTaskCount() {
         return activeTasks.size();
     }
+
+    public int estimatedMinutes() {
+        return activeTasks.stream()
+                .map(TaskListItemView::estimateMinutes)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+    }
 }

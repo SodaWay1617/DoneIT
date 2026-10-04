@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -113,104 +113,103 @@
     </style>
 </head>
 <body>
-<div style="width:min(760px,calc(100% - 24px));margin:14px auto 0"><a class="ghost" th:href="@{/recurring/new}">Switch to recurring task</a></div>
+<div style="width:min(760px,calc(100% - 24px));margin:14px auto 0"><a class="ghost" th:href="@{/recurring/new}" th:text="#{form.switchRecurring}">Switch to recurring task</a></div>
 <div class="shell">
-    <h1 th:text="${pageTitle}">Create Task</h1>
+    <h1 th:text="${form.editMode} ? #{task.editTitle} : #{task.createTitle}">Create Task</h1>
     <p th:text="'Signed in as ' + ${username}">Signed in as doneit</p>
 
     <div class="hint">
-        <strong>Choose a day or an exact time for one-time work.</strong>
-        <p>New, backlog, and paused tasks do not use planning dates. Recurring work is created separately.</p>
+        <strong th:text="#{task.plannedFor}">Choose a day or an exact time for one-time work.</strong>
     </div>
 
     <form method="post" th:action="${formAction}" th:object="${form}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <div class="error-summary" th:if="${#fields.hasErrors('*')}">
-            <strong>Please fix the highlighted fields.</strong>
+            <strong th:text="#{form.fixErrors}">Please fix the highlighted fields.</strong>
         </div>
         <input type="hidden" th:field="*{taskId}" />
         <label>
-            Title
+            <span th:text="#{task.title}">Title</span>
             <input type="text" th:field="*{title}" th:classappend="${#fields.hasErrors('title')} ? ' field-invalid'" placeholder="Task title" />
             <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Title error</span>
         </label>
         <label th:if='${projects != null}'>
-            Project
+            <span th:text="#{common.project}">Project</span>
             <select th:field='*{projectId}' required>
                 <option th:each='project : ${projects}' th:value='${project.id}' th:text='${project.name}'>Project</option>
             </select>
         </label>
         <label>
-            Priority
+            <span th:text="#{common.priority}">Priority</span>
             <select th:field="*{priority}">
                 <option th:each="priorityValue : ${T(com.doneit.task.domain.TaskPriority).values()}"
                         th:value="${priorityValue}"
-                        th:text="${priorityValue.displayName()}">None</option>
+                        th:text="${@labels.priority(priorityValue)}">None</option>
             </select>
         </label>
         <label>
-            Estimate, minutes
+            <span th:text="#{task.estimateMinutes}">Estimate, minutes</span>
             <input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}"
                    th:classappend="${#fields.hasErrors('estimateMinutes')} ? ' field-invalid'" placeholder="Not estimated" />
             <span class="field-error" th:if="${#fields.hasErrors('estimateMinutes')}" th:errors="*{estimateMinutes}">Estimate error</span>
         </label>
         <label th:if="*{editMode}">
-            Total spent, minutes
+            <span th:text="#{task.totalSpent}">Total spent, minutes</span>
             <input type="number" min="0" inputmode="numeric" th:field="*{spentMinutes}"
                    th:classappend="${#fields.hasErrors('spentMinutes')} ? ' field-invalid'" />
             <span class="field-error" th:if="${#fields.hasErrors('spentMinutes')}" th:errors="*{spentMinutes}">Spent time error</span>
         </label>
         <label>
-            Status
+            <span th:text="#{common.status}">Status</span>
             <select th:field="*{status}">
                 <option th:each="statusValue : ${T(com.doneit.task.domain.TaskStatus).workflowValues()}"
                         th:value="${statusValue}"
-                        th:text="${statusValue.displayName()}">New</option>
+                        th:text="${@labels.status(statusValue)}">New</option>
             </select>
         </label>
         <label>
-            Description
-            <textarea th:field="*{description}" placeholder="Notes, details, links"></textarea>
+            <span th:text="#{common.description}">Description</span>
+            <textarea th:field="*{description}" th:placeholder="#{form.notes}"></textarea>
         </label>
         <div id="dateOptions" class="date-fields">
-            <label class="choice"><input type="checkbox" th:field="*{withoutPlannedDate}" /> Without planned date</label>
-            <label class="choice"><input type="checkbox" th:field="*{withoutDeadline}" /> Without deadline</label>
+            <label class="choice"><input type="checkbox" th:field="*{withoutPlannedDate}" /> <span th:text="#{task.withoutPlanned}">Without planned date</span></label>
+            <label class="choice"><input type="checkbox" th:field="*{withoutDeadline}" /> <span th:text="#{task.withoutDeadline}">Without deadline</span></label>
         </div>
         <div id="planningFields" class="date-fields">
             <label>
-                Planned day (without time)
+                <span th:text="#{task.plannedDay}">Planned day (without time)</span>
                 <input id="plannedDate" type="date" th:field="*{plannedDate}" />
             </label>
             <label>
-                Planned for
+                <span th:text="#{task.plannedFor}">Planned for</span>
                 <input type="datetime-local" th:field="*{plannedForAt}" th:classappend="${#fields.hasErrors('plannedForAt')} ? ' field-invalid'" />
                 <span class="field-error" th:if="${#fields.hasErrors('plannedForAt')}" th:errors="*{plannedForAt}">Planned time error</span>
             </label>
         </div>
         <label id="deadlineField">
-            Deadline
+            <span th:text="#{task.deadline('')}">Deadline</span>
             <input type="datetime-local" th:field="*{deadlineAt}" th:classappend="${#fields.hasErrors('deadlineAt')} ? ' field-invalid'" />
             <span class="field-error" th:if="${#fields.hasErrors('deadlineAt')}" th:errors="*{deadlineAt}">Deadline error</span>
         </label>
         <div class="actions">
-            <button class="solid" type="submit" th:text="${submitLabel}">Create task</button>
-            <a class="ghost" th:href="@{/}">Back to tasks</a>
-            <a class="ghost" th:href="@{/backlog}">Open backlog</a>
+            <button class="solid" type="submit" th:text="${form.editMode} ? #{common.save} : #{task.create}">Create task</button>
+            <a class="ghost" th:href="@{/}" th:text="#{form.backTasks}">Back to tasks</a>
+            <a class="ghost" th:href="@{/backlog}" th:text="#{form.openBacklog}">Open backlog</a>
         </div>
     </form>
     <section class="comments" th:if="${form.editMode}">
-        <h2>Comments</h2>
+        <h2 th:text="#{task.comments}">Comments</h2>
         <div class="comment-list" th:if="${comments != null and !#lists.isEmpty(comments)}">
             <article class="comment" th:each="comment : ${comments}">
                 <div class="comment-meta"><strong th:text="${comment.author}">Author</strong><time th:text="${#temporals.format(comment.createdAt, 'dd MMM yyyy HH:mm')}">01 Jan 2026 12:00</time></div>
                 <p th:text="${comment.body}">Comment</p>
             </article>
         </div>
-        <p th:if="${comments == null or #lists.isEmpty(comments)}">No comments yet.</p>
+        <p th:if="${comments == null or #lists.isEmpty(comments)}" th:text="#{task.noComments}">No comments yet.</p>
         <form method="post" th:action="@{/tasks/{id}/comments(id=${form.taskId})}">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-            <label>New comment<textarea name="body" maxlength="5000" required placeholder="Add context or an update"></textarea></label>
-            <div class="actions"><button class="solid" type="submit">Add comment</button></div>
+            <label><span th:text="#{task.newComment}">New comment</span><textarea name="body" maxlength="5000" required></textarea></label>
+            <div class="actions"><button class="solid" type="submit" th:text="#{task.addComment}">Add comment</button></div>
         </form>
     </section>
 </div>

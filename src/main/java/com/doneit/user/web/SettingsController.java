@@ -2,6 +2,7 @@ package com.doneit.user.web;
 
 import com.doneit.user.domain.User;
 import com.doneit.user.domain.UserRepository;
+import com.doneit.user.application.WorkloadSettingsService;
 import java.security.Principal;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,15 +16,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class SettingsController {
 
     private final UserRepository userRepository;
+    private final WorkloadSettingsService workloadSettings;
 
-    public SettingsController(UserRepository userRepository) {
+    public SettingsController(UserRepository userRepository, WorkloadSettingsService workloadSettings) {
         this.userRepository = userRepository;
+        this.workloadSettings = workloadSettings;
     }
 
     @GetMapping("/settings")
     public String settings(Principal principal, Model model) {
         User user = requireUser(principal);
         model.addAttribute("showProjectInTaskTitle", user.showProjectInTaskTitle());
+        model.addAttribute("workload", workloadSettings.current());
         return "settings";
     }
 
@@ -32,10 +36,14 @@ public class SettingsController {
     public String updateSettings(
             Principal principal,
             @RequestParam(defaultValue = "false") boolean showProjectInTaskTitle,
+            @RequestParam int workloadGreenHours,
+            @RequestParam int workloadYellowHours,
+            @RequestParam int workloadOrangeHours,
             RedirectAttributes redirectAttributes
     ) {
         userRepository.updateShowProjectInTaskTitle(principal.getName(), showProjectInTaskTitle);
-        redirectAttributes.addFlashAttribute("flashMessage", "Settings saved.");
+        workloadSettings.update(workloadGreenHours, workloadYellowHours, workloadOrangeHours);
+        redirectAttributes.addFlashAttribute("settingsSaved", true);
         return "redirect:/settings";
     }
 

@@ -15,7 +15,11 @@ public class RecurringViewAdvice {
   String path=request.getRequestURI(); if(!(path.equals("/")||path.equals("/tasks")||path.equals("/backlog")||path.equals("/inbox")||path.equals("/finished")||path.equals("/kanban")||path.equals("/calendar")))return;
   Long project=parseLong(request.getParameter("projectId"));
   LocalDate date=parseDate(request.getParameter("date"),LocalDate.now());
-  model.addAttribute("regularActive",service.activeFor(date,project));
+  var regularActive=service.activeFor(date,project);
+  model.addAttribute("regularActive",regularActive);
+  model.addAttribute("regularEstimateMinutes",regularActive.stream()
+   .map(com.doneit.recurring.domain.RegularTask::estimateMinutes).filter(java.util.Objects::nonNull)
+   .mapToInt(Integer::intValue).sum());
   model.addAttribute("regularInbox",service.inbox(project));
   model.addAttribute("regularBacklog",service.backlog(project));
   model.addAttribute("regularFinished",service.finished(project));
