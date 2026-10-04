@@ -1,7 +1,9 @@
 package com.doneit.task.web;
 
+import com.doneit.assignment.application.TaskAssignmentService;
 import com.doneit.project.application.ProjectService;
 import com.doneit.task.application.TaskApplicationService;
+import com.doneit.task.application.SubtaskService;
 import com.doneit.task.application.command.CreateTaskCommand;
 import com.doneit.task.application.command.EditTaskCommand;
 import com.doneit.task.application.command.MoveTaskToBacklogCommand;
@@ -34,15 +36,29 @@ public class HomeController {
 
     private final TaskApplicationService taskApplicationService;
     private final ProjectService projectService;
+    private final TaskAssignmentService taskAssignments;
+    private final SubtaskService subtasks;
 
     public HomeController(TaskApplicationService taskApplicationService) {
-        this(taskApplicationService, null);
+        this(taskApplicationService, null, null, null);
+    }
+
+    public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService) {
+        this(taskApplicationService, projectService, null, null);
+    }
+
+    public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService,
+                          TaskAssignmentService taskAssignments) {
+        this(taskApplicationService, projectService, taskAssignments, null);
     }
 
     @Autowired
-    public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService) {
+    public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService,
+                          TaskAssignmentService taskAssignments, SubtaskService subtasks) {
         this.taskApplicationService = taskApplicationService;
         this.projectService = projectService;
+        this.taskAssignments = taskAssignments;
+        this.subtasks = subtasks;
     }
 
     @ModelAttribute
@@ -136,14 +152,33 @@ public class HomeController {
         return "task-form";
     }
 
+    @GetMapping("/tasks/{parentId}/subtasks/new")
+    public String createSubtaskPage(@PathVariable Long parentId, Model model, Principal principal) {
+        var parent = taskApplicationService.getTaskForEdit(parentId);
+        TaskUpsertForm form = TaskUpsertForm.from(taskApplicationService.getCreateTaskForm());
+        form.setProjectId(parent.projectId());
+        populateTaskFormModel(model, principal, form);
+        model.addAttribute("pageTitle", "Create subtask");
+        model.addAttribute("submitLabel", "Create subtask");
+        model.addAttribute("formAction", "/tasks");
+        model.addAttribute("parentTaskId", parentId);
+        model.addAttribute("parentTaskTitle", parent.title());
+        return "task-form";
+    }
+
     @PostMapping("/tasks")
     public String createTask(@Valid @ModelAttribute("form") TaskUpsertForm form,
                              BindingResult bindingResult,
                              Model model,
                              Principal principal,
+                             @RequestParam(required = false) Long parentTaskId,
                              RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateTaskFormModel(model, principal, form);
+            if (parentTaskId != null) {
+                model.addAttribute("parentTaskId", parentTaskId);
+                model.addAttribute("parentTaskTitle", taskApplicationService.getTaskForEdit(parentTaskId).title());
+            }
             model.addAttribute("pageTitle", "Create Task");
             model.addAttribute("submitLabel", "Create task");
             model.addAttribute("formAction", "/tasks");
@@ -154,32 +189,46 @@ public class HomeController {
         boolean undatedStatus = hasNoDates(form.getStatus());
         boolean withoutPlannedDate = undatedStatus || form.isWithoutPlannedDate();
         boolean withoutDeadline = undatedStatus || form.isWithoutDeadline();
+        LocalDateTime plannedForAt = withoutPlannedDate || !form.isPlannedWithTime() ? null : form.getPlannedForAt();
+        LocalDate plannedDate = withoutPlannedDate || form.isPlannedWithTime() ? null : form.getPlannedDate();
         CreateTaskCommand command = new CreateTaskCommand(
                 form.getTitle(),
                 form.getDescription(),
-                withoutPlannedDate ? null : form.getPlannedForAt(),
+                plannedForAt,
                 withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
-                withoutPlannedDate ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus(),
+                plannedDate, backlog, form.getPriority(), form.getStatus(),
                 form.getEstimateMinutes()
         );
 
         if (backlog) {
-            taskApplicationService.createBacklogTask(command);
+            var created = taskApplicationService.createBacklogTask(command);
+            if (parentTaskId != null && subtasks != null) subtasks.attach(created.id(), parentTaskId);
             redirectAttributes.addFlashAttribute("flashMessage", "Task added to backlog.");
-            return "redirect:/backlog";
+            return parentTaskId == null ? "redirect:/backlog" : "redirect:/tasks/" + parentTaskId + "/edit";
         }
 
-        taskApplicationService.createTask(command);
+        var created = taskApplicationService.createTask(command);
+        if (parentTaskId != null && subtasks != null) subtasks.attach(created.id(), parentTaskId);
         redirectAttributes.addFlashAttribute("flashMessage", "Task created.");
+        if (parentTaskId != null) return "redirect:/tasks/" + parentTaskId + "/edit";
         String statusRedirect = statusListRedirect(form.getStatus());
         if (statusRedirect != null) return "redirect:" + statusRedirect;
-        LocalDate plannedDate = form.getPlannedDate() != null ? form.getPlannedDate() : form.getPlannedForAt() == null ? null : form.getPlannedForAt().toLocalDate();
-        return "redirect:" + (plannedDate == null ? "/" : resolveDateRedirect(plannedDate));
+        LocalDate redirectDate = plannedDate != null ? plannedDate : plannedForAt == null ? null : plannedForAt.toLocalDate();
+        return "redirect:" + (redirectDate == null ? "/" : resolveDateRedirect(redirectDate));
     }
 
     @GetMapping("/tasks/{taskId}/edit")
     public String editTaskPage(@PathVariable Long taskId, Model model, Principal principal) {
         populateTaskFormModel(model, principal, TaskUpsertForm.from(taskApplicationService.getTaskForEdit(taskId)));
+        if (taskAssignments != null) {
+            var assignment = taskAssignments.assignmentForTask(taskId);
+            model.addAttribute("assignmentMembers", assignment.members());
+            model.addAttribute("assignedUserIds", assignment.assignedUserIds());
+        }
+        if (subtasks != null) {
+            model.addAttribute("subtasks", subtasks.summary(taskId));
+            model.addAttribute("parentTask", subtasks.parentOf(taskId));
+        }
         model.addAttribute("pageTitle", "Edit Task");
         model.addAttribute("submitLabel", "Save changes");
         model.addAttribute("formAction", "/tasks/" + taskId);
@@ -207,21 +256,23 @@ public class HomeController {
         boolean undatedStatus = hasNoDates(form.getStatus());
         boolean withoutPlannedDate = undatedStatus || form.isWithoutPlannedDate();
         boolean withoutDeadline = undatedStatus || form.isWithoutDeadline();
+        LocalDateTime plannedForAt = withoutPlannedDate || !form.isPlannedWithTime() ? null : form.getPlannedForAt();
+        LocalDate plannedDate = withoutPlannedDate || form.isPlannedWithTime() ? null : form.getPlannedDate();
         EditTaskCommand command = new EditTaskCommand(
                 taskId,
                 form.getTitle(),
                 form.getDescription(),
-                withoutPlannedDate ? null : form.getPlannedForAt(),
+                plannedForAt,
                 withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
-                withoutPlannedDate ? null : form.getPlannedDate(), backlog, form.getPriority(), form.getStatus(),
+                plannedDate, backlog, form.getPriority(), form.getStatus(),
                 form.getEstimateMinutes(), form.getSpentMinutes()
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
         String statusRedirect = statusListRedirect(form.getStatus());
         if (statusRedirect != null) return "redirect:" + statusRedirect;
-        LocalDate plannedDate = form.getPlannedDate() != null ? form.getPlannedDate() : form.getPlannedForAt() == null ? null : form.getPlannedForAt().toLocalDate();
-        return "redirect:" + (plannedDate == null ? "/" : resolveDateRedirect(plannedDate));
+        LocalDate redirectDate = plannedDate != null ? plannedDate : plannedForAt == null ? null : plannedForAt.toLocalDate();
+        return "redirect:" + (redirectDate == null ? "/" : resolveDateRedirect(redirectDate));
     }
 
     @PostMapping("/tasks/{taskId}/done")

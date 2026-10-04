@@ -37,6 +37,10 @@
             <input type="checkbox" name="showProjectInTaskTitle" value="true" th:checked="${showProjectInTaskTitle}">
             <span><strong th:text="#{settings.projectTitles}">Show project in task titles</strong><span th:text="#{settings.projectTitlesHint}">Add project code.</span></span>
         </label>
+        <label class="setting">
+            <input type="checkbox" name="rollUpSubtaskTime" value="true" th:checked="${rollUpSubtaskTime}">
+            <span><strong th:text="#{settings.rollUpSubtaskTime}">Group subtask time under parent</strong><span th:text="#{settings.rollUpSubtaskTimeHint}">Show child time as parent time in analytics.</span></span>
+        </label>
         <div class="setting"><span><strong th:text="#{settings.workload}">Daily workload colors</strong><span th:text="#{settings.workloadHint}">Set limits.</span></span></div>
         <div class="thresholds">
             <label><span th:text="#{settings.greenHours}">Green</span><input type="number" name="workloadGreenHours" min="1" max="23" required th:value="${workload.greenHours}"></label>

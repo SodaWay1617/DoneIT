@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import org.springframework.format.annotation.DateTimeFormat;
 
 public class RegularTaskForm {
     private Long id;
@@ -17,7 +18,11 @@ public class RegularTaskForm {
     @NotNull private TaskStatus status = TaskStatus.NEW;
     @NotNull private TaskPriority priority = TaskPriority.NONE;
     @NotNull private RecurrenceType recurrenceType = RecurrenceType.DAILY;
+    @Min(value = 1, message = "Repeat interval must be at least one")
+    private int repeatInterval = 1;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
     private LocalTime occurrenceTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate anchorDate;
     @Min(value = 1, message = "Estimate must be at least one minute")
     private Integer estimateMinutes;
@@ -38,6 +43,8 @@ public class RegularTaskForm {
     public void setPriority(TaskPriority priority) { this.priority = priority; }
     public RecurrenceType getRecurrenceType() { return recurrenceType; }
     public void setRecurrenceType(RecurrenceType recurrenceType) { this.recurrenceType = recurrenceType; }
+    public int getRepeatInterval() { return repeatInterval; }
+    public void setRepeatInterval(int repeatInterval) { this.repeatInterval = repeatInterval; }
     public LocalTime getOccurrenceTime() { return occurrenceTime; }
     public void setOccurrenceTime(LocalTime occurrenceTime) { this.occurrenceTime = occurrenceTime; }
     public LocalDate getAnchorDate() { return anchorDate; }

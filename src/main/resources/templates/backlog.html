@@ -160,6 +160,7 @@
         <article class="task" th:each="task : ${regularBacklog}">
             <div class="badges"><span class="badge" th:text="${@labels.status(task.status)}">NEW</span><span class="badge" th:text="#{task.recurring}">RECURRING</span><span class="badge" th:text="${@labels.recurrence(task.recurrenceType)}">Every day</span></div>
             <h2 th:text="${task.title}">Recurring task</h2>
+            <p class="meta" th:if="${regularTaskAssignees[task.id] != null}" th:text="#{assignment.list(${#strings.listJoin(regularTaskAssignees[task.id], ', ')})}">Assignees</p>
             <p class="meta" th:if="${task.description != null}" th:text="${task.description}">Description</p>
             <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>
             <p class="meta" th:if="${task.spentMinutes > 0}" th:text="'Spent: ' + ${task.spentMinutes} + ' min'">Spent</p>
@@ -175,6 +176,7 @@
                     <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                 </div>
                 <h2 th:text="${task.title}">Backlog task</h2>
+                <p class="meta" th:if="${taskAssignees[task.id] != null}" th:text="#{assignment.list(${#strings.listJoin(taskAssignees[task.id], ', ')})}">Assignees</p>
             </div>
             <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
             <p class="meta" th:if="${task.deadlineAt != null}" th:text="'Deadline: ' + ${#temporals.format(task.deadlineAt, 'dd MMM yyyy HH:mm')}">Deadline</p>

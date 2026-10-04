@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TaskUpsertFormTest {
 
@@ -56,5 +57,29 @@ class TaskUpsertFormTest {
         TaskUpsertForm form = TaskUpsertForm.from(view);
 
         org.junit.jupiter.api.Assertions.assertEquals(90, form.getEstimateMinutes());
+    }
+
+    @Test
+    void newTaskDefaultsToDateOnlyPlanning() {
+        var initial = java.time.LocalDateTime.of(2026, 10, 4, 12, 30);
+
+        TaskUpsertForm form = TaskUpsertForm.from(TaskFormView.forCreate(initial));
+
+        assertFalse(form.isPlannedWithTime());
+        assertEquals(initial.toLocalDate(), form.getPlannedDate());
+        assertEquals(null, form.getPlannedForAt());
+    }
+
+    @Test
+    void existingTimedTaskKeepsExactTimeMode() {
+        var planned = java.time.LocalDateTime.of(2026, 10, 4, 12, 30);
+        TaskFormView view = new TaskFormView(
+                1L, "Timed", "", planned, null, false, true, 2L, null
+        );
+
+        TaskUpsertForm form = TaskUpsertForm.from(view);
+
+        assertTrue(form.isPlannedWithTime());
+        assertEquals(planned, form.getPlannedForAt());
     }
 }

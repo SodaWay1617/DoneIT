@@ -3,6 +3,8 @@ package com.doneit.user.web;
 import com.doneit.user.domain.User;
 import com.doneit.user.domain.UserRepository;
 import com.doneit.user.application.WorkloadSettingsService;
+import com.doneit.user.application.AnalyticsSettingsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.security.Principal;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +19,18 @@ public class SettingsController {
 
     private final UserRepository userRepository;
     private final WorkloadSettingsService workloadSettings;
+    private final AnalyticsSettingsService analyticsSettings;
 
     public SettingsController(UserRepository userRepository, WorkloadSettingsService workloadSettings) {
+        this(userRepository, workloadSettings, null);
+    }
+
+    @Autowired
+    public SettingsController(UserRepository userRepository, WorkloadSettingsService workloadSettings,
+                              AnalyticsSettingsService analyticsSettings) {
         this.userRepository = userRepository;
         this.workloadSettings = workloadSettings;
+        this.analyticsSettings = analyticsSettings;
     }
 
     @GetMapping("/settings")
@@ -28,6 +38,7 @@ public class SettingsController {
         User user = requireUser(principal);
         model.addAttribute("showProjectInTaskTitle", user.showProjectInTaskTitle());
         model.addAttribute("workload", workloadSettings.current());
+        model.addAttribute("rollUpSubtaskTime", analyticsSettings != null && analyticsSettings.rollUpSubtaskTime());
         return "settings";
     }
 
@@ -36,6 +47,7 @@ public class SettingsController {
     public String updateSettings(
             Principal principal,
             @RequestParam(defaultValue = "false") boolean showProjectInTaskTitle,
+            @RequestParam(defaultValue = "false") boolean rollUpSubtaskTime,
             @RequestParam int workloadGreenHours,
             @RequestParam int workloadYellowHours,
             @RequestParam int workloadOrangeHours,
@@ -43,6 +55,7 @@ public class SettingsController {
     ) {
         userRepository.updateShowProjectInTaskTitle(principal.getName(), showProjectInTaskTitle);
         workloadSettings.update(workloadGreenHours, workloadYellowHours, workloadOrangeHours);
+        if (analyticsSettings != null) analyticsSettings.update(rollUpSubtaskTime);
         redirectAttributes.addFlashAttribute("settingsSaved", true);
         return "redirect:/settings";
     }

@@ -17,6 +17,7 @@ public record RegularTask(
         TaskStatus status,
         TaskPriority priority,
         RecurrenceType recurrenceType,
+        int repeatInterval,
         LocalTime occurrenceTime,
         LocalDate anchorDate,
         RegularStatus regularStatus,
@@ -34,7 +35,7 @@ public record RegularTask(
                        LocalDateTime activatedAt,LocalDateTime finishedAt,LocalDateTime createdAt,
                        LocalDateTime updatedAt,long statusPosition,Integer estimateMinutes) {
         this(id,userId,projectId,taskNumber,taskKey,title,description,status,priority,recurrenceType,
-                occurrenceTime,anchorDate,regularStatus,activatedAt,finishedAt,createdAt,updatedAt,statusPosition,
+                1,occurrenceTime,anchorDate,regularStatus,activatedAt,finishedAt,createdAt,updatedAt,statusPosition,
                 estimateMinutes,0);
     }
     public RegularTask(Long id,Long userId,Long projectId,Long taskNumber,String taskKey,String title,
@@ -43,15 +44,18 @@ public record RegularTask(
                        LocalDateTime activatedAt,LocalDateTime finishedAt,LocalDateTime createdAt,
                        LocalDateTime updatedAt,long statusPosition) {
         this(id,userId,projectId,taskNumber,taskKey,title,description,status,priority,recurrenceType,
-                occurrenceTime,anchorDate,regularStatus,activatedAt,finishedAt,createdAt,updatedAt,statusPosition,null);
+                1,occurrenceTime,anchorDate,regularStatus,activatedAt,finishedAt,createdAt,updatedAt,statusPosition,null,0);
     }
     public RegularTask {
         if (status == TaskStatus.TODO || status == TaskStatus.PAUSED) {
             throw new IllegalArgumentException("TODO and PAUSED are not available for recurring tasks");
         }
-        if (recurrenceType.requiresAnchorDate() != (anchorDate != null)) {
+        if (recurrenceType.requiresAnchorDate() && anchorDate == null) {
             throw new IllegalArgumentException("Anchor date does not match recurrence type");
         }
+        if (repeatInterval < 1) throw new IllegalArgumentException("Repeat interval must be positive");
+        if (repeatInterval > 1 && anchorDate == null) throw new IllegalArgumentException("Repeat interval requires anchor date");
+        if (recurrenceType == RecurrenceType.WEEKDAYS && repeatInterval != 1) throw new IllegalArgumentException("Weekday interval must be one");
         if (regularStatus == RegularStatus.ACTIVE && activatedAt == null) {
             throw new IllegalArgumentException("Active recurring task requires activatedAt");
         }
@@ -67,6 +71,6 @@ public record RegularTask(
     public boolean occursOn(LocalDate date) {
         if (activatedAt == null || date.isBefore(activatedAt.toLocalDate())) return false;
         if (finishedAt != null && date.isAfter(finishedAt.toLocalDate())) return false;
-        return recurrenceType.occursOn(date, anchorDate);
+        return recurrenceType.occursOn(date, anchorDate, repeatInterval);
     }
 }

@@ -27,8 +27,7 @@ class JdbcUserRepositoryTest extends IntegrationTestSupport {
 
     @BeforeEach
     void setUp() {
-        jdbcTemplate.update("DELETE FROM tasks");
-        jdbcTemplate.update("DELETE FROM users");
+        jdbcTemplate.execute("TRUNCATE TABLE users CASCADE");
         jdbcTemplate.update("""
                 INSERT INTO users (login, password_hash, display_name, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)

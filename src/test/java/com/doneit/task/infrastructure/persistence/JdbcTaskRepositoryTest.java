@@ -33,8 +33,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
 
     @BeforeEach
     void setUp() {
-        jdbcTemplate.update("DELETE FROM tasks");
-        jdbcTemplate.update("DELETE FROM users");
+        jdbcTemplate.execute("TRUNCATE TABLE users CASCADE");
         userId = jdbcTemplate.queryForObject(
                 """
                 INSERT INTO users (login, password_hash, display_name, created_at, updated_at)
@@ -83,7 +82,14 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
                 created.createdAt(),
                 LocalDateTime.of(2026, 4, 5, 19, 0),
                 null,
-                null
+                null,
+                created.projectId(),
+                created.taskNumber(),
+                created.taskKey(),
+                created.plannedDate(),
+                created.priority(),
+                created.estimateMinutes(),
+                created.spentMinutes()
         );
 
         Task persisted = taskRepository.update(updated);
@@ -171,7 +177,7 @@ class JdbcTaskRepositoryTest extends IntegrationTestSupport {
         ).orElseThrow();
 
         assertFalse(rescheduled.isBacklog());
-        assertEquals(TaskStatus.IN_PROGRESS, rescheduled.status());
+        assertEquals(TaskStatus.TODO, rescheduled.status());
         assertEquals(LocalDateTime.of(2026, 4, 6, 16, 0), rescheduled.plannedForAt());
     }
 

@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0018-subtasks
+      author: codex
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              ALTER TABLE tasks ADD COLUMN parent_task_id BIGINT REFERENCES tasks(id) ON DELETE SET NULL;
+              CREATE INDEX idx_tasks_parent ON tasks(parent_task_id);
+              ALTER TABLE tasks ADD CONSTRAINT ck_tasks_not_own_parent CHECK (parent_task_id IS NULL OR parent_task_id <> id);
+              ALTER TABLE users ADD COLUMN roll_up_subtask_time BOOLEAN NOT NULL DEFAULT FALSE;
+              CREATE FUNCTION validate_task_hierarchy() RETURNS trigger AS $$
+              BEGIN
+                  IF NEW.parent_task_id IS NOT NULL AND NOT EXISTS (
+                      SELECT 1 FROM tasks p
+                      WHERE p.id=NEW.parent_task_id AND p.project_id=NEW.project_id AND p.parent_task_id IS NULL
+                  ) THEN
+                      RAISE EXCEPTION 'Subtask parent must be a root task in the same project';
+                  END IF;
+                  IF TG_OP='UPDATE' AND NEW.project_id IS DISTINCT FROM OLD.project_id
+                     AND EXISTS (SELECT 1 FROM tasks c WHERE c.parent_task_id=NEW.id) THEN
+                      RAISE EXCEPTION 'A task with subtasks cannot move to another project';
+                  END IF;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_validate_task_hierarchy
+                  BEFORE INSERT OR UPDATE OF parent_task_id,project_id ON tasks
+                  FOR EACH ROW EXECUTE FUNCTION validate_task_hierarchy();

@@ -124,6 +124,8 @@
 
     <form method="post" th:action="${formAction}" th:object="${form}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <input type="hidden" name="parentTaskId" th:if="${parentTaskId != null}" th:value="${parentTaskId}" />
+        <p th:if="${parentTaskId != null}" th:text="#{subtask.creatingFor(${parentTaskTitle})}">Creating for parent</p>
         <div class="error-summary" th:if="${#fields.hasErrors('*')}">
             <strong th:text="#{form.fixErrors}">Please fix the highlighted fields.</strong>
         </div>
@@ -135,9 +137,10 @@
         </label>
         <label th:if='${projects != null}'>
             <span th:text="#{common.project}">Project</span>
-            <select th:field='*{projectId}' required>
+            <select th:field='*{projectId}' required th:disabled="${parentTaskId != null}">
                 <option th:each='project : ${projects}' th:value='${project.id}' th:text='${project.name}'>Project</option>
             </select>
+            <input type="hidden" th:if="${parentTaskId != null}" th:field="*{projectId}" />
         </label>
         <label>
             <span th:text="#{common.priority}">Priority</span>
@@ -176,11 +179,12 @@
             <label class="choice"><input type="checkbox" th:field="*{withoutDeadline}" /> <span th:text="#{task.withoutDeadline}">Without deadline</span></label>
         </div>
         <div id="planningFields" class="date-fields">
-            <label>
+            <label class="choice"><input type="checkbox" th:field="*{plannedWithTime}" /> <span th:text="#{task.plannedWithTime}">Set exact time</span></label>
+            <label id="plannedDayField">
                 <span th:text="#{task.plannedDay}">Planned day (without time)</span>
                 <input id="plannedDate" type="date" th:field="*{plannedDate}" />
             </label>
-            <label>
+            <label id="plannedTimeField">
                 <span th:text="#{task.plannedFor}">Planned for</span>
                 <input type="datetime-local" th:field="*{plannedForAt}" th:classappend="${#fields.hasErrors('plannedForAt')} ? ' field-invalid'" />
                 <span class="field-error" th:if="${#fields.hasErrors('plannedForAt')}" th:errors="*{plannedForAt}">Planned time error</span>
@@ -197,6 +201,36 @@
             <a class="ghost" th:href="@{/backlog}" th:text="#{form.openBacklog}">Open backlog</a>
         </div>
     </form>
+    <section class="comments" th:if="${form.editMode and parentTask != null}">
+        <h2 th:text="#{subtask.parent}">Parent task</h2>
+        <a class="ghost" th:href="@{/tasks/{id}/edit(id=${parentTask.id})}" th:text="${parentTask.title}">Parent</a>
+    </section>
+    <section class="comments" th:if="${form.editMode and subtasks != null and parentTask == null}">
+        <div class="actions">
+            <h2 th:text="#{subtask.title}">Subtasks</h2>
+            <a class="ghost" th:href="@{/tasks/{id}/subtasks/new(id=${form.taskId})}" th:text="#{subtask.create}">Create subtask</a>
+        </div>
+        <p th:text="#{subtask.summary(${subtasks.estimateMinutes},${subtasks.spentMinutes})}">Children totals</p>
+        <div class="comment-list" th:if="${!#lists.isEmpty(subtasks.tasks)}">
+            <article class="comment" th:each="child : ${subtasks.tasks}">
+                <div class="comment-meta"><a th:href="@{/tasks/{id}/edit(id=${child.id})}" th:text="${child.title}">Subtask</a><strong th:text="${@labels.status(child.status)}">Status</strong></div>
+                <p th:text="#{subtask.metrics(${child.estimateMinutes == null ? 0 : child.estimateMinutes},${child.spentMinutes})}">Metrics</p>
+            </article>
+        </div>
+        <p th:if="${#lists.isEmpty(subtasks.tasks)}" th:text="#{subtask.empty}">No subtasks yet.</p>
+    </section>
+    <section class="comments" th:if="${form.editMode and assignmentMembers != null}">
+        <h2 th:text="#{assignment.title}">Assignees</h2>
+        <p th:text="#{assignment.hint}">Choose project members responsible for this task.</p>
+        <form method="post" th:action="@{/tasks/{id}/assignees(id=${form.taskId})}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <label class="choice" th:each="member : ${assignmentMembers}">
+                <input type="checkbox" name="userIds" th:value="${member.id}" th:checked="${#lists.contains(assignedUserIds, member.id)}" />
+                <span th:text="${member.displayName != null and !member.displayName.isBlank()} ? ${member.displayName} : ${member.login}">User</span>
+            </label>
+            <div class="actions"><button class="solid" type="submit" th:text="#{assignment.save}">Save assignees</button></div>
+        </form>
+    </section>
     <section class="comments" th:if="${form.editMode}">
         <h2 th:text="#{task.comments}">Comments</h2>
         <div class="comment-list" th:if="${comments != null and !#lists.isEmpty(comments)}">
@@ -215,10 +249,13 @@
 </div>
 <script>
     const status = document.getElementById('status');
-    const withoutPlannedDate = document.getElementById('withoutPlannedDate');
-    const withoutDeadline = document.getElementById('withoutDeadline');
+    const withoutPlannedDate = document.querySelector('[name=withoutPlannedDate]');
+    const withoutDeadline = document.querySelector('[name=withoutDeadline]');
     const dateOptions = document.getElementById('dateOptions');
     const planningFields = document.getElementById('planningFields');
+    const plannedWithTime = document.querySelector('[name=plannedWithTime]');
+    const plannedDayField = document.getElementById('plannedDayField');
+    const plannedTimeField = document.getElementById('plannedTimeField');
     const deadlineField = document.getElementById('deadlineField');
     const day = document.getElementById('plannedDate');
     const time = document.querySelector('[name=plannedForAt]');
@@ -228,9 +265,17 @@
         const undatedStatus = ['NEW', 'BACKLOG', 'PAUSED'].includes(status.value);
         dateOptions.hidden = undatedStatus;
         planningFields.hidden = undatedStatus || withoutPlannedDate.checked;
+        plannedDayField.hidden = plannedWithTime.checked;
+        plannedTimeField.hidden = !plannedWithTime.checked;
+        day.disabled = planningFields.hidden || plannedWithTime.checked;
+        time.disabled = planningFields.hidden || !plannedWithTime.checked;
         deadlineField.hidden = undatedStatus || withoutDeadline.checked;
         if (planningFields.hidden) {
             day.value = '';
+            time.value = '';
+        } else if (plannedWithTime.checked) {
+            day.value = '';
+        } else {
             time.value = '';
         }
         if (deadlineField.hidden) {
@@ -241,8 +286,7 @@
     status.addEventListener('change', updateDateFields);
     withoutPlannedDate.addEventListener('change', updateDateFields);
     withoutDeadline.addEventListener('change', updateDateFields);
-    day.addEventListener('input', () => { if (day.value) time.value = ''; });
-    time.addEventListener('input', () => { if (time.value) day.value = ''; });
+    plannedWithTime.addEventListener('change', updateDateFields);
     updateDateFields();
 </script>
 </body>

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0019-regular-task-skips
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE regular_task_skips (
+                  regular_task_id BIGINT NOT NULL REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                  occurrence_date DATE NOT NULL,
+                  skipped_at TIMESTAMP NOT NULL,
+                  PRIMARY KEY (regular_task_id, occurrence_date)
+              );
+              CREATE INDEX idx_regular_task_skips_date ON regular_task_skips(occurrence_date);

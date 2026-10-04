@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0020-optional-regular-start-date
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE regular_tasks DROP CONSTRAINT chk_regular_anchor;
+              ALTER TABLE regular_tasks ADD CONSTRAINT chk_regular_anchor CHECK (
+                  recurrence_type IN ('DAILY', 'WEEKDAYS')
+                  OR anchor_date IS NOT NULL
+              );

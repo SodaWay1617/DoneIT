@@ -143,7 +143,8 @@ public class TaskApplicationService {
 
         Task savedTask = taskRepository.update(updatedTask);
         int timeAdjustment = command.spentMinutes() - existingTask.spentMinutes();
-        if (timeAdjustment != 0) taskRepository.recordTrackedTimeAdjustment(existingTask.id(), timeAdjustment, now);
+        if (timeAdjustment != 0) taskRepository.recordTrackedTimeAdjustment(
+                existingTask.id(), requireActiveUser().id(), timeAdjustment, now);
         return toView(savedTask);
     }
 
@@ -328,7 +329,7 @@ public class TaskApplicationService {
         Task task = taskRepository.markDone(requireTaskId(taskId), LocalDateTime.now(clock))
                 .orElseGet(() -> getExistingTaskForStatusAction(taskId));
         if (spentMinutes != null) {
-            task = taskRepository.addTrackedTime(taskId, spentMinutes, LocalDateTime.now(clock))
+            task = taskRepository.addTrackedTime(taskId, requireActiveUser().id(), spentMinutes, LocalDateTime.now(clock))
                     .orElseThrow(() -> new TaskNotFoundException(taskId));
         }
         return toView(task);
@@ -338,7 +339,7 @@ public class TaskApplicationService {
     public TaskListItemView trackTime(@NotNull Long taskId, int minutes) {
         validateTrackedMinutes(minutes);
         getTaskOrThrow(taskId);
-        return toView(taskRepository.addTrackedTime(taskId, minutes, LocalDateTime.now(clock))
+        return toView(taskRepository.addTrackedTime(taskId, requireActiveUser().id(), minutes, LocalDateTime.now(clock))
                 .orElseThrow(() -> new TaskNotFoundException(taskId)));
     }
 

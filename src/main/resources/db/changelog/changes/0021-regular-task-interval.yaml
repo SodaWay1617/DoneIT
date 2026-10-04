@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0021-regular-task-interval
+      author: codex
+      changes:
+        - addColumn:
+            tableName: regular_tasks
+            columns:
+              - column:
+                  name: repeat_interval
+                  type: INTEGER
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: |
+              ALTER TABLE regular_tasks ADD CONSTRAINT chk_regular_repeat_interval CHECK (repeat_interval > 0);
+              ALTER TABLE regular_tasks DROP CONSTRAINT chk_regular_anchor;
+              ALTER TABLE regular_tasks ADD CONSTRAINT chk_regular_anchor CHECK (
+                  (recurrence_type IN ('DAILY', 'WEEKDAYS') AND repeat_interval = 1)
+                  OR anchor_date IS NOT NULL
+              );
+              ALTER TABLE regular_tasks ADD CONSTRAINT chk_regular_weekdays_interval CHECK (
+                  recurrence_type <> 'WEEKDAYS' OR repeat_interval = 1
+              );

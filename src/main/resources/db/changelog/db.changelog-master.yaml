@@ -31,3 +31,13 @@ databaseChangeLog:
       file: db/changelog/changes/0015-task-time-entries.yaml
   - include:
       file: db/changelog/changes/0016-workload-thresholds.yaml
+  - include:
+      file: db/changelog/changes/0017-task-assignees.yaml
+  - include:
+      file: db/changelog/changes/0018-subtasks.yaml
+  - include:
+      file: db/changelog/changes/0019-regular-task-skips.yaml
+  - include:
+      file: db/changelog/changes/0020-optional-regular-start-date.yaml
+  - include:
+      file: db/changelog/changes/0021-regular-task-interval.yaml

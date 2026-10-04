@@ -355,7 +355,7 @@ class TaskApplicationServiceTest {
                 task.closedAt(), task.projectId(), task.taskNumber(), task.taskKey(), task.plannedDate(),
                 task.priority(), null, 45);
         when(taskRepository.findById(305L)).thenReturn(Optional.of(task));
-        when(taskRepository.addTrackedTime(eq(305L), eq(45), any(LocalDateTime.class)))
+        when(taskRepository.addTrackedTime(eq(305L), eq(ACTIVE_USER.id()), eq(45), any(LocalDateTime.class)))
                 .thenReturn(Optional.of(tracked));
 
         TaskListItemView result = service.trackTime(305L, 45);
@@ -371,7 +371,7 @@ class TaskApplicationServiceTest {
                 done.closedAt(), done.projectId(), done.taskNumber(), done.taskKey(), done.plannedDate(),
                 done.priority(), null, 30);
         when(taskRepository.markDone(eq(306L), any(LocalDateTime.class))).thenReturn(Optional.of(done));
-        when(taskRepository.addTrackedTime(eq(306L), eq(30), any(LocalDateTime.class)))
+        when(taskRepository.addTrackedTime(eq(306L), eq(ACTIVE_USER.id()), eq(30), any(LocalDateTime.class)))
                 .thenReturn(Optional.of(tracked));
 
         TaskListItemView result = service.markTaskAsDone(306L, 30);

@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0017-task-assignees
+      author: codex
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              ALTER TABLE task_time_entries ADD COLUMN user_id BIGINT REFERENCES users(id);
+              UPDATE task_time_entries e SET user_id=t.user_id FROM tasks t WHERE t.id=e.task_id;
+              ALTER TABLE task_time_entries ALTER COLUMN user_id SET NOT NULL;
+              CREATE INDEX idx_task_time_entries_user_date ON task_time_entries(user_id,entry_date);
+
+              ALTER TABLE regular_task_time_entries ADD COLUMN user_id BIGINT REFERENCES users(id);
+              UPDATE regular_task_time_entries e SET user_id=r.user_id
+              FROM regular_tasks r WHERE r.id=e.regular_task_id;
+              ALTER TABLE regular_task_time_entries ALTER COLUMN user_id SET NOT NULL;
+              CREATE INDEX idx_regular_time_entries_user_date
+                  ON regular_task_time_entries(user_id,entry_date);
+
+              CREATE TABLE task_assignees (
+                  task_id BIGINT REFERENCES tasks(id) ON DELETE CASCADE,
+                  regular_task_id BIGINT REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                  assigned_at TIMESTAMP NOT NULL,
+                  CONSTRAINT ck_task_assignee_target CHECK (
+                      (task_id IS NOT NULL AND regular_task_id IS NULL)
+                      OR (task_id IS NULL AND regular_task_id IS NOT NULL)
+                  )
+              );
+              CREATE UNIQUE INDEX uq_task_assignees_task_user
+                  ON task_assignees(task_id,user_id) WHERE task_id IS NOT NULL;
+              CREATE UNIQUE INDEX uq_task_assignees_regular_user
+                  ON task_assignees(regular_task_id,user_id) WHERE regular_task_id IS NOT NULL;
+              INSERT INTO task_assignees(task_id,user_id,assigned_at)
+                  SELECT id,user_id,created_at FROM tasks;
+              INSERT INTO task_assignees(regular_task_id,user_id,assigned_at)
+                  SELECT id,user_id,created_at FROM regular_tasks;
+
+              CREATE FUNCTION assign_new_task_creator() RETURNS trigger AS $$
+              BEGIN
+                  INSERT INTO task_assignees(task_id,user_id,assigned_at)
+                  VALUES(NEW.id,NEW.user_id,NEW.created_at);
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_assign_new_task_creator AFTER INSERT ON tasks
+                  FOR EACH ROW EXECUTE FUNCTION assign_new_task_creator();
+
+              CREATE FUNCTION assign_new_regular_task_creator() RETURNS trigger AS $$
+              BEGIN
+                  INSERT INTO task_assignees(regular_task_id,user_id,assigned_at)
+                  VALUES(NEW.id,NEW.user_id,NEW.created_at);
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_assign_new_regular_task_creator AFTER INSERT ON regular_tasks
+                  FOR EACH ROW EXECUTE FUNCTION assign_new_regular_task_creator();
+
+              CREATE FUNCTION clean_task_assignees_after_project_move() RETURNS trigger AS $$
+              BEGIN
+                  IF NEW.project_id IS DISTINCT FROM OLD.project_id THEN
+                      DELETE FROM task_assignees a
+                      WHERE a.task_id=NEW.id AND NOT EXISTS (
+                          SELECT 1 FROM project_members m
+                          WHERE m.project_id=NEW.project_id AND m.user_id=a.user_id
+                      );
+                  END IF;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_clean_task_assignees AFTER UPDATE OF project_id ON tasks
+                  FOR EACH ROW EXECUTE FUNCTION clean_task_assignees_after_project_move();
+
+              CREATE FUNCTION clean_regular_assignees_after_project_move() RETURNS trigger AS $$
+              BEGIN
+                  IF NEW.project_id IS DISTINCT FROM OLD.project_id THEN
+                      DELETE FROM task_assignees a
+                      WHERE a.regular_task_id=NEW.id AND NOT EXISTS (
+                          SELECT 1 FROM project_members m
+                          WHERE m.project_id=NEW.project_id AND m.user_id=a.user_id
+                      );
+                  END IF;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_clean_regular_assignees AFTER UPDATE OF project_id ON regular_tasks
+                  FOR EACH ROW EXECUTE FUNCTION clean_regular_assignees_after_project_move();

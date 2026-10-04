@@ -30,6 +30,7 @@ public class TaskUpsertForm {
     private boolean backlog;
     private boolean withoutPlannedDate;
     private boolean withoutDeadline;
+    private boolean plannedWithTime;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate plannedDate;
     private TaskPriority priority = TaskPriority.NONE;
@@ -45,7 +46,9 @@ public class TaskUpsertForm {
         form.setProjectId(taskFormView.projectId());
         form.setTitle(taskFormView.title());
         form.setDescription(taskFormView.description());
-        form.setPlannedForAt(taskFormView.plannedForAt());
+        boolean plannedWithTime = taskFormView.editMode() && taskFormView.plannedForAt() != null;
+        form.setPlannedWithTime(plannedWithTime);
+        form.setPlannedForAt(plannedWithTime ? taskFormView.plannedForAt() : null);
         form.setDeadlineAt(taskFormView.deadlineAt());
         form.setEditMode(taskFormView.editMode());
         form.setBacklog(taskFormView.backlog());
@@ -53,7 +56,9 @@ public class TaskUpsertForm {
                 && taskFormView.plannedForAt() == null
                 && taskFormView.plannedDate() == null);
         form.setWithoutDeadline(taskFormView.editMode() && taskFormView.deadlineAt() == null);
-        form.setPlannedDate(taskFormView.plannedDate());
+        form.setPlannedDate(taskFormView.plannedDate() != null
+                ? taskFormView.plannedDate()
+                : taskFormView.plannedForAt() == null ? null : taskFormView.plannedForAt().toLocalDate());
         form.setPriority(taskFormView.priority());
         form.setStatus(taskFormView.status());
         form.setEstimateMinutes(taskFormView.estimateMinutes());
@@ -118,6 +123,8 @@ public class TaskUpsertForm {
     public void setWithoutPlannedDate(boolean withoutPlannedDate) { this.withoutPlannedDate = withoutPlannedDate; }
     public boolean isWithoutDeadline() { return withoutDeadline; }
     public void setWithoutDeadline(boolean withoutDeadline) { this.withoutDeadline = withoutDeadline; }
+    public boolean isPlannedWithTime() { return plannedWithTime; }
+    public void setPlannedWithTime(boolean plannedWithTime) { this.plannedWithTime = plannedWithTime; }
     public LocalDate getPlannedDate() { return plannedDate; }
     public void setPlannedDate(LocalDate plannedDate) { this.plannedDate = plannedDate; }
     public TaskPriority getPriority() { return priority; }

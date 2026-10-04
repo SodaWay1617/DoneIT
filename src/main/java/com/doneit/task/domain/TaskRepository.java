@@ -35,8 +35,8 @@ public interface TaskRepository {
 
     Optional<Task> markClosed(Long taskId, LocalDateTime closedAt);
 
-    Optional<Task> addTrackedTime(Long taskId, int minutes, LocalDateTime updatedAt);
-    void recordTrackedTimeAdjustment(Long taskId, int minutes, LocalDateTime recordedAt);
+    Optional<Task> addTrackedTime(Long taskId, Long userId, int minutes, LocalDateTime updatedAt);
+    void recordTrackedTimeAdjustment(Long taskId, Long userId, int minutes, LocalDateTime recordedAt);
 
     Optional<Task> reschedule(Long taskId, LocalDateTime plannedForAt, LocalDateTime updatedAt);
 

@@ -39,8 +39,7 @@ class LoginFlowTest extends IntegrationTestSupport {
 
     @BeforeEach
     void setUp() {
-        jdbcTemplate.update("DELETE FROM tasks");
-        jdbcTemplate.update("DELETE FROM users");
+        jdbcTemplate.execute("TRUNCATE TABLE users CASCADE");
         jdbcTemplate.update("""
                 INSERT INTO users (login, password_hash, display_name, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?)
@@ -57,7 +56,7 @@ class LoginFlowTest extends IntegrationTestSupport {
     void loginPageIsPublic() throws Exception {
         mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Sign in")));
+                .andExpect(content().string(containsString("action=\"/login\"")));
     }
 
     @Test
