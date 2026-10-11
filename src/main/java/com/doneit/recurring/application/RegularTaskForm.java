@@ -1,5 +1,7 @@
 package com.doneit.recurring.application;
 
+import com.doneit.task.domain.PlanningType;
+
 import com.doneit.recurring.domain.RecurrenceType;
 import com.doneit.task.domain.TaskPriority;
 import com.doneit.task.domain.TaskStatus;
@@ -17,6 +19,9 @@ public class RegularTaskForm {
     @NotNull private Long projectId;
     @NotNull private TaskStatus status = TaskStatus.NEW;
     @NotNull private TaskPriority priority = TaskPriority.NONE;
+    private PlanningType planningType = PlanningType.REQUIRED;
+    public PlanningType getPlanningType() { return planningType; }
+    public void setPlanningType(PlanningType planningType) { this.planningType = planningType == null ? PlanningType.REQUIRED : planningType; }
     @NotNull private RecurrenceType recurrenceType = RecurrenceType.DAILY;
     @Min(value = 1, message = "Repeat interval must be at least one")
     private int repeatInterval = 1;

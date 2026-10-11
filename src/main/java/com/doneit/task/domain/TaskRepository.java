@@ -40,6 +40,8 @@ public interface TaskRepository {
 
     Optional<Task> reschedule(Long taskId, LocalDateTime plannedForAt, LocalDateTime updatedAt);
 
+    Optional<Task> rescheduleOnDate(Long taskId, LocalDate plannedDate, LocalDateTime updatedAt);
+
     Optional<Task> moveToBacklog(Long taskId, LocalDateTime updatedAt);
 
     Optional<Task> moveToProject(Long taskId, Long projectId, LocalDateTime updatedAt);

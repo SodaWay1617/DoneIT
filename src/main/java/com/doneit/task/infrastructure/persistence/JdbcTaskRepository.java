@@ -17,7 +17,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String BASE_SELECT = """
             SELECT id, user_id, title, description, status, planned_for_at, deadline_at,
                    created_at, updated_at, completed_at, closed_at,
-                   project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes
+                   project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes, planning_type
             FROM tasks
             """;
 
@@ -25,8 +25,8 @@ public class JdbcTaskRepository implements TaskRepository {
             INSERT INTO tasks (
                 user_id, title, description, status, planned_for_at, deadline_at,
                 created_at, updated_at, completed_at, closed_at,
-                project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes, planning_type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             """;
 
@@ -42,6 +42,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 priority = ?,
                 estimate_minutes = ?,
                 spent_minutes = ?,
+                planning_type = ?,
                 updated_at = ?,
                 completed_at = ?,
                 closed_at = ?
@@ -170,7 +171,7 @@ public class JdbcTaskRepository implements TaskRepository {
             UPDATE tasks
             SET status = CASE WHEN status IN ('NEW', 'BACKLOG') THEN 'TODO' ELSE status END,
                 planned_for_at = ?,
-                planned_date = NULL,
+                planned_date = ?,
                 updated_at = ?
             WHERE id = ?
             """;
@@ -190,6 +191,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 planned_date = planned_date + 1,
                 updated_at = ?
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+              AND planning_type <> 'OPTIONAL'
               AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
             """;
@@ -200,6 +202,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 planned_date = CASE WHEN planned_date IS NULL THEN NULL ELSE CAST(? AS date) END,
                 updated_at = ?
             WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+              AND planning_type <> 'OPTIONAL'
               AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
             """;
@@ -239,6 +242,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.priority().name()
                 ,task.estimateMinutes()
                 ,task.spentMinutes()
+                ,task.planningType().name()
         );
         return findById(Objects.requireNonNull(id)).orElseThrow();
     }
@@ -257,6 +261,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.priority().name(),
                 task.estimateMinutes(),
                 task.spentMinutes(),
+                task.planningType().name(),
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(),
@@ -394,7 +399,7 @@ public class JdbcTaskRepository implements TaskRepository {
 
     @Override
     public Optional<Task> reschedule(Long taskId, LocalDateTime plannedForAt, LocalDateTime updatedAt) {
-        int updated = jdbcTemplate.update(RESCHEDULE_SQL, plannedForAt, updatedAt, taskId);
+        int updated = jdbcTemplate.update(RESCHEDULE_SQL, plannedForAt, null, updatedAt, taskId);
         if (updated == 0) {
             return Optional.empty();
         }
@@ -408,6 +413,12 @@ public class JdbcTaskRepository implements TaskRepository {
             return Optional.empty();
         }
         return findById(taskId);
+    }
+
+    @Override
+    public Optional<Task> rescheduleOnDate(Long taskId, LocalDate plannedDate, LocalDateTime updatedAt) {
+        int updated = jdbcTemplate.update(RESCHEDULE_SQL, null, plannedDate, updatedAt, taskId);
+        return updated == 0 ? Optional.empty() : findById(taskId);
     }
 
     @Override

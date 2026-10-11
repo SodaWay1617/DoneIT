@@ -150,7 +150,8 @@
                         th:text="${@labels.priority(priorityValue)}">None</option>
             </select>
         </label>
-        <label>
+        <label><span th:text="#{planning.title}">Planning</span><select th:field="*{planningType}"><option th:each="type : ${T(com.doneit.task.domain.PlanningType).values()}" th:value="${type}" th:text="${@labels.planning(type)}">Need to</option></select></label>
+<label>
             <span th:text="#{task.estimateMinutes}">Estimate, minutes</span>
             <input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}"
                    th:classappend="${#fields.hasErrors('estimateMinutes')} ? ' field-invalid'" placeholder="Not estimated" />

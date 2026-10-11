@@ -2,6 +2,7 @@ package com.doneit.task.web;
 
 import com.doneit.assignment.application.TaskAssignmentService;
 import com.doneit.project.application.ProjectService;
+import com.doneit.recurring.domain.RegularTask;
 import com.doneit.task.application.TaskApplicationService;
 import com.doneit.task.application.SubtaskService;
 import com.doneit.task.application.command.CreateTaskCommand;
@@ -10,6 +11,7 @@ import com.doneit.task.application.command.MoveTaskToBacklogCommand;
 import com.doneit.task.application.command.RescheduleTaskCommand;
 import com.doneit.task.application.view.BacklogTasksView;
 import com.doneit.task.application.view.DailyTasksView;
+import com.doneit.task.application.view.DailyTaskEntryView;
 import com.doneit.task.domain.TaskStatus;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -197,7 +199,7 @@ public class HomeController {
                 plannedForAt,
                 withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
                 plannedDate, backlog, form.getPriority(), form.getStatus(),
-                form.getEstimateMinutes()
+                form.getEstimateMinutes(), form.getPlanningType()
         );
 
         if (backlog) {
@@ -265,7 +267,7 @@ public class HomeController {
                 plannedForAt,
                 withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
                 plannedDate, backlog, form.getPriority(), form.getStatus(),
-                form.getEstimateMinutes(), form.getSpentMinutes()
+                form.getEstimateMinutes(), form.getSpentMinutes(), form.getPlanningType()
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
@@ -306,12 +308,25 @@ public class HomeController {
 
     @PostMapping("/tasks/{taskId}/reschedule")
     public String rescheduleTask(@PathVariable Long taskId,
-                                 @RequestParam("plannedForAt") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime plannedForAt,
+                                 @RequestParam(required = false) String plannedForAt,
+                                 @RequestParam(required = false) String plannedDate,
+                                 @RequestParam(required = false) Boolean plannedWithTime,
                                  @RequestParam(value = "redirectTo", required = false) String redirectTo,
                                  RedirectAttributes redirectAttributes) {
-        taskApplicationService.moveTask(new RescheduleTaskCommand(taskId, plannedForAt));
+        boolean withTime = plannedWithTime != null ? plannedWithTime : plannedDate == null || plannedDate.isBlank();
+        RescheduleTaskCommand command;
+        try {
+            command = withTime
+                    ? new RescheduleTaskCommand(taskId, LocalDateTime.parse(plannedForAt), null)
+                    : new RescheduleTaskCommand(taskId, null, LocalDate.parse(plannedDate));
+        } catch (java.time.format.DateTimeParseException | NullPointerException exception) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "A valid planned date is required", exception);
+        }
+        taskApplicationService.moveTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task moved to a new date.");
-        return "redirect:" + resolveRedirectTarget(redirectTo, resolveDateRedirect(plannedForAt.toLocalDate()));
+        LocalDate targetDate = command.plannedDate() != null ? command.plannedDate() : command.plannedForAt().toLocalDate();
+        return "redirect:" + resolveRedirectTarget(redirectTo, resolveDateRedirect(targetDate));
     }
 
     @PostMapping("/tasks/{taskId}/backlog")
@@ -365,6 +380,9 @@ public class HomeController {
         model.addAttribute("appName", "DoneIt");
         model.addAttribute("username", principal.getName());
         model.addAttribute("daily", dailyTasksView);
+        List<RegularTask> regularTasks = model.getAttribute("regularActive") instanceof List<?> tasks
+                ? tasks.stream().map(RegularTask.class::cast).toList() : List.of();
+        model.addAttribute("activeEntries", DailyTaskEntryView.sorted(dailyTasksView.activeTasks(), regularTasks));
         model.addAttribute("backlogPreview", backlogTasksView.tasks().stream().limit(3).toList());
         model.addAttribute("inboxPreview", inboxTasksView.tasks().stream().limit(3).toList());
         model.addAttribute("finishedPreview", finishedTasksView.tasks().stream().limit(3).toList());

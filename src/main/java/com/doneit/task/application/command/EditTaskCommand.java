@@ -1,5 +1,7 @@
 package com.doneit.task.application.command;
 
+import com.doneit.task.domain.PlanningType;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -20,8 +22,26 @@ public record EditTaskCommand(
         TaskPriority priority,
         TaskStatus status,
         Integer estimateMinutes,
-        int spentMinutes
+        int spentMinutes,
+        PlanningType planningType
 ) {
+    public EditTaskCommand(
+        @NotNull(message = "Task id is required") Long taskId,
+        @NotBlank(message = "Task title is required") String title,
+        String description,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        Long projectId,
+        LocalDate plannedDate,
+        boolean backlog,
+        TaskPriority priority,
+        TaskStatus status,
+        Integer estimateMinutes,
+        int spentMinutes
+    ) {
+        this(taskId, title, description, plannedForAt, deadlineAt, projectId, plannedDate, backlog, priority, status, estimateMinutes, spentMinutes, PlanningType.REQUIRED);
+    }
+
     public EditTaskCommand(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt,
                            Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority,TaskStatus status,
                            Integer estimateMinutes) {
@@ -39,6 +59,7 @@ public record EditTaskCommand(
     public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority){this(id,title,description,planned,deadline,projectId,plannedDate,backlog,priority,backlog?TaskStatus.BACKLOG:null);}
 
     public EditTaskCommand {
+        if (planningType == null) planningType = PlanningType.REQUIRED;
         if (taskId == null) {
             throw new IllegalArgumentException("Task id is required");
         }

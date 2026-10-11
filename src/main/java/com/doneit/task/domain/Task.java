@@ -1,5 +1,7 @@
 package com.doneit.task.domain;
 
+import com.doneit.task.domain.PlanningType;
+
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -22,8 +24,32 @@ public record Task(
         LocalDate plannedDate,
         TaskPriority priority,
         Integer estimateMinutes,
-        int spentMinutes
+        int spentMinutes,
+        PlanningType planningType
 ) {
+    public Task(
+        Long id,
+        Long userId,
+        String title,
+        String description,
+        TaskStatus status,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        LocalDateTime completedAt,
+        LocalDateTime closedAt,
+        Long projectId,
+        Long taskNumber,
+        String taskKey,
+        LocalDate plannedDate,
+        TaskPriority priority,
+        Integer estimateMinutes,
+        int spentMinutes
+    ) {
+        this(id, userId, title, description, status, plannedForAt, deadlineAt, createdAt, updatedAt, completedAt, closedAt, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, PlanningType.REQUIRED);
+    }
+
     public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,
                 LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,
                 LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey,LocalDate plannedDate,
@@ -51,6 +77,7 @@ public record Task(
     public Task(Long id,Long userId,String title,String description,TaskStatus status,LocalDateTime plannedForAt,LocalDateTime deadlineAt,LocalDateTime createdAt,LocalDateTime updatedAt,LocalDateTime completedAt,LocalDateTime closedAt,Long projectId,Long taskNumber,String taskKey,LocalDate plannedDate){this(id,userId,title,description,status,plannedForAt,deadlineAt,createdAt,updatedAt,completedAt,closedAt,projectId,taskNumber,taskKey,plannedDate,TaskPriority.NONE);}
 
     public Task {
+        if (planningType == null) planningType = PlanningType.REQUIRED;
         if (plannedForAt != null && plannedDate != null) {
             throw new IllegalArgumentException("Choose either planned date or datetime");
         }
@@ -106,7 +133,7 @@ public record Task(
     }
 
     public boolean isEligibleForBulkMove() {
-        return isActive() && (plannedForAt != null || plannedDate != null);
+        return isActive() && planningType != PlanningType.OPTIONAL && (plannedForAt != null || plannedDate != null);
     }
 
     public Task markDone(LocalDateTime completedAt) {
@@ -123,7 +150,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 transitionAt,
-                null, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes
+                null, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, planningType
         );
     }
 
@@ -141,7 +168,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 null,
-                transitionAt, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes
+                transitionAt, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, planningType
         );
     }
 
@@ -159,7 +186,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes
+                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes, planningType
         );
     }
 
@@ -176,7 +203,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes
+                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes, planningType
         );
     }
 

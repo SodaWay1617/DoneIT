@@ -41,3 +41,5 @@ databaseChangeLog:
       file: db/changelog/changes/0020-optional-regular-start-date.yaml
   - include:
       file: db/changelog/changes/0021-regular-task-interval.yaml
+  - include:
+      file: db/changelog/changes/0022-task-planning-types.yaml

@@ -2,6 +2,7 @@ package com.doneit.config;
 
 import com.doneit.recurring.domain.RecurrenceType;
 import com.doneit.task.domain.TaskPriority;
+import com.doneit.task.domain.PlanningType;
 import com.doneit.task.domain.TaskStatus;
 import java.util.Locale;
 import org.springframework.context.MessageSource;
@@ -13,6 +14,7 @@ public class LocalizedLabels {
     private final MessageSource messages;
     public LocalizedLabels(MessageSource messages) { this.messages = messages; }
     public String status(TaskStatus value) { return message("status." + value.name()); }
+    public String planning(PlanningType value) { return message("planning." + value.name()); }
     public String priority(TaskPriority value) { return message("priority." + value.name()); }
     public String recurrence(RecurrenceType value) { return message("recurrence." + value.name()); }
     private String message(String key) {

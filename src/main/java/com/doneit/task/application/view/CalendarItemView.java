@@ -1,5 +1,7 @@
 package com.doneit.task.application.view;
 
+import com.doneit.task.domain.PlanningType;
+
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskStatus;
 import com.doneit.task.domain.TaskPriority;
@@ -16,8 +18,28 @@ public record CalendarItemView(
         TaskStatus taskStatus,
         boolean deadlineHighlighted,
         TaskPriority priority,
-        boolean exactTime
+        boolean exactTime,
+        PlanningType planningType,
+        Integer estimateMinutes
 ) {
+    public CalendarItemView(
+        Long taskId,
+        CalendarOccurrenceType occurrenceType,
+        LocalDate date,
+        LocalDateTime dateTime,
+        String title,
+        TaskStatus taskStatus,
+        boolean deadlineHighlighted,
+        TaskPriority priority,
+        boolean exactTime
+    ) {
+        this(taskId, occurrenceType, date, dateTime, title, taskStatus, deadlineHighlighted, priority, exactTime, PlanningType.REQUIRED, null);
+    }
+
+    public CalendarItemView {
+        if (planningType == null) planningType = PlanningType.REQUIRED;
+    }
+
     public CalendarItemView(Long taskId, CalendarOccurrenceType occurrenceType, LocalDate date,
                             LocalDateTime dateTime, String title, TaskStatus taskStatus,
                             boolean deadlineHighlighted) {
@@ -39,7 +61,7 @@ public record CalendarItemView(
                 task.status(),
                 task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedForAt().toLocalDate()),
                 task.priority(),
-                true
+                true, task.planningType(), task.estimateMinutes()
         );
     }
 
@@ -51,7 +73,7 @@ public record CalendarItemView(
         return new CalendarItemView(task.id(), CalendarOccurrenceType.PLANNED, task.plannedDate(),
                 task.plannedDate().atStartOfDay(), displayTitle(task, showProjectInTitle), task.status(),
                 task.deadlineAt() != null && task.deadlineAt().toLocalDate().equals(task.plannedDate()),
-                task.priority(), false);
+                task.priority(), false, task.planningType(), task.estimateMinutes());
     }
 
     public static CalendarItemView deadline(Task task) {
@@ -68,7 +90,7 @@ public record CalendarItemView(
                 task.status(),
                 true,
                 task.priority(),
-                true
+                true, task.planningType(), task.estimateMinutes()
         );
     }
 
@@ -84,7 +106,7 @@ public record CalendarItemView(
                                              CalendarOccurrenceType type, boolean showProjectInTitle) {
         if (finishedAt == null) throw new IllegalArgumentException("Finished task requires a timestamp");
         return new CalendarItemView(task.id(), type, finishedAt.toLocalDate(), finishedAt,
-                displayTitle(task, showProjectInTitle), task.status(), false, task.priority(), true);
+                displayTitle(task, showProjectInTitle), task.status(), false, task.priority(), true, task.planningType(), null);
     }
 
     private static String displayTitle(Task task, boolean showProjectInTitle) {

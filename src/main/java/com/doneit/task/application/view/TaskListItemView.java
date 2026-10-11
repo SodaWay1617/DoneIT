@@ -1,5 +1,7 @@
 package com.doneit.task.application.view;
 
+import com.doneit.task.domain.PlanningType;
+
 import com.doneit.task.domain.Task;
 import com.doneit.task.domain.TaskStatus;
 import com.doneit.task.domain.TaskPriority;
@@ -21,8 +23,28 @@ public record TaskListItemView(
         LocalDate plannedDate,
         TaskPriority priority,
         Integer estimateMinutes,
-        int spentMinutes
+        int spentMinutes,
+        PlanningType planningType
 ) {
+    public TaskListItemView(
+        Long id,
+        String title,
+        String description,
+        TaskStatus status,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        boolean backlog,
+        boolean overdue,
+        Long projectId,
+        String taskCode,
+        LocalDate plannedDate,
+        TaskPriority priority,
+        Integer estimateMinutes,
+        int spentMinutes
+    ) {
+        this(id, title, description, status, plannedForAt, deadlineAt, backlog, overdue, projectId, taskCode, plannedDate, priority, estimateMinutes, spentMinutes, PlanningType.REQUIRED);
+    }
+
     public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime plannedForAt,
                             LocalDateTime deadlineAt,boolean backlog,boolean overdue,Long projectId,String taskCode,
                             LocalDate plannedDate,TaskPriority priority,Integer estimateMinutes) {
@@ -38,6 +60,7 @@ public record TaskListItemView(
     public TaskListItemView(Long id,String title,String description,TaskStatus status,LocalDateTime planned,LocalDateTime deadline,boolean backlog,boolean overdue,Long projectId,String taskCode){this(id,title,description,status,planned,deadline,backlog,overdue,projectId,taskCode,null,TaskPriority.NONE);}
 
     public TaskListItemView {
+        if (planningType == null) planningType = PlanningType.REQUIRED;
         if (id == null) {
             throw new IllegalArgumentException("Task id is required");
         }
@@ -77,7 +100,8 @@ public record TaskListItemView(
                 task.plannedDate(),
                 task.priority(),
                 task.estimateMinutes(),
-                task.spentMinutes()
+                task.spentMinutes(),
+                task.planningType()
         );
     }
 

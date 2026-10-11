@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -334,6 +333,47 @@ class HomeControllerTest extends IntegrationTestSupport {
 
     @Test
     @WithMockUser(username = "doneit")
+    void shouldSortOrdinaryAndRecurringTasksTogetherByPriorityAndTime() throws Exception {
+        jdbcTemplate.update("UPDATE tasks SET priority = 'CRITICAL' WHERE id = ?", taskId);
+        Long projectId = jdbcTemplate.queryForObject(
+                "SELECT id FROM projects WHERE default_project = TRUE", Long.class);
+        String[][] tasks = {
+                {"Low recurring", "LOW", "08:00"},
+                {"Critical late", "CRITICAL", "11:00"},
+                {"Critical early", "CRITICAL", "09:00"},
+                {"Critical untimed", "CRITICAL", ""},
+                {"No priority recurring", "NONE", "07:00"}
+        };
+        for (String[] task : tasks) {
+            mockMvc.perform(post("/recurring").with(csrf())
+                            .param("projectId", projectId.toString())
+                            .param("title", task[0]).param("priority", task[1])
+                            .param("status", "IN_PROGRESS").param("recurrenceType", "DAILY")
+                            .param("occurrenceTime", task[2]))
+                    .andExpect(status().is3xxRedirection());
+        }
+
+        for (String path : new String[] {"/", "/tasks?date=2026-04-08"}) {
+        mockMvc.perform(get(path))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String html = result.getResponse().getContentAsString();
+                    Assertions.assertThat(html).containsPattern("class=\"badge\\s+priority-critical\"");
+                    Assertions.assertThat(html).containsPattern("class=\"badge\\s+priority-low\"");
+                    Assertions.assertThat(html).doesNotContainPattern("class=\"badge\\s+priority-none\"");
+                    Assertions.assertThat(html.indexOf(">Critical early<")).isLessThan(html.indexOf(">Critical late<"));
+                    Assertions.assertThat(html).contains(">Today task<");
+                    Assertions.assertThat(html.indexOf(">Critical early<")).isLessThan(html.indexOf(">Today task<"));
+                    Assertions.assertThat(html.indexOf(">Today task<")).isLessThan(html.indexOf(">Critical late<"));
+                    Assertions.assertThat(html.indexOf(">Critical late<")).isLessThan(html.indexOf(">Critical untimed<"));
+                    Assertions.assertThat(html.indexOf(">Critical untimed<")).isLessThan(html.indexOf(">Low recurring<"));
+                    Assertions.assertThat(html.indexOf(">Low recurring<")).isLessThan(html.indexOf(">No priority recurring<"));
+                });
+        }
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
     void shouldCreateBacklogTaskWithoutPlannedDatetime() throws Exception {
         mockMvc.perform(post("/tasks")
                         .with(csrf())
@@ -477,9 +517,12 @@ class HomeControllerTest extends IntegrationTestSupport {
     @Test
     @WithMockUser(username = "doneit")
     void shouldRescheduleOneTaskToAnotherDatetime() throws Exception {
+        jdbcTemplate.update("UPDATE tasks SET planned_for_at = NULL, planned_date = DATE '2026-04-08' WHERE id = ?", taskId);
         mockMvc.perform(post("/tasks/{taskId}/reschedule", taskId)
                         .with(csrf())
                         .param("plannedForAt", "2026-04-10T09:15")
+                        .param("plannedDate", "invalid inactive date")
+                        .param("plannedWithTime", "true")
                         .param("redirectTo", "/tasks?date=2026-04-10"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/tasks?date=2026-04-10"));
@@ -491,6 +534,50 @@ class HomeControllerTest extends IntegrationTestSupport {
                 """, LocalDateTime.class, taskId);
 
         Assertions.assertThat(plannedForAt).isEqualTo(LocalDateTime.of(2026, 4, 10, 9, 15));
+        Assertions.assertThat(jdbcTemplate.queryForObject("SELECT planned_date FROM tasks WHERE id = ?", LocalDate.class, taskId)).isNull();
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
+    void shouldRescheduleTimedTaskToDateOnlyAndIgnoreInactiveTime() throws Exception {
+        mockMvc.perform(post("/tasks/{taskId}/reschedule", taskId).with(csrf())
+                        .param("plannedDate", "2026-04-10")
+                        .param("plannedWithTime", "false")
+                        .param("plannedForAt", "invalid inactive datetime"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/tasks?date=2026-04-10"));
+        var task = jdbcTemplate.queryForMap("SELECT planned_date, planned_for_at, status FROM tasks WHERE id = ?", taskId);
+        Assertions.assertThat(task.get("planned_date")).isEqualTo(java.sql.Date.valueOf("2026-04-10"));
+        Assertions.assertThat(task.get("planned_for_at")).isNull();
+        Assertions.assertThat(task.get("status")).isEqualTo("IN_PROGRESS");
+        mockMvc.perform(get("/tasks?date=2026-04-10"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("2026-04-10")))
+                .andExpect(content().string(containsString("name=\"plannedDate\"")))
+                .andExpect(content().string(containsString("/reschedule.js")));
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
+    void shouldScheduleBacklogTaskForDateOnly() throws Exception {
+        mockMvc.perform(post("/tasks/{taskId}/reschedule", backlogTaskId).with(csrf())
+                        .param("plannedDate", "2026-04-10").param("redirectTo", "/backlog"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/backlog"));
+        var task = jdbcTemplate.queryForMap("SELECT planned_date, planned_for_at, status FROM tasks WHERE id = ?", backlogTaskId);
+        Assertions.assertThat(task.get("planned_date")).isEqualTo(java.sql.Date.valueOf("2026-04-10"));
+        Assertions.assertThat(task.get("planned_for_at")).isNull();
+        Assertions.assertThat(task.get("status")).isEqualTo("TODO");
+    }
+
+    @Test
+    @WithMockUser(username = "doneit")
+    void shouldRejectRescheduleWithoutSelectedDate() throws Exception {
+        mockMvc.perform(post("/tasks/{taskId}/reschedule", taskId).with(csrf())
+                        .param("plannedWithTime", "false").param("plannedForAt", "2026-04-10T09:15"))
+                .andExpect(status().isBadRequest());
+        Assertions.assertThat(jdbcTemplate.queryForObject("SELECT planned_for_at FROM tasks WHERE id = ?", LocalDateTime.class, taskId))
+                .isEqualTo(LocalDateTime.of(2026, 4, 8, 10, 0));
     }
 
     @Test

@@ -1,5 +1,7 @@
 package com.doneit.task.application.view;
 
+import com.doneit.task.domain.PlanningType;
+
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import com.doneit.task.domain.TaskPriority;
@@ -18,8 +20,31 @@ public record TaskFormView(
         TaskPriority priority,
         TaskStatus status,
         Integer estimateMinutes,
-        int spentMinutes
+        int spentMinutes,
+        PlanningType planningType
 ) {
+    public TaskFormView(
+        Long taskId,
+        String title,
+        String description,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        boolean backlog,
+        boolean editMode,
+        Long projectId,
+        LocalDate plannedDate,
+        TaskPriority priority,
+        TaskStatus status,
+        Integer estimateMinutes,
+        int spentMinutes
+    ) {
+        this(taskId, title, description, plannedForAt, deadlineAt, backlog, editMode, projectId, plannedDate, priority, status, estimateMinutes, spentMinutes, PlanningType.REQUIRED);
+    }
+
+    public TaskFormView {
+        if (planningType == null) planningType = PlanningType.REQUIRED;
+    }
+
     public TaskFormView(Long taskId,String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt,
                         boolean backlog,boolean editMode,Long projectId,LocalDate plannedDate,
                         TaskPriority priority,TaskStatus status,Integer estimateMinutes) {

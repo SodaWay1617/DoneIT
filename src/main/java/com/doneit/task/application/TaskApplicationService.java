@@ -84,7 +84,7 @@ public class TaskApplicationService {
                 now,
                 command.status() == TaskStatus.DONE ? now : null,
                 command.status() == TaskStatus.CLOSED ? now : null,
-                command.projectId(), null, null, command.plannedDate(), command.priority(), command.estimateMinutes()
+                command.projectId(), null, null, command.plannedDate(), command.priority(), command.estimateMinutes(), 0, command.planningType()
         );
 
         return toView(taskRepository.create(task));
@@ -111,7 +111,7 @@ public class TaskApplicationService {
                 now,
                 null,
                 null,
-                command.projectId(), null, null, null, command.priority(), command.estimateMinutes()
+                command.projectId(), null, null, null, command.priority(), command.estimateMinutes(), 0, command.planningType()
         );
 
         return toView(taskRepository.create(task));
@@ -138,7 +138,7 @@ public class TaskApplicationService {
                 closingTime(command.status(), existingTask, now),
                 command.projectId() == null ? existingTask.projectId() : command.projectId(),
                 existingTask.taskNumber(), existingTask.taskKey(), command.backlog() ? null : command.plannedDate(),
-                command.priority(), command.estimateMinutes(), command.spentMinutes()
+                command.priority(), command.estimateMinutes(), command.spentMinutes(), command.planningType()
         );
 
         Task savedTask = taskRepository.update(updatedTask);
@@ -267,7 +267,7 @@ public class TaskApplicationService {
                 .findTasksForCalendarRange(activeUser.id(), gridStart, gridEndExclusive)
                 .stream()
                 .filter(t -> matches(t, projectId))
-                .flatMap(task -> calendarItems(task, activeUser.showProjectInTaskTitle(), gridStart, gridEndExclusive).stream())
+                .flatMap(task -> calendarItems(task, activeUser.showProjectInTaskTitle(), LocalDate.now(clock), gridStart, gridEndExclusive).stream())
                 .collect(Collectors.groupingBy(CalendarItemView::date));
 
         LocalDate today = LocalDate.now(clock);
@@ -313,7 +313,7 @@ public class TaskApplicationService {
                 task.priority(),
                 task.status(),
                 task.estimateMinutes(),
-                task.spentMinutes()
+                task.spentMinutes(), task.planningType()
         );
     }
 
@@ -354,7 +354,10 @@ public class TaskApplicationService {
     @Transactional
     public TaskListItemView moveTask(@Valid @NotNull RescheduleTaskCommand command) {
         if (projectService != null) getTaskOrThrow(command.taskId());
-        Task task = taskRepository.reschedule(command.taskId(), command.plannedForAt(), LocalDateTime.now(clock))
+        LocalDateTime now = LocalDateTime.now(clock);
+        Task task = (command.plannedDate() != null
+                ? taskRepository.rescheduleOnDate(command.taskId(), command.plannedDate(), now)
+                : taskRepository.reschedule(command.taskId(), command.plannedForAt(), now))
                 .orElseThrow(() -> new TaskNotFoundException(command.taskId()));
         return toView(task);
     }
@@ -403,7 +406,7 @@ public class TaskApplicationService {
     }
 
     private static List<CalendarItemView> calendarItems(Task task, boolean showProjectInTitle,
-                                                        LocalDate start, LocalDate endExclusive) {
+                                                        LocalDate today, LocalDate start, LocalDate endExclusive) {
         List<CalendarItemView> items = new ArrayList<>();
         if (task.status() == TaskStatus.DONE) {
             return task.completedAt() == null ? items : List.of(CalendarItemView.completed(task, showProjectInTitle));
@@ -421,12 +424,11 @@ public class TaskApplicationService {
                 && (task.plannedDate() == null || !task.deadlineAt().toLocalDate().equals(task.plannedDate()))) {
             items.add(CalendarItemView.deadline(task, showProjectInTitle));
         }
-        if (task.plannedForAt() == null && task.plannedDate() == null && task.deadlineAt() == null) {
-            String title = TaskListItemView.from(task, start, showProjectInTitle).title();
-            for (LocalDate date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
-                items.add(new CalendarItemView(task.id(), com.doneit.task.application.view.CalendarOccurrenceType.PLANNED,
-                        date, date.atStartOfDay(), title, task.status(), false, task.priority(), false));
-            }
+        if (task.plannedForAt() == null && task.plannedDate() == null && task.deadlineAt() == null
+                && !today.isBefore(start) && today.isBefore(endExclusive)) {
+            String title = TaskListItemView.from(task, today, showProjectInTitle).title();
+            items.add(new CalendarItemView(task.id(), com.doneit.task.application.view.CalendarOccurrenceType.PLANNED,
+                    today, today.atStartOfDay(), title, task.status(), false, task.priority(), false, task.planningType(), null));
         }
         return items;
     }

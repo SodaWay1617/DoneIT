@@ -1,5 +1,7 @@
 package com.doneit.task.web;
 
+import com.doneit.task.domain.PlanningType;
+
 import com.doneit.task.application.view.TaskFormView;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Min;
@@ -34,6 +36,9 @@ public class TaskUpsertForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate plannedDate;
     private TaskPriority priority = TaskPriority.NONE;
+    private PlanningType planningType = PlanningType.REQUIRED;
+    public PlanningType getPlanningType() { return planningType; }
+    public void setPlanningType(PlanningType planningType) { this.planningType = planningType == null ? PlanningType.REQUIRED : planningType; }
     private TaskStatus status = TaskStatus.NEW;
     @Min(value = 1, message = "Estimate must be at least one minute")
     private Integer estimateMinutes;
@@ -60,6 +65,7 @@ public class TaskUpsertForm {
                 ? taskFormView.plannedDate()
                 : taskFormView.plannedForAt() == null ? null : taskFormView.plannedForAt().toLocalDate());
         form.setPriority(taskFormView.priority());
+        form.setPlanningType(taskFormView.planningType());
         form.setStatus(taskFormView.status());
         form.setEstimateMinutes(taskFormView.estimateMinutes());
         form.setSpentMinutes(taskFormView.spentMinutes());

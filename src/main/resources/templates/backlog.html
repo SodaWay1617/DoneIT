@@ -77,6 +77,9 @@
             min-width: 220px;
             justify-content: flex-start;
         }
+        .reschedule-form [hidden] { display: none; }
+        .reschedule-form .compact-input { min-width: 0; width: 220px; max-width: 100%; }
+        .reschedule-mode { display: inline-flex; gap: 6px; align-items: center; }
 
         .solid {
             background: var(--accent);
@@ -132,9 +135,10 @@
 
         form.inline { margin: 0; }
     </style>
+<link rel="stylesheet" href="/planning.css">
 </head>
 <body>
-<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value='' th:text="#{project.all}">All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects' th:text="#{project.manage}">Manage projects</a></form>
+<div th:replace="~{planning :: filters}"></div>
 <div class="shell">
     <section class="hero">
         <h1 th:text="#{nav.backlog}">Backlog</h1>
@@ -157,7 +161,7 @@
         <p class="meta" th:if="${flashMessage != null}" th:text="${flashMessage}">Task updated.</p>
     </section>
     <section class="stack" th:if="!${#lists.isEmpty(regularBacklog)}">
-        <article class="task" th:each="task : ${regularBacklog}">
+        <article class="task" th:each="task : ${regularBacklog}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
             <div class="badges"><span class="badge" th:text="${@labels.status(task.status)}">NEW</span><span class="badge" th:text="#{task.recurring}">RECURRING</span><span class="badge" th:text="${@labels.recurrence(task.recurrenceType)}">Every day</span></div>
             <h2 th:text="${task.title}">Recurring task</h2>
             <p class="meta" th:if="${regularTaskAssignees[task.id] != null}" th:text="#{assignment.list(${#strings.listJoin(regularTaskAssignees[task.id], ', ')})}">Assignees</p>
@@ -169,7 +173,7 @@
     </section>
 
     <section class="stack" th:if="!${#lists.isEmpty(backlog.tasks)}">
-        <article class="task" th:each="task : ${backlog.tasks}">
+        <article class="task" th:each="task : ${backlog.tasks}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
             <div class="task-top">
                 <div class="badges">
                     <span class="badge" th:text="${@labels.status(task.status)}">BACKLOG</span>
@@ -185,7 +189,9 @@
             <form class="reschedule-form" method="post" th:action="@{/tasks/{id}/reschedule(id=${task.id})}">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" name="redirectTo" value="/backlog" />
-                <input class="compact-input" type="datetime-local" name="plannedForAt" />
+                <input class="compact-input" type="date" name="plannedDate" required th:aria-label="#{task.plannedDay}" />
+                <input class="compact-input" type="datetime-local" name="plannedForAt" hidden disabled th:aria-label="#{task.plannedWithTime}" />
+                <label class="reschedule-mode"><input type="checkbox" name="plannedWithTime" value="true" /><span th:text="#{task.plannedWithTime}">Set exact time</span></label>
                     <button class="secondary" type="submit" th:text="#{backlog.schedule}">Schedule</button>
             </form>
             <div class="task-actions">
@@ -211,5 +217,7 @@
     </section>
 </div>
 <script src="/time-tracking.js"></script>
+<script src="/reschedule.js"></script>
+<script src="/planning.js"></script>
 </body>
 </html>

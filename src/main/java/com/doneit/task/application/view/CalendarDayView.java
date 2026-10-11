@@ -8,8 +8,13 @@ public record CalendarDayView(
         LocalDate date,
         boolean currentMonth,
         boolean today,
-        List<CalendarItemView> items
+        List<CalendarItemView> items,
+        PlanningLoad workload
 ) {
+
+    public CalendarDayView(LocalDate date, boolean currentMonth, boolean today, List<CalendarItemView> items) {
+        this(date, currentMonth, today, items, PlanningLoad.empty());
+    }
 
     public CalendarDayView {
         Objects.requireNonNull(date, "date is required");

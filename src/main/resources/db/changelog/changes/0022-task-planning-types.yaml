@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0022-task-planning-types
+      author: codex
+      changes:
+        - addColumn:
+            tableName: tasks
+            columns:
+              - column:
+                  name: planning_type
+                  type: VARCHAR(16)
+                  defaultValue: REQUIRED
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: regular_tasks
+            columns:
+              - column:
+                  name: planning_type
+                  type: VARCHAR(16)
+                  defaultValue: REQUIRED
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: |
+              ALTER TABLE tasks ADD CONSTRAINT chk_task_planning_type CHECK (planning_type IN ('REQUIRED', 'WANTED', 'OPTIONAL'));
+              ALTER TABLE regular_tasks ADD CONSTRAINT chk_regular_planning_type CHECK (planning_type IN ('REQUIRED', 'WANTED', 'OPTIONAL'));

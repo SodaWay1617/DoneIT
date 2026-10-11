@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<form th:fragment="filters" class="view-filters" method="get">
+    <input type="hidden" name="date" th:if="${filterDate != null}" th:value="${filterDate}">
+    <input type="hidden" name="month" th:if="${filterMonth != null}" th:value="${filterMonth}">
+    <label><span th:text="#{common.project}">Project</span>
+        <select name="projectId" onchange="this.form.submit()">
+            <option value="" th:text="#{project.all}">All projects</option>
+            <option th:each="project : ${projects}" th:value="${project.id}" th:selected="${project.id == selectedProjectId}" th:text="${project.name}">Project</option>
+        </select>
+    </label>
+    <label><span th:text="#{planning.title}">Planning</span>
+        <select name="planningType" onchange="this.form.submit()">
+            <option value="" th:text="#{planning.all}">All planning types</option>
+            <option th:each="type : ${planningTypes}" th:value="${type}" th:selected="${type == selectedPlanningType}" th:text="${@labels.planning(type)}">Need to</option>
+        </select>
+    </label>
+</form>
+<div th:fragment="load(load)" class="load-values">
+    <span class="load-value" th:each="type : ${planningTypes}"
+          th:with="minutes=${load.minutes(type)}"
+          th:classappend="${' workload-' + workloadSettings.level(minutes)}"
+          th:attr="data-planning-type=${type},data-minutes=${minutes}"
+          th:text="#{planning.load(${@labels.planning(type)},${minutes / 60},${minutes % 60})}">Need to: 0h 0m</span>
+</div>
+</body>
+</html>

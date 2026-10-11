@@ -1,5 +1,7 @@
 package com.doneit.recurring.domain;
 
+import com.doneit.task.domain.PlanningType;
+
 import com.doneit.task.domain.TaskPriority;
 import com.doneit.task.domain.TaskStatus;
 import java.time.LocalDate;
@@ -27,8 +29,35 @@ public record RegularTask(
         LocalDateTime updatedAt,
         long statusPosition,
         Integer estimateMinutes,
-        int spentMinutes
+        int spentMinutes,
+        PlanningType planningType
 ) {
+    public RegularTask(
+        Long id,
+        Long userId,
+        Long projectId,
+        Long taskNumber,
+        String taskKey,
+        String title,
+        String description,
+        TaskStatus status,
+        TaskPriority priority,
+        RecurrenceType recurrenceType,
+        int repeatInterval,
+        LocalTime occurrenceTime,
+        LocalDate anchorDate,
+        RegularStatus regularStatus,
+        LocalDateTime activatedAt,
+        LocalDateTime finishedAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        long statusPosition,
+        Integer estimateMinutes,
+        int spentMinutes
+    ) {
+        this(id, userId, projectId, taskNumber, taskKey, title, description, status, priority, recurrenceType, repeatInterval, occurrenceTime, anchorDate, regularStatus, activatedAt, finishedAt, createdAt, updatedAt, statusPosition, estimateMinutes, spentMinutes, PlanningType.REQUIRED);
+    }
+
     public RegularTask(Long id,Long userId,Long projectId,Long taskNumber,String taskKey,String title,
                        String description,TaskStatus status,TaskPriority priority,RecurrenceType recurrenceType,
                        LocalTime occurrenceTime,LocalDate anchorDate,RegularStatus regularStatus,
@@ -47,6 +76,7 @@ public record RegularTask(
                 1,occurrenceTime,anchorDate,regularStatus,activatedAt,finishedAt,createdAt,updatedAt,statusPosition,null,0);
     }
     public RegularTask {
+        if (planningType == null) planningType = PlanningType.REQUIRED;
         if (status == TaskStatus.TODO || status == TaskStatus.PAUSED) {
             throw new IllegalArgumentException("TODO and PAUSED are not available for recurring tasks");
         }

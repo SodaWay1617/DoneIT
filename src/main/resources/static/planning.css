@@ -1,0 +1,15 @@
+.task.planning-wanted, .item.planning-wanted { border-style: dashed !important; }
+.task.planning-optional, .item.planning-optional { opacity: .72; }
+.task.planning-optional:hover, .task.planning-optional:focus-within,
+.item.planning-optional:hover, .item.planning-optional:focus { opacity: 1; }
+.view-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 16px 12px; }
+.view-filters label { display: grid; gap: 4px; font-size: .9rem; min-width: 0; }
+.view-filters select { font: inherit; color: inherit; padding: 8px; max-width: 100%; border: 1px solid #d8cfbf; border-radius: 6px; background: white; }
+.load-values { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.load-value { padding: 5px 8px; border: 1px solid; border-radius: 6px; font-size: .85rem; }
+.load-value.workload-green { color: #245c38; border-color: #6c9e7d; background: #eef8f0; }
+.load-value.workload-yellow { color: #685510; border-color: #b49c43; background: #fff9de; }
+.load-value.workload-orange { color: #79400e; border-color: #bd864e; background: #fff1e4; }
+.load-value.workload-red { color: #8b2828; border-color: #b96a6a; background: #fff0f0; }
+.day .load-values { gap: 3px; }
+.day .load-value { font-size: .75rem; padding: 3px 4px; }

@@ -70,9 +70,10 @@
             .day { min-height: auto; }
         }
     </style>
+<link rel="stylesheet" href="/planning.css">
 </head>
 <body>
-<form method='get' class='project-filter'><select name='projectId' onchange='this.form.submit()'><option value='' th:text="#{project.all}">All projects</option><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == selectedProjectId}'>Project</option></select> <a href='/projects' th:text="#{project.manage}">Manage projects</a></form>
+<div th:replace="~{planning :: filters}"></div>
 <div class="shell">
     <section class="hero">
         <div>
@@ -106,15 +107,16 @@
 
         <article class="day" th:each="day : ${calendar.days}" th:classappend="${!day.currentMonth} ? ' outside' : (${day.today} ? ' today' : '')">
             <div class="day-number" th:text="${day.date.dayOfMonth}">1</div>
+            <div th:replace="~{planning :: load(${day.workload})}"></div>
             <div class="items">
                 <a class="item"
                    th:each="item : ${day.items}"
-                   th:classappend="${item.deadlineHighlighted} ? ' deadline' : (${item.taskStatus.name() == 'DONE'} ? ' done' : (${item.taskStatus.name() == 'CLOSED'} ? ' closed' : ''))"
+                   th:classappend="${' planning-' + item.planningType.name().toLowerCase() + (item.deadlineHighlighted ? ' deadline' : (item.taskStatus.name() == 'DONE' ? ' done' : (item.taskStatus.name() == 'CLOSED' ? ' closed' : '')))}"
                    th:href="@{/tasks/{id}/edit(id=${item.taskId})}"
                    th:attr="data-exact-time=${item.exactTime},data-time=${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') : ''}"
                    th:text="${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') + ' ' + item.title : item.title}">09:00 Task</a>
                 <th:block th:each="occ : ${regularCalendar}">
-                    <a class="item" th:if="${occ.date == day.date}" th:classappend="${occ.completed} ? ' done'"
+                    <a class="item" th:if="${occ.date == day.date}" th:classappend="${' planning-' + occ.task.planningType.name().toLowerCase() + (occ.completed ? ' done' : '')}"
                        th:href="@{/recurring/{id}/edit(id=${occ.task.id})}"
                        th:attr="data-exact-time=${occ.task.occurrenceTime != null},data-time=${occ.task.occurrenceTime != null ? occ.task.occurrenceTime : ''}"
                        th:text="${occ.task.occurrenceTime != null ? occ.task.occurrenceTime + ' ' + occ.task.title : occ.task.title}">Recurring task</a>
@@ -136,5 +138,6 @@
         items.forEach(item => container.appendChild(item));
     });
 </script>
+<script src="/planning.js"></script>
 </body>
 </html>

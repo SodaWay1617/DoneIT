@@ -14,7 +14,7 @@ public class RecurringViewAdvice {
  @ModelAttribute public void projections(HttpServletRequest request,Model model){
   String path=request.getRequestURI(); if(!(path.equals("/")||path.equals("/tasks")||path.equals("/backlog")||path.equals("/inbox")||path.equals("/finished")||path.equals("/kanban")||path.equals("/calendar")))return;
   Long project=parseLong(request.getParameter("projectId"));
-  LocalDate date=parseDate(request.getParameter("date"),LocalDate.now());
+  LocalDate date=parseDate(request.getParameter("date"),service.today());
   var regularActive=service.activeFor(date,project);
   model.addAttribute("regularActive",regularActive);
   model.addAttribute("regularEstimateMinutes",regularActive.stream()
@@ -24,7 +24,7 @@ public class RecurringViewAdvice {
   model.addAttribute("regularBacklog",service.backlog(project));
   model.addAttribute("regularFinished",service.finished(project));
   model.addAttribute("regularKanban",service.kanbanFor(date,project));
-  YearMonth month=parseMonth(request.getParameter("month"),YearMonth.now());
+  YearMonth month=parseMonth(request.getParameter("month"),YearMonth.from(service.today()));
   LocalDate first=month.atDay(1),start=first.minusDays(first.getDayOfWeek().getValue()-1);
   model.addAttribute("regularCalendar",service.occurrences(start,start.plusDays(42),project));
   model.addAttribute("regularSelectedDate",date);
