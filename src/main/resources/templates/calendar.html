@@ -82,11 +82,12 @@
             <div class="nav">
                 <a class="pill" th:href="@{/}" th:text="#{nav.list}">List</a>
                 <a class="pill" th:href="@{/kanban}" th:text="#{nav.kanban}">Kanban</a>
-                <a class="pill" th:href="@{/calendar(month=${calendar.monthValue})}" th:text="#{nav.calendar}">Calendar</a>
+                <a class="pill" th:href="@{/calendar(month=${calendar.monthValue})}" th:text="#{nav.calendar}">Calendar</a><a class="ghost" th:href="@{/schedule}" th:text="#{schedule.title}">Schedule</a>
                 <a class="pill" th:href="@{/analytics(month=${calendar.monthValue})}" th:text="#{nav.analytics}">Analytics</a>
                 <a class="ghost" th:href="@{/backlog}" th:text="#{nav.backlog}">Backlog</a>
                 <a class="ghost" th:href="@{/inbox}" th:text="#{nav.inbox}">Inbox</a>
                 <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
+                <a th:replace="~{planning :: projectsLink}"></a>
                 <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
             </div>
         </div>
@@ -107,19 +108,28 @@
 
         <article class="day" th:each="day : ${calendar.days}" th:classappend="${!day.currentMonth} ? ' outside' : (${day.today} ? ' today' : '')">
             <div class="day-number" th:text="${day.date.dayOfMonth}">1</div>
-            <div th:replace="~{planning :: load(${day.workload})}"></div>
+            <th:block th:if="${day.actualWorkload}">
+                <div th:replace="~{planning :: actual(${day.workload})}"></div>
+            </th:block>
+            <th:block th:unless="${day.actualWorkload}">
+                <div th:replace="~{planning :: load(${day.workload})}"></div>
+            </th:block>
             <div class="items">
                 <a class="item"
                    th:each="item : ${day.items}"
                    th:classappend="${' planning-' + item.planningType.name().toLowerCase() + (item.deadlineHighlighted ? ' deadline' : (item.taskStatus.name() == 'DONE' ? ' done' : (item.taskStatus.name() == 'CLOSED' ? ' closed' : '')))}"
                    th:href="@{/tasks/{id}/edit(id=${item.taskId})}"
-                   th:attr="data-exact-time=${item.exactTime},data-time=${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') : ''}"
-                   th:text="${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') + ' ' + item.title : item.title}">09:00 Task</a>
+                   th:attr="data-exact-time=${item.exactTime},data-time=${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') : ''}">
+                    <span th:text="${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') + ' ' + item.title : item.title}">09:00 Task</span>
+                    <span th:replace="~{task-people :: assignees(${taskAssignees[item.taskId]})}"></span>
+                </a>
                 <th:block th:each="occ : ${regularCalendar}">
                     <a class="item" th:if="${occ.date == day.date}" th:classappend="${' planning-' + occ.task.planningType.name().toLowerCase() + (occ.completed ? ' done' : '')}"
                        th:href="@{/recurring/{id}/edit(id=${occ.task.id})}"
-                       th:attr="data-exact-time=${occ.task.occurrenceTime != null},data-time=${occ.task.occurrenceTime != null ? occ.task.occurrenceTime : ''}"
-                       th:text="${occ.task.occurrenceTime != null ? occ.task.occurrenceTime + ' ' + occ.task.title : occ.task.title}">Recurring task</a>
+                       th:attr="data-exact-time=${occ.task.occurrenceTime != null},data-time=${occ.task.occurrenceTime != null ? occ.task.occurrenceTime : ''}">
+                        <span th:text="${occ.task.occurrenceTime != null ? occ.task.occurrenceTime + ' ' + occ.task.title : occ.task.title}">Recurring task</span>
+                        <span th:replace="~{task-people :: assignees(${regularTaskAssignees[occ.task.id]})}"></span>
+                    </a>
                 </th:block>
             </div>
         </article>

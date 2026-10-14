@@ -1,7 +1,7 @@
 (() => {
     const filters = new URLSearchParams(location.search);
     const keys = ['projectId', 'planningType'];
-    const views = new Set(['/', '/tasks', '/kanban', '/calendar', '/backlog', '/inbox', '/finished']);
+    const views = new Set(['/', '/tasks', '/kanban', '/calendar', '/schedule', '/backlog', '/inbox', '/finished']);
     function preserve(target) {
         const url = new URL(target, location.origin);
         keys.forEach(key => {

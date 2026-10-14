@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title th:text="#{schedule.title}">Schedule</title>
+<link rel="stylesheet" href="/schedule.css"><link rel="stylesheet" href="/planning.css">
+</head>
+<body>
+<header class="schedule-header">
+    <div class="schedule-title"><h1 th:text="#{schedule.title}">Schedule</h1><time th:text="${#temporals.format(selectedDate,'dd.MM.yyyy')}">01.01.2026</time></div>
+    <nav class="schedule-nav">
+        <a href="/" th:text="#{nav.today}">Today</a>
+        <a th:href="@{/kanban(date=${selectedDate})}" th:text="#{nav.kanban}">Kanban</a>
+        <a th:href="@{/calendar(month=${#temporals.format(selectedDate,'yyyy-MM')})}" th:text="#{nav.calendar}">Calendar</a>
+        <a th:replace="~{planning :: projectsLink}"></a>
+        <a href="/settings" th:text="#{nav.settings}">Settings</a>
+        <a class="create-task" href="/tasks/new" th:text="#{task.create}">Create task</a>
+    </nav>
+    <div class="schedule-date">
+        <a th:href="@{/schedule(date=${selectedDate.minusDays(1)})}" th:aria-label="#{nav.previousDay}" th:title="#{nav.previousDay}">&larr;</a>
+        <form method="get" action="/schedule"><input type="date" name="date" th:value="${selectedDate}" th:aria-label="#{task.plannedDay}" onchange="this.form.submit()"></form>
+        <a th:href="@{/schedule(date=${selectedDate.plusDays(1)})}" th:aria-label="#{nav.nextDay}" th:title="#{nav.nextDay}">&rarr;</a>
+        <a th:href="@{/schedule}" th:text="#{nav.today}">Today</a>
+    </div>
+</header>
+<div th:replace="~{planning :: filters}"></div>
+<main>
+<div class="schedule-scroll" id="scheduleScroll">
+    <div class="schedule-content">
+        <div class="schedule-head">
+            <div class="time-heading" th:text="#{schedule.time}">Time</div>
+            <div class="person-heading" th:each="column : ${schedule.columns}"
+                 th:classappend="${column.mine} ? ' mine'" th:style="'width:' + ${column.widthPixels} + 'px'"
+                 th:attr="data-person=${column.person.login},data-lanes=${column.lanes}">
+                <div class="person-label"><strong th:text="${column.person.login}">user</strong>
+                    <span th:if="${column.mine}" th:text="#{schedule.you}">You</span>
+                </div>
+            </div>
+        </div>
+        <div class="schedule-body">
+            <div class="time-gutter">
+                <div class="hour-label" th:each="hour : ${#numbers.sequence(0,23)}"
+                     th:style="'top:' + ${hour * 120} + 'px'" th:text="${#numbers.formatInteger(hour,2)} + ':00'">09:00</div>
+            </div>
+            <section class="person-column" th:each="column : ${schedule.columns}"
+                     th:classappend="${column.mine} ? ' mine'" th:style="'width:' + ${column.widthPixels} + 'px'"
+                     th:aria-label="${column.person.login}" th:attr="data-person=${column.person.login}">
+                <a class="schedule-event" th:each="block : ${column.blocks}" th:href="${block.entry.href}"
+                   th:classappend="${' planning-' + block.entry.planningType.name().toLowerCase() + (block.entry.status.name() == 'DONE' ? ' is-done' : '')}"
+                   th:style="'top:' + ${block.topPixels} + 'px; height:' + ${block.heightPixels} + 'px; left:' + ${block.lane * 224 + 5} + 'px'"
+                   th:attr="data-lane=${block.lane},data-compact=${block.compact},data-task-id=${block.entry.id},data-recurring=${block.entry.recurring}"
+                   th:title="${block.entry.timeLabel + ' · ' + block.entry.title + ' · ' + column.person.login}"
+                   th:aria-label="${block.entry.timeLabel + ' ' + block.entry.title + ' ' + column.person.login}">
+                    <time th:text="${block.entry.timeLabel}">09:00 - 10:00</time>
+                    <strong th:text="${block.entry.title}">Task</strong>
+                </a>
+                <div class="now-line" th:if="${selectedDate == today}" th:style="'top:' + ${nowMinute * 2} + 'px'"></div>
+            </section>
+        </div>
+    </div>
+</div>
+<section class="unscheduled" th:if="${!#lists.isEmpty(schedule.unscheduled)}">
+    <h2 th:text="#{schedule.unscheduled}">Without interval</h2>
+    <div class="unscheduled-list"><a th:each="entry : ${schedule.unscheduled}" th:href="${entry.href}">
+        <strong th:text="${entry.title}">Task</strong><span th:text="${entry.peopleLabel}">user</span>
+    </a></div>
+</section>
+</main>
+<script src="/planning.js"></script>
+<script th:inline="javascript">
+    const selected = /*[[${selectedDate.toString()}]]*/ '';
+    const today = /*[[${today.toString()}]]*/ '';
+    const now = /*[[${nowMinute}]]*/ 480;
+    const scroll = document.getElementById('scheduleScroll');
+    scroll.scrollTop = selected === today ? Math.max(0, now * 2 - 160) : 7 * 120;
+</script>
+</body></html>

@@ -84,7 +84,7 @@ public class TaskApplicationService {
                 now,
                 command.status() == TaskStatus.DONE ? now : null,
                 command.status() == TaskStatus.CLOSED ? now : null,
-                command.projectId(), null, null, command.plannedDate(), command.priority(), command.estimateMinutes(), 0, command.planningType()
+                command.projectId(), null, null, command.plannedDate(), command.priority(), command.estimateMinutes(), 0, command.planningType(), command.endTime()
         );
 
         return toView(taskRepository.create(task));
@@ -111,7 +111,7 @@ public class TaskApplicationService {
                 now,
                 null,
                 null,
-                command.projectId(), null, null, null, command.priority(), command.estimateMinutes(), 0, command.planningType()
+                command.projectId(), null, null, null, command.priority(), command.estimateMinutes(), 0, command.planningType(), command.endTime()
         );
 
         return toView(taskRepository.create(task));
@@ -138,7 +138,7 @@ public class TaskApplicationService {
                 closingTime(command.status(), existingTask, now),
                 command.projectId() == null ? existingTask.projectId() : command.projectId(),
                 existingTask.taskNumber(), existingTask.taskKey(), command.backlog() ? null : command.plannedDate(),
-                command.priority(), command.estimateMinutes(), command.spentMinutes(), command.planningType()
+                command.priority(), command.estimateMinutes(), command.spentMinutes(), command.planningType(), command.endTime()
         );
 
         Task savedTask = taskRepository.update(updatedTask);
@@ -313,7 +313,7 @@ public class TaskApplicationService {
                 task.priority(),
                 task.status(),
                 task.estimateMinutes(),
-                task.spentMinutes(), task.planningType()
+                task.spentMinutes(), task.planningType(), task.endTime()
         );
     }
 
@@ -453,7 +453,7 @@ public class TaskApplicationService {
     private Task getTaskOrThrow(Long taskId) {
         Task task = taskRepository.findById(requireTaskId(taskId))
                 .orElseThrow(() -> new TaskNotFoundException(taskId));
-        if (projectService != null && !projectService.canAccess(task.projectId())) throw new TaskNotFoundException(taskId);
+        if (projectService != null) projectService.requireTaskAccess(taskId, false);
         return task;
     }
 

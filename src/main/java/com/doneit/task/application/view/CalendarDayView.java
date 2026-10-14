@@ -9,11 +9,16 @@ public record CalendarDayView(
         boolean currentMonth,
         boolean today,
         List<CalendarItemView> items,
-        PlanningLoad workload
+        PlanningLoad workload,
+        boolean actualWorkload
 ) {
 
     public CalendarDayView(LocalDate date, boolean currentMonth, boolean today, List<CalendarItemView> items) {
-        this(date, currentMonth, today, items, PlanningLoad.empty());
+        this(date, currentMonth, today, items, PlanningLoad.empty(), false);
+    }
+
+    public CalendarDayView(LocalDate date, boolean currentMonth, boolean today, List<CalendarItemView> items, PlanningLoad workload) {
+        this(date, currentMonth, today, items, workload, false);
     }
 
     public CalendarDayView {

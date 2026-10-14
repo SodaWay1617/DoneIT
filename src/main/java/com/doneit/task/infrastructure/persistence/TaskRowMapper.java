@@ -34,7 +34,7 @@ public class TaskRowMapper implements RowMapper<Task> {
                 ,TaskPriority.valueOf(rs.getString("priority"))
                 ,(Integer) rs.getObject("estimate_minutes")
                 ,rs.getInt("spent_minutes")
-                ,PlanningType.valueOf(rs.getString("planning_type"))
+                ,PlanningType.valueOf(rs.getString("planning_type")), rs.getObject("end_time", java.time.LocalTime.class)
         );
     }
 

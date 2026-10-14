@@ -294,13 +294,14 @@
             <div class="nav">
                 <a class="pill" th:classappend="${todayPage} ? ' active'" th:href="@{/}" th:text="#{nav.today}">Today</a>
                 <a class="pill" th:href="@{/kanban(date=${daily.selectedDate})}" th:text="#{nav.kanban}">Kanban</a>
-                <a class="pill" th:href="@{/calendar(month=${#temporals.format(daily.selectedDate, 'yyyy-MM')})}" th:text="#{nav.calendar}">Calendar</a>
+                <a class="pill" th:href="@{/calendar(month=${#temporals.format(daily.selectedDate, 'yyyy-MM')})}" th:text="#{nav.calendar}">Calendar</a><a class="ghost" th:href="@{/schedule(date=${daily.selectedDate})}" th:text="#{schedule.title}">Schedule</a>
                 <a class="pill" th:href="@{/analytics(month=${#temporals.format(daily.selectedDate, 'yyyy-MM')})}" th:text="#{nav.analytics}">Analytics</a>
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.minusDays(1)})}" th:text="#{nav.previousDay}">Previous day</a>
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.plusDays(1)})}" th:text="#{nav.nextDay}">Next day</a>
                 <a class="ghost" th:href="@{/backlog}" th:text="#{nav.backlog}">Backlog</a>
                 <a class="ghost" th:href="@{/inbox}" th:text="#{nav.inbox}">Inbox</a>
                 <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
+                <a th:replace="~{planning :: projectsLink}"></a>
                 <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
             </div>
             <form class="date-picker" method="get" th:action="@{/tasks}">
@@ -354,8 +355,8 @@
                                 <span class="badge status-overdue" th:if="${task.overdue}" th:text="#{task.overdue}">OVERDUE</span>
                                 <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${@labels.priority(task.priority)}">Priority</span>
                             </div>
-                            <h3 class="task-title" th:text="${task.title}">Task title</h3>
-                            <p class="meta" th:if="${taskAssignees[task.id] != null}" th:text="#{assignment.list(${#strings.listJoin(taskAssignees[task.id], ', ')})}">Assignees</p>
+                            <h3 class="task-title" th:text="${task.title}">Task title</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
+
                         </div>
                         <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}" th:text="#{common.edit}">Edit</a>
                     </div>
@@ -403,7 +404,7 @@
                         <span class="badge" th:text="#{task.recurring}">RECURRING</span>
                         <span class="badge" th:text="${@labels.recurrence(task.recurrenceType)}">Every day</span>
                         <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${@labels.priority(task.priority)}">Priority</span>
-                    </div><h3 class="task-title" th:text="${task.title}">Task</h3><p class="meta" th:if="${regularTaskAssignees[task.id] != null}" th:text="#{assignment.list(${#strings.listJoin(regularTaskAssignees[task.id], ', ')})}">Assignees</p></div>
+                    </div><h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span></div>
                     <a class="ghost" th:href="@{/recurring/{id}/edit(id=${task.id})}" th:text="#{common.edit}">Edit</a></div>
                     <p class="meta" th:if="${task.description != null}" th:text="${task.description}">Description</p>
                     <p class="meta" th:if="${task.occurrenceTime != null}" th:text="'At ' + ${task.occurrenceTime}">At 10:00</p>
@@ -435,11 +436,11 @@
                 <div class="stack">
                     <article class="task backlog-task" th:each="task : ${inboxPreview}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
                         <div class="badges"><span class="badge">NEW</span></div>
-                        <h3 class="task-title" th:text="${task.title}">Task</h3>
+                        <h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
                     </article>
                     <article class="task backlog-task" th:each="task : ${regularInbox}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
                         <div class="badges"><span class="badge">NEW</span><span class="badge">RECURRING</span></div>
-                        <h3 class="task-title" th:text="${task.title}">Task</h3>
+                        <h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span>
                     </article>
                 </div>
                 <p class="empty" th:if="${#lists.isEmpty(inboxPreview) and #lists.isEmpty(regularInbox)}">Inbox is empty.</p>
@@ -455,7 +456,7 @@
                                     <span class="badge status-backlog">BACKLOG</span>
                                     <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                                 </div>
-                                <h3 class="task-title" th:text="${task.title}">Backlog task</h3>
+                                <h3 class="task-title" th:text="${task.title}">Backlog task</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
                             </div>
                             <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>
                         </div>
@@ -475,7 +476,7 @@
                         </div>
                     </article>
                 </div>
-                <div class="stack" th:if="!${#lists.isEmpty(regularBacklog)}"><article class="task backlog-task" th:each="task:${regularBacklog}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}"><div class="badges"><span class="badge">BACKLOG</span><span class="badge">RECURRING</span></div><h3 class="task-title" th:text="${task.title}">Task</h3></article></div>
+                <div class="stack" th:if="!${#lists.isEmpty(regularBacklog)}"><article class="task backlog-task" th:each="task:${regularBacklog}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}"><div class="badges"><span class="badge">BACKLOG</span><span class="badge">RECURRING</span></div><h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span></article></div>
                 <p class="empty" th:if="${#lists.isEmpty(backlogPreview) and #lists.isEmpty(regularBacklog)}">Backlog is empty for now.</p>
             </section>
 
@@ -490,7 +491,7 @@
                                     <span class="badge" th:classappend="${task.status.name() == 'DONE'} ? ' status-done' : ' status-closed'" th:text="${task.status}">DONE</span>
                                     <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                                 </div>
-                                <h3 class="task-title" th:text="${task.title}">Completed task</h3>
+                                <h3 class="task-title" th:text="${task.title}">Completed task</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
                             </div>
                         </div>
                         <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
@@ -499,7 +500,7 @@
                 <div class="stack" th:if="!${#lists.isEmpty(regularFinished)}">
                     <article class="task completed-task" th:each="task : ${regularFinished}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
                         <div class="badges"><span class="badge" th:text="${task.status.displayName()}">DONE</span><span class="badge">RECURRING</span></div>
-                        <h3 class="task-title" th:text="${task.title}">Task</h3>
+                        <h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span>
                     </article>
                 </div>
                 <p class="empty" th:if="${#lists.isEmpty(finishedPreview) and #lists.isEmpty(regularFinished)}">Completed and closed tasks will appear here.</p>

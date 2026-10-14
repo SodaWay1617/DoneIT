@@ -21,8 +21,28 @@ public record TaskFormView(
         TaskStatus status,
         Integer estimateMinutes,
         int spentMinutes,
-        PlanningType planningType
+        PlanningType planningType,
+        java.time.LocalTime endTime
 ) {
+    public TaskFormView(
+        Long taskId,
+        String title,
+        String description,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        boolean backlog,
+        boolean editMode,
+        Long projectId,
+        LocalDate plannedDate,
+        TaskPriority priority,
+        TaskStatus status,
+        Integer estimateMinutes,
+        int spentMinutes,
+        PlanningType planningType
+    ) {
+        this(taskId, title, description, plannedForAt, deadlineAt, backlog, editMode, projectId, plannedDate, priority, status, estimateMinutes, spentMinutes, planningType, null);
+    }
+
     public TaskFormView(
         Long taskId,
         String title,

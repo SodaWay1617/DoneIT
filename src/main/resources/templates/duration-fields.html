@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<div th:fragment="estimate" class="estimate-control" data-estimate>
+    <label for="estimateMinutes" th:text="#{timing.estimate}">Estimate</label>
+    <input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}" data-estimate-value>
+    <div class="duration-picker" data-estimate-picker hidden>
+        <label><span th:text="#{timing.hours}">Hours</span><select data-hours th:aria-label="#{timing.hours}">
+            <option value="" th:text="#{timing.none}">Not set</option>
+            <option th:each="n : ${#numbers.sequence(0,168)}" th:value="${n}" th:text="${n}">0</option>
+        </select></label>
+        <label><span th:text="#{timing.minutes}">Minutes</span><select data-minutes th:aria-label="#{timing.minutes}">
+            <option value="" th:text="#{timing.none}">Not set</option>
+            <option th:each="n : ${#numbers.sequence(0,59)}" th:value="${n}" th:text="${n}">0</option>
+        </select></label>
+    </div>
+    <span class="field-error" th:if="${#fields.hasErrors('estimateMinutes')}" th:errors="*{estimateMinutes}">Invalid estimate</span>
+</div>
+<div th:fragment="end" class="end-control" data-end-control>
+    <label class="end-choice"><input type="checkbox" th:field="*{explicitEndTime}" data-end-mode><span th:text="#{timing.explicitEnd}">Set end time</span></label>
+    <label data-end-field><span th:text="#{timing.end}">End time</span><input type="time" th:field="*{endTime}" data-end-value></label>
+    <output data-duration-preview th:attr="data-hours-unit=#{timing.hoursShort},data-minutes-unit=#{timing.minutesShort}"></output>
+    <span class="field-error" th:if="${#fields.hasErrors('validEndTime')}" th:errors="*{validEndTime}">Invalid end time</span>
+</div>
+</body></html>

@@ -20,8 +20,25 @@ public record CreateTaskCommand(
         TaskPriority priority,
         TaskStatus status,
         Integer estimateMinutes,
-        PlanningType planningType
+        PlanningType planningType,
+        java.time.LocalTime endTime
 ) {
+    public CreateTaskCommand(
+        @NotBlank(message = "Task title is required") String title,
+        String description,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        Long projectId,
+        LocalDate plannedDate,
+        boolean backlog,
+        TaskPriority priority,
+        TaskStatus status,
+        Integer estimateMinutes,
+        PlanningType planningType
+    ) {
+        this(title, description, plannedForAt, deadlineAt, projectId, plannedDate, backlog, priority, status, estimateMinutes, planningType, null);
+    }
+
     public CreateTaskCommand(
         @NotBlank(message = "Task title is required") String title,
         String description,
@@ -49,6 +66,8 @@ public record CreateTaskCommand(
     public CreateTaskCommand(String title,String description,LocalDateTime plannedForAt,LocalDateTime deadlineAt,Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority){this(title,description,plannedForAt,deadlineAt,projectId,plannedDate,backlog,priority,backlog?TaskStatus.BACKLOG:TaskStatus.IN_PROGRESS);}
 
     public CreateTaskCommand {
+        com.doneit.task.domain.TaskInterval.validate(plannedForAt == null ? null : plannedForAt.toLocalTime(), endTime);
+        if (endTime != null) estimateMinutes = com.doneit.task.domain.TaskInterval.minutes(plannedForAt.toLocalTime(),endTime);
         if (planningType == null) planningType = PlanningType.REQUIRED;
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Task title is required");

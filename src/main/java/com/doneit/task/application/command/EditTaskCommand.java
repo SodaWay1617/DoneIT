@@ -23,8 +23,27 @@ public record EditTaskCommand(
         TaskStatus status,
         Integer estimateMinutes,
         int spentMinutes,
-        PlanningType planningType
+        PlanningType planningType,
+        java.time.LocalTime endTime
 ) {
+    public EditTaskCommand(
+        @NotNull(message = "Task id is required") Long taskId,
+        @NotBlank(message = "Task title is required") String title,
+        String description,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        Long projectId,
+        LocalDate plannedDate,
+        boolean backlog,
+        TaskPriority priority,
+        TaskStatus status,
+        Integer estimateMinutes,
+        int spentMinutes,
+        PlanningType planningType
+    ) {
+        this(taskId, title, description, plannedForAt, deadlineAt, projectId, plannedDate, backlog, priority, status, estimateMinutes, spentMinutes, planningType, null);
+    }
+
     public EditTaskCommand(
         @NotNull(message = "Task id is required") Long taskId,
         @NotBlank(message = "Task title is required") String title,
@@ -59,6 +78,8 @@ public record EditTaskCommand(
     public EditTaskCommand(Long id,String title,String description,LocalDateTime planned,LocalDateTime deadline,Long projectId,LocalDate plannedDate,boolean backlog,TaskPriority priority){this(id,title,description,planned,deadline,projectId,plannedDate,backlog,priority,backlog?TaskStatus.BACKLOG:null);}
 
     public EditTaskCommand {
+        com.doneit.task.domain.TaskInterval.validate(plannedForAt == null ? null : plannedForAt.toLocalTime(), endTime);
+        if (endTime != null) estimateMinutes = com.doneit.task.domain.TaskInterval.minutes(plannedForAt.toLocalTime(),endTime);
         if (planningType == null) planningType = PlanningType.REQUIRED;
         if (taskId == null) {
             throw new IllegalArgumentException("Task id is required");

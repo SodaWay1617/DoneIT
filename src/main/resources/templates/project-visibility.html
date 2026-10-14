@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<label th:fragment="selector(value)">
+    <span th:text="#{project.visibility}">Task visibility</span>
+    <select name="taskVisibility" required>
+        <option th:each="mode : ${T(com.doneit.project.domain.TaskVisibilityMode).values()}"
+                th:value="${mode}" th:selected="${mode == value}"
+                th:text="${#messages.msg('project.visibility.' + mode.name())}">All project members</option>
+    </select>
+</label>
+</body>
+</html>

@@ -31,6 +31,18 @@ public class RegularTaskForm {
     private LocalDate anchorDate;
     @Min(value = 1, message = "Estimate must be at least one minute")
     private Integer estimateMinutes;
+    private boolean explicitEndTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private java.time.LocalTime endTime;
+    public boolean isExplicitEndTime() { return explicitEndTime; }
+    public void setExplicitEndTime(boolean value) { explicitEndTime = value; }
+    public java.time.LocalTime getEndTime() { return endTime; }
+    public void setEndTime(java.time.LocalTime value) { endTime = value; }
+    @jakarta.validation.constraints.AssertTrue(message = "Choose a start time and a different end time")
+    public boolean isValidEndTime() {
+        if (!explicitEndTime) return true;
+        return occurrenceTime != null && endTime != null && !occurrenceTime.equals(endTime);
+    }
     @Min(value = 0, message = "Spent time cannot be negative")
     private int spentMinutes;
 

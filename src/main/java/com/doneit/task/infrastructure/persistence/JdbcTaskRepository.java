@@ -1,6 +1,7 @@
 package com.doneit.task.infrastructure.persistence;
 
 import com.doneit.task.domain.Task;
+import com.doneit.project.application.TaskVisibility;
 import com.doneit.task.domain.TaskRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -17,7 +18,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String BASE_SELECT = """
             SELECT id, user_id, title, description, status, planned_for_at, deadline_at,
                    created_at, updated_at, completed_at, closed_at,
-                   project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes, planning_type
+                   project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes, planning_type, end_time
             FROM tasks
             """;
 
@@ -25,8 +26,8 @@ public class JdbcTaskRepository implements TaskRepository {
             INSERT INTO tasks (
                 user_id, title, description, status, planned_for_at, deadline_at,
                 created_at, updated_at, completed_at, closed_at,
-                project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes, planning_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                project_id, task_number, task_key, planned_date, priority, estimate_minutes, spent_minutes, planning_type, end_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             """;
 
@@ -43,6 +44,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 estimate_minutes = ?,
                 spent_minutes = ?,
                 planning_type = ?,
+                end_time = ?,
                 updated_at = ?,
                 completed_at = ?,
                 closed_at = ?
@@ -52,7 +54,7 @@ public class JdbcTaskRepository implements TaskRepository {
     private static final String FIND_BY_ID_SQL = BASE_SELECT + "WHERE id = ?";
 
     private static final String FIND_ACTIVE_FOR_DATE_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND (
                   (planned_for_at IS NULL AND planned_date IS NULL)
@@ -65,10 +67,10 @@ public class JdbcTaskRepository implements TaskRepository {
                      CASE status WHEN 'IN_PROGRESS' THEN 0 WHEN 'TODO' THEN 1 WHEN 'DOCUMENTATION' THEN 2
                          WHEN 'SPECIFICATION' THEN 3 ELSE 4 END,
                      LOWER(title), id
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String FIND_ACTIVE_DUE_BY_DATE_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND (
                   (planned_for_at IS NULL AND planned_date IS NULL)
@@ -81,37 +83,37 @@ public class JdbcTaskRepository implements TaskRepository {
                      CASE status WHEN 'IN_PROGRESS' THEN 0 WHEN 'TODO' THEN 1 WHEN 'DOCUMENTATION' THEN 2
                          WHEN 'SPECIFICATION' THEN 3 ELSE 4 END,
                      LOWER(title), id
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String FIND_BACKLOG_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND status IN ('BACKLOG', 'PAUSED')
             ORDER BY CASE priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
                      updated_at DESC, id DESC
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String FIND_INBOX_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND status = 'NEW'
             ORDER BY CASE priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END DESC,
                      updated_at DESC, id DESC
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String FIND_COMPLETED_OR_CLOSED_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND status IN ('DONE', 'CLOSED')
             ORDER BY updated_at DESC, id DESC
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String FIND_COMPLETED_OR_CLOSED_FOR_DATE_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND status IN ('DONE', 'CLOSED')
               AND ((planned_for_at >= ? AND planned_for_at < ?) OR planned_date = ?)
             ORDER BY planned_for_at, updated_at DESC, id
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String FIND_FOR_CALENDAR_RANGE_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND (
                   (status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION') AND (
                       (planned_for_at IS NOT NULL AND planned_for_at >= ? AND planned_for_at < ?)
@@ -123,10 +125,10 @@ public class JdbcTaskRepository implements TaskRepository {
                   OR (status = 'CLOSED' AND closed_at >= ? AND closed_at < ?)
               )
             ORDER BY COALESCE(completed_at, closed_at, planned_for_at, deadline_at), id
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String FIND_FOR_KANBAN_SQL = BASE_SELECT + """
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND (
                   status = 'BACKLOG'
                   OR (status NOT IN ('DONE', 'CLOSED') AND (
@@ -145,7 +147,7 @@ public class JdbcTaskRepository implements TaskRepository {
                          WHEN 'DOCUMENTATION' THEN 6 WHEN 'DONE' THEN 7 ELSE 8
                      END,
                      status_position, id
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false));
 
     private static final String MARK_DONE_SQL = """
             UPDATE tasks
@@ -172,6 +174,8 @@ public class JdbcTaskRepository implements TaskRepository {
             SET status = CASE WHEN status IN ('NEW', 'BACKLOG') THEN 'TODO' ELSE status END,
                 planned_for_at = ?,
                 planned_date = ?,
+                end_time = CASE WHEN CAST(? AS timestamp) IS NULL OR planned_for_at IS NULL THEN NULL
+                    ELSE end_time + (CAST(? AS time) - CAST(planned_for_at AS time)) END,
                 updated_at = ?
             WHERE id = ?
             """;
@@ -181,6 +185,7 @@ public class JdbcTaskRepository implements TaskRepository {
             SET status = 'BACKLOG',
                 planned_for_at = NULL,
                 planned_date = NULL,
+                end_time = NULL,
                 updated_at = ?
             WHERE id = ?
             """;
@@ -190,22 +195,22 @@ public class JdbcTaskRepository implements TaskRepository {
             SET planned_for_at = planned_for_at + INTERVAL '1 day',
                 planned_date = planned_date + 1,
                 updated_at = ?
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND planning_type <> 'OPTIONAL'
               AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false, true));
 
     private static final String BULK_MOVE_OVERDUE_TO_DATE_SQL = """
             UPDATE tasks
             SET planned_for_at = CAST(? AS date) + CAST(planned_for_at AS time),
                 planned_date = CASE WHEN planned_date IS NULL THEN NULL ELSE CAST(? AS date) END,
                 updated_at = ?
-            WHERE EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=tasks.project_id AND pm.user_id=?)
+            WHERE %s
               AND planning_type <> 'OPTIONAL'
               AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
-            """;
+            """.formatted(TaskVisibility.memberTasks("tasks", false, true));
 
     private final JdbcTemplate jdbcTemplate;
     private final TaskRowMapper taskRowMapper;
@@ -243,6 +248,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 ,task.estimateMinutes()
                 ,task.spentMinutes()
                 ,task.planningType().name()
+                ,task.endTime()
         );
         return findById(Objects.requireNonNull(id)).orElseThrow();
     }
@@ -261,7 +267,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.priority().name(),
                 task.estimateMinutes(),
                 task.spentMinutes(),
-                task.planningType().name(),
+                task.planningType().name(), task.endTime(),
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(),
@@ -338,6 +344,7 @@ public class JdbcTaskRepository implements TaskRepository {
                     SET status = ?,
                         planned_for_at = CASE WHEN ? = 'BACKLOG' THEN NULL ELSE planned_for_at END,
                         planned_date = CASE WHEN ? = 'BACKLOG' THEN NULL ELSE planned_date END,
+                        end_time = CASE WHEN ? = 'BACKLOG' THEN NULL ELSE end_time END,
                         completed_at = CASE WHEN ? = 'DONE' THEN COALESCE(completed_at, ?) ELSE NULL END,
                         closed_at = CASE WHEN ? = 'CLOSED' THEN COALESCE(closed_at, ?) ELSE NULL END,
                         updated_at = ?
@@ -346,7 +353,7 @@ public class JdbcTaskRepository implements TaskRepository {
                           SELECT 1 FROM project_members pm
                           WHERE pm.project_id = tasks.project_id AND pm.user_id = ?
                       )
-                    """, status.name(), status.name(), status.name(), status.name(), updatedAt, status.name(), updatedAt,
+                    """, status.name(), status.name(), status.name(), status.name(), status.name(), updatedAt, status.name(), updatedAt,
                     updatedAt, taskId, userId);
         }
         for (int index = 0; index < orderedTaskIds.size(); index++) {
@@ -399,7 +406,7 @@ public class JdbcTaskRepository implements TaskRepository {
 
     @Override
     public Optional<Task> reschedule(Long taskId, LocalDateTime plannedForAt, LocalDateTime updatedAt) {
-        int updated = jdbcTemplate.update(RESCHEDULE_SQL, plannedForAt, null, updatedAt, taskId);
+        int updated = jdbcTemplate.update(RESCHEDULE_SQL, plannedForAt, null, plannedForAt, plannedForAt, updatedAt, taskId);
         if (updated == 0) {
             return Optional.empty();
         }
@@ -417,7 +424,7 @@ public class JdbcTaskRepository implements TaskRepository {
 
     @Override
     public Optional<Task> rescheduleOnDate(Long taskId, LocalDate plannedDate, LocalDateTime updatedAt) {
-        int updated = jdbcTemplate.update(RESCHEDULE_SQL, null, plannedDate, updatedAt, taskId);
+        int updated = jdbcTemplate.update(RESCHEDULE_SQL, null, plannedDate, null, null, updatedAt, taskId);
         return updated == 0 ? Optional.empty() : findById(taskId);
     }
 

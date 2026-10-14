@@ -30,8 +30,36 @@ public record RegularTask(
         long statusPosition,
         Integer estimateMinutes,
         int spentMinutes,
-        PlanningType planningType
+        PlanningType planningType,
+        java.time.LocalTime endTime
 ) {
+    public RegularTask(
+        Long id,
+        Long userId,
+        Long projectId,
+        Long taskNumber,
+        String taskKey,
+        String title,
+        String description,
+        TaskStatus status,
+        TaskPriority priority,
+        RecurrenceType recurrenceType,
+        int repeatInterval,
+        LocalTime occurrenceTime,
+        LocalDate anchorDate,
+        RegularStatus regularStatus,
+        LocalDateTime activatedAt,
+        LocalDateTime finishedAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        long statusPosition,
+        Integer estimateMinutes,
+        int spentMinutes,
+        PlanningType planningType
+    ) {
+        this(id, userId, projectId, taskNumber, taskKey, title, description, status, priority, recurrenceType, repeatInterval, occurrenceTime, anchorDate, regularStatus, activatedAt, finishedAt, createdAt, updatedAt, statusPosition, estimateMinutes, spentMinutes, planningType, null);
+    }
+
     public RegularTask(
         Long id,
         Long userId,

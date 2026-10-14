@@ -43,3 +43,7 @@ databaseChangeLog:
       file: db/changelog/changes/0021-regular-task-interval.yaml
   - include:
       file: db/changelog/changes/0022-task-planning-types.yaml
+  - include:
+      file: db/changelog/changes/0023-project-task-visibility.yaml
+  - include:
+      file: db/changelog/changes/0024-task-end-times.yaml

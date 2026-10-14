@@ -58,14 +58,10 @@ public class TaskCommentService {
     }
 
     private void requireTaskAccess(Long id) {
-        Long projectId = db.query("SELECT project_id FROM tasks WHERE id=?", (r,n)->r.getLong(1), id)
-                .stream().findFirst().orElseThrow();
-        projects.get(projectId);
+        projects.requireTaskAccess(id, false);
     }
 
     private void requireRegularTaskAccess(Long id) {
-        Long projectId = db.query("SELECT project_id FROM regular_tasks WHERE id=?", (r,n)->r.getLong(1), id)
-                .stream().findFirst().orElseThrow();
-        projects.get(projectId);
+        projects.requireTaskAccess(id, true);
     }
 }

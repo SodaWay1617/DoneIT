@@ -1,0 +1,8 @@
+.estimate-control, .end-control { display: grid; gap: 8px; }
+.duration-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.duration-picker label, [data-end-field] { display: grid; gap: 6px; min-width: 0; }
+.duration-picker select { width: 100%; min-width: 0; font: inherit; color: inherit; padding: 10px; border: 1px solid #d8cfbf; border-radius: 6px; background: white; }
+.end-choice { display: flex !important; align-items: center; gap: 8px; }
+.end-choice input { width: auto; margin: 0; padding: 0; }
+[data-duration-preview] { font-size: .85rem; color: #526b62; }
+[hidden] { display: none !important; }

@@ -42,6 +42,19 @@ public class TaskUpsertForm {
     private TaskStatus status = TaskStatus.NEW;
     @Min(value = 1, message = "Estimate must be at least one minute")
     private Integer estimateMinutes;
+    private boolean explicitEndTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private java.time.LocalTime endTime;
+    public boolean isExplicitEndTime() { return explicitEndTime; }
+    public void setExplicitEndTime(boolean value) { explicitEndTime = value; }
+    public java.time.LocalTime getEndTime() { return endTime; }
+    public void setEndTime(java.time.LocalTime value) { endTime = value; }
+    @jakarta.validation.constraints.AssertTrue(message = "Choose a start time and a different end time")
+    public boolean isValidEndTime() {
+        if (!explicitEndTime) return true;
+        if (withoutPlannedDate || !plannedWithTime || status == TaskStatus.NEW || status == TaskStatus.BACKLOG || status == TaskStatus.PAUSED) return true;
+        return plannedForAt != null && endTime != null && !plannedForAt.toLocalTime().equals(endTime);
+    }
     @Min(value = 0, message = "Spent time cannot be negative")
     private int spentMinutes;
 
@@ -69,6 +82,8 @@ public class TaskUpsertForm {
         form.setStatus(taskFormView.status());
         form.setEstimateMinutes(taskFormView.estimateMinutes());
         form.setSpentMinutes(taskFormView.spentMinutes());
+        form.setEndTime(taskFormView.endTime());
+        form.setExplicitEndTime(taskFormView.endTime() != null);
         return form;
     }
 

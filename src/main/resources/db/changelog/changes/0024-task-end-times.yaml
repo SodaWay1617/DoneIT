@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0024-task-end-times
+      author: codex
+      changes:
+        - addColumn:
+            tableName: tasks
+            columns:
+              - column:
+                  name: end_time
+                  type: TIME
+        - addColumn:
+            tableName: regular_tasks
+            columns:
+              - column:
+                  name: end_time
+                  type: TIME

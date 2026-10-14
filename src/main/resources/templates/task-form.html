@@ -111,11 +111,12 @@
         .comment p { margin-bottom: 0; white-space: pre-wrap; }
         [hidden] { display: none !important; }
     </style>
-</head>
+<link rel="stylesheet" href="/duration-fields.css"></head>
 <body>
 <div style="width:min(760px,calc(100% - 24px));margin:14px auto 0"><a class="ghost" th:href="@{/recurring/new}" th:text="#{form.switchRecurring}">Switch to recurring task</a></div>
 <div class="shell">
     <h1 th:text="${form.editMode} ? #{task.editTitle} : #{task.createTitle}">Create Task</h1>
+    <p th:replace="~{task-people :: author}"></p>
     <p th:text="'Signed in as ' + ${username}">Signed in as doneit</p>
 
     <div class="hint">
@@ -151,12 +152,7 @@
             </select>
         </label>
         <label><span th:text="#{planning.title}">Planning</span><select th:field="*{planningType}"><option th:each="type : ${T(com.doneit.task.domain.PlanningType).values()}" th:value="${type}" th:text="${@labels.planning(type)}">Need to</option></select></label>
-<label>
-            <span th:text="#{task.estimateMinutes}">Estimate, minutes</span>
-            <input type="number" min="1" inputmode="numeric" th:field="*{estimateMinutes}"
-                   th:classappend="${#fields.hasErrors('estimateMinutes')} ? ' field-invalid'" placeholder="Not estimated" />
-            <span class="field-error" th:if="${#fields.hasErrors('estimateMinutes')}" th:errors="*{estimateMinutes}">Estimate error</span>
-        </label>
+<div th:replace="~{duration-fields :: estimate}"></div>
         <label th:if="*{editMode}">
             <span th:text="#{task.totalSpent}">Total spent, minutes</span>
             <input type="number" min="0" inputmode="numeric" th:field="*{spentMinutes}"
@@ -191,6 +187,7 @@
                 <span class="field-error" th:if="${#fields.hasErrors('plannedForAt')}" th:errors="*{plannedForAt}">Planned time error</span>
             </label>
         </div>
+        <div th:replace="~{duration-fields :: end}"></div>
         <label id="deadlineField">
             <span th:text="#{task.deadline('')}">Deadline</span>
             <input type="datetime-local" th:field="*{deadlineAt}" th:classappend="${#fields.hasErrors('deadlineAt')} ? ' field-invalid'" />
@@ -290,5 +287,6 @@
     plannedWithTime.addEventListener('change', updateDateFields);
     updateDateFields();
 </script>
+<script src="/duration-fields.js"></script>
 </body>
 </html>

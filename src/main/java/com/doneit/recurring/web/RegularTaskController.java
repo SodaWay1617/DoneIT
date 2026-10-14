@@ -27,10 +27,10 @@ public class RegularTaskController {
   flash.addFlashAttribute("flashMessage","Recurring task created.");return "redirect:"+redirect(f.getStatus());
  }
  @GetMapping("/recurring/{id}/edit") public String edit(@PathVariable Long id,Model m){
-  if(assignments!=null){var a=assignments.assignmentForRegularTask(id);m.addAttribute("assignmentMembers",a.members());m.addAttribute("assignedUserIds",a.assignedUserIds());}
   return page(m,service.form(id),"Edit recurring task","/recurring/"+id);
  }
  @PostMapping("/recurring/{id}") public String edit(@PathVariable Long id,@Valid @ModelAttribute("form") RegularTaskForm f,BindingResult errors,Model m,RedirectAttributes flash){
+  f.setId(id);
   if(errors.hasErrors())return page(m,f,"Edit recurring task","/recurring/"+id);
   try{service.update(id,f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Edit recurring task","/recurring/"+id);}
   flash.addFlashAttribute("flashMessage","Recurring task updated.");return "redirect:"+redirect(f.getStatus());
@@ -45,6 +45,7 @@ public class RegularTaskController {
  }
  @PostMapping("/recurring/{id}/track-time") public String track(@PathVariable Long id,@RequestParam int minutes,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){service.track(id,date,minutes);flash.addFlashAttribute("flashMessage","Time tracked.");return "redirect:"+(redirectTo.startsWith("/")&&!redirectTo.startsWith("//")?redirectTo:"/");}
  private String page(Model m,RegularTaskForm f,String title,String action){
+  if(assignments!=null&&f.getId()!=null){var a=assignments.assignmentForRegularTask(f.getId());m.addAttribute("assignmentMembers",a.members());m.addAttribute("assignedUserIds",a.assignedUserIds());m.addAttribute("taskAuthorLogin",a.authorLogin());}
   m.addAttribute("form",f);m.addAttribute("pageTitle",title);m.addAttribute("formAction",action);m.addAttribute("projects",projects.list());
   m.addAttribute("statuses",new TaskStatus[]{TaskStatus.NEW,TaskStatus.BACKLOG,TaskStatus.SPECIFICATION,TaskStatus.IN_PROGRESS,TaskStatus.DOCUMENTATION,TaskStatus.DONE,TaskStatus.CLOSED});
   m.addAttribute("priorities",TaskPriority.values());m.addAttribute("recurrences",RecurrenceType.values());return "recurring-form";

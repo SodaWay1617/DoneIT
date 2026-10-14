@@ -25,8 +25,33 @@ public record Task(
         TaskPriority priority,
         Integer estimateMinutes,
         int spentMinutes,
-        PlanningType planningType
+        PlanningType planningType,
+        java.time.LocalTime endTime
 ) {
+    public Task(
+        Long id,
+        Long userId,
+        String title,
+        String description,
+        TaskStatus status,
+        LocalDateTime plannedForAt,
+        LocalDateTime deadlineAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        LocalDateTime completedAt,
+        LocalDateTime closedAt,
+        Long projectId,
+        Long taskNumber,
+        String taskKey,
+        LocalDate plannedDate,
+        TaskPriority priority,
+        Integer estimateMinutes,
+        int spentMinutes,
+        PlanningType planningType
+    ) {
+        this(id, userId, title, description, status, plannedForAt, deadlineAt, createdAt, updatedAt, completedAt, closedAt, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, planningType, null);
+    }
+
     public Task(
         Long id,
         Long userId,
@@ -150,7 +175,7 @@ public record Task(
                 createdAt,
                 transitionAt,
                 transitionAt,
-                null, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, planningType
+                null, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, planningType, endTime
         );
     }
 
@@ -168,12 +193,14 @@ public record Task(
                 createdAt,
                 transitionAt,
                 null,
-                transitionAt, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, planningType
+                transitionAt, projectId, taskNumber, taskKey, plannedDate, priority, estimateMinutes, spentMinutes, planningType, endTime
         );
     }
 
     public Task rescheduleTo(LocalDateTime plannedForAt, LocalDateTime updatedAt) {
         Objects.requireNonNull(plannedForAt, "plannedForAt is required when rescheduling a dated task");
+        java.time.LocalTime shiftedEnd = endTime == null ? null : plannedForAt.toLocalTime()
+                .plusMinutes(TaskInterval.minutes(this.plannedForAt.toLocalTime(),endTime));
         LocalDateTime changedAt = requireTransitionTime(updatedAt, "updatedAt");
         return new Task(
                 id,
@@ -186,7 +213,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes, planningType
+                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes, planningType, shiftedEnd
         );
     }
 
@@ -203,7 +230,7 @@ public record Task(
                 createdAt,
                 changedAt,
                 completedAt,
-                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes, planningType
+                closedAt, projectId, taskNumber, taskKey, null, priority, estimateMinutes, spentMinutes, planningType, null
         );
     }
 

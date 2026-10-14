@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0023-project-task-visibility
+      author: codex
+      changes:
+        - addColumn:
+            tableName: projects
+            columns:
+              - column:
+                  name: task_visibility
+                  type: VARCHAR(32)
+                  defaultValue: ALL_MEMBERS
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: |
+              ALTER TABLE projects ADD CONSTRAINT chk_project_task_visibility CHECK (task_visibility IN ('ALL_MEMBERS', 'AUTHOR_AND_ASSIGNEES'));

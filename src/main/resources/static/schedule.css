@@ -1,0 +1,43 @@
+* { box-sizing: border-box; }
+body { margin: 0; color: #253833; background: #f5f7f5; font: 16px system-ui,sans-serif; letter-spacing: 0; }
+.schedule-header { padding: 18px 24px; background: white; border-bottom: 1px solid #d9e3de; }
+.schedule-title, .schedule-nav, .schedule-date { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.schedule-title h1 { font-size: 24px; margin: 0; }
+.schedule-title time { color: #61736b; }
+.schedule-nav { margin-top: 14px; }
+.schedule-nav a, .schedule-date a { color: #345e52; text-decoration: none; padding: 8px 12px; border: 1px solid #cbdad2; border-radius: 6px; background: white; }
+.schedule-nav a:hover, .schedule-date a:hover { background: #edf6f1; }
+.schedule-nav .create-task { background: #276c59; color: white; border-color: #276c59; }
+.schedule-date { margin-top: 14px; }
+.schedule-date form { margin: 0; }
+.schedule-date input { font: inherit; padding: 8px; border: 1px solid #cbdad2; border-radius: 6px; }
+.schedule-scroll { overflow: auto; max-height: calc(100dvh - 260px); min-height: 320px; border-top: 1px solid #cbdad2; border-bottom: 1px solid #cbdad2; background: white; }
+.schedule-content { width: max-content; min-width: 100%; }
+.schedule-head { display: flex; position: sticky; top: 0; z-index: 5; background: #f4f8f5; height: 52px; border-bottom: 1px solid #cbdad2; }
+.time-heading { width: 64px; flex-shrink: 0; position: sticky; left: 0; background: #f4f8f5; z-index: 7; font-size: 12px; padding: 16px 8px; }
+.person-heading { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-right: 1px solid #cbdad2; overflow-wrap: anywhere; }
+.person-heading span { font-size: 12px; color: #426d5c; }
+.person-label { position: sticky; left: 78px; display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 90px); }
+.person-heading.mine { background: #e7f2ec; }
+.schedule-body { display: flex; position: relative; }
+.time-gutter { width: 64px; flex-shrink: 0; height: 2880px; position: sticky; left: 0; z-index: 4; background: #f7faf8; border-right: 1px solid #cbdad2; }
+.hour-label { position: absolute; left: 8px; font-size: 12px; color: #64766d; padding-top: 3px; }
+.person-column { position: relative; flex-shrink: 0; height: 2880px; border-right: 1px solid #cbdad2; background: repeating-linear-gradient(to bottom,transparent 0,transparent 59px,#edf2ef 59px,#edf2ef 60px,transparent 60px,transparent 119px,#cfddd5 119px,#cfddd5 120px); }
+.person-column.mine { background-color: #fcfefc; }
+.schedule-event { position: absolute; width: 214px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; padding: 5px 8px; color: #244e3d; text-decoration: none; border: 1px solid #81ab98; border-left: 3px solid #4e8a6c; border-radius: 5px; background: #e8f3ec; }
+.person-column:not(.mine) .schedule-event { background: #edf0fa; border-color: #9aa9d0; color: #394c7f; }
+.schedule-event time { font-size: 12px; white-space: nowrap; }
+.schedule-event strong { font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.schedule-event[data-compact=true] { padding: 0 6px; }
+.schedule-event[data-compact=true] strong { display: none; }
+.schedule-event.is-done { opacity: .65; }
+.schedule-event.planning-wanted { border-style: dashed; }
+.schedule-event.planning-optional { opacity: .72; }
+.schedule-event:hover, .schedule-event:focus-visible { filter: brightness(.96); outline: 2px solid #426d5c; outline-offset: -2px; opacity: 1; z-index: 2; }
+.now-line { position: absolute; left: 0; right: 0; border-top: 2px solid #bc4e58; pointer-events: none; z-index: 3; }
+.unscheduled { padding: 20px 24px; }
+.unscheduled h2 { font-size: 18px; margin: 0 0 12px; }
+.unscheduled-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.unscheduled-list a { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid #cbdad2; border-radius: 6px; background: white; color: inherit; text-decoration: none; max-width: 300px; overflow-wrap: anywhere; }
+.unscheduled-list span { font-size: 12px; color: #61736b; }
+@media(max-width:600px) { .schedule-header { padding: 14px 12px; } .schedule-scroll { max-height: 65dvh; } }

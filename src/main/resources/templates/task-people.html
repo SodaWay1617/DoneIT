@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<span th:fragment="assignees(names)" class="task-assignees"
+      th:if="${names != null and !#lists.isEmpty(names)}"
+      th:attr="data-assignees=${#strings.listJoin(names, ', ')}"
+      th:aria-label="#{assignment.list(${#strings.listJoin(names, ', ')})}"
+      th:text="${#strings.listJoin(names, ', ')}">katya</span>
+<p th:fragment="author" class="task-author" th:if="${taskAuthorLogin != null}">
+    <span th:text="#{task.author}">Author</span>: <strong data-task-author th:text="${taskAuthorLogin}">owner</strong>
+</p>
+</body>
+</html>

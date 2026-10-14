@@ -153,7 +153,8 @@
             <a class="ghost" th:href="@{/inbox}" th:text="#{nav.inbox}">Inbox</a>
             <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
             <a class="ghost" th:href="@{/kanban}" th:text="#{nav.kanban}">Kanban</a>
-            <a class="ghost" th:href="@{/calendar}" th:text="#{nav.calendar}">Calendar</a>
+            <a class="ghost" th:href="@{/calendar}" th:text="#{nav.calendar}">Calendar</a><a class="ghost" th:href="@{/schedule}" th:text="#{schedule.title}">Schedule</a>
+            <a th:replace="~{planning :: projectsLink}"></a>
             <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
             <a class="solid" th:href="@{/tasks/new}" th:text="#{task.create}">Create task</a>
             <a class="ghost" th:href="@{/recurring/new}" th:text="#{task.createRecurring}">Create recurring</a>

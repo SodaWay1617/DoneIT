@@ -199,7 +199,7 @@ public class HomeController {
                 plannedForAt,
                 withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
                 plannedDate, backlog, form.getPriority(), form.getStatus(),
-                form.getEstimateMinutes(), form.getPlanningType()
+                form.getEstimateMinutes(), form.getPlanningType(), plannedForAt != null && form.isExplicitEndTime() ? form.getEndTime() : null
         );
 
         if (backlog) {
@@ -222,11 +222,6 @@ public class HomeController {
     @GetMapping("/tasks/{taskId}/edit")
     public String editTaskPage(@PathVariable Long taskId, Model model, Principal principal) {
         populateTaskFormModel(model, principal, TaskUpsertForm.from(taskApplicationService.getTaskForEdit(taskId)));
-        if (taskAssignments != null) {
-            var assignment = taskAssignments.assignmentForTask(taskId);
-            model.addAttribute("assignmentMembers", assignment.members());
-            model.addAttribute("assignedUserIds", assignment.assignedUserIds());
-        }
         if (subtasks != null) {
             model.addAttribute("subtasks", subtasks.summary(taskId));
             model.addAttribute("parentTask", subtasks.parentOf(taskId));
@@ -267,7 +262,7 @@ public class HomeController {
                 plannedForAt,
                 withoutDeadline ? null : form.getDeadlineAt(), form.getProjectId(),
                 plannedDate, backlog, form.getPriority(), form.getStatus(),
-                form.getEstimateMinutes(), form.getSpentMinutes(), form.getPlanningType()
+                form.getEstimateMinutes(), form.getSpentMinutes(), form.getPlanningType(), plannedForAt != null && form.isExplicitEndTime() ? form.getEndTime() : null
         );
         taskApplicationService.editTask(command);
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
@@ -392,6 +387,12 @@ public class HomeController {
     private void populateTaskFormModel(Model model, Principal principal, TaskUpsertForm form) {
         model.addAttribute("username", principal.getName());
         model.addAttribute("form", form);
+        if (taskAssignments != null && form.isEditMode() && form.getTaskId() != null) {
+            var assignment = taskAssignments.assignmentForTask(form.getTaskId());
+            model.addAttribute("assignmentMembers", assignment.members());
+            model.addAttribute("assignedUserIds", assignment.assignedUserIds());
+            model.addAttribute("taskAuthorLogin", assignment.authorLogin());
+        }
         if (projectService != null) model.addAttribute(\u0022projects\u0022, projectService.list());
     }
 

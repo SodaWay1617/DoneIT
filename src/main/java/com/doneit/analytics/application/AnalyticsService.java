@@ -1,6 +1,7 @@
 package com.doneit.analytics.application;
 
 import com.doneit.project.application.ProjectService;
+import com.doneit.project.application.TaskVisibility;
 import com.doneit.user.application.AnalyticsSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDate;
@@ -18,25 +19,25 @@ public class AnalyticsService {
               SELECT r.id,TRUE,r.title,p.id,p.name,e.minutes
               FROM regular_task_time_entries e JOIN regular_tasks r ON r.id=e.regular_task_id
               JOIN projects p ON p.id=r.project_id JOIN project_members pm ON pm.project_id=p.id
-              WHERE pm.user_id=? AND e.user_id=? AND e.entry_date>=? AND e.entry_date<?
+              WHERE pm.user_id=? AND e.user_id=? AND e.entry_date>=? AND e.entry_date<? AND %s
             )
-            """;
+            """.formatted(TaskVisibility.visibleTo("r", "pm.user_id", true));
     private static final String SEPARATE_ENTRIES = """
             WITH entries AS (
               SELECT t.id task_id,FALSE recurring,t.title,p.id project_id,p.name project_name,e.minutes
               FROM task_time_entries e JOIN tasks t ON t.id=e.task_id
               JOIN projects p ON p.id=t.project_id JOIN project_members pm ON pm.project_id=p.id
-              WHERE pm.user_id=? AND e.user_id=? AND e.entry_date>=? AND e.entry_date<?
-            """ + REGULAR_ENTRIES;
+              WHERE pm.user_id=? AND e.user_id=? AND e.entry_date>=? AND e.entry_date<? AND %s
+            """.formatted(TaskVisibility.visibleTo("t", "pm.user_id", false)) + REGULAR_ENTRIES;
     private static final String ROLLED_UP_ENTRIES = """
             WITH entries AS (
               SELECT COALESCE(parent.id,t.id) task_id,FALSE recurring,
                      COALESCE(parent.title,t.title) title,p.id project_id,p.name project_name,e.minutes
               FROM task_time_entries e JOIN tasks t ON t.id=e.task_id
-              LEFT JOIN tasks parent ON parent.id=t.parent_task_id
               JOIN projects p ON p.id=t.project_id JOIN project_members pm ON pm.project_id=p.id
-              WHERE pm.user_id=? AND e.user_id=? AND e.entry_date>=? AND e.entry_date<?
-            """ + REGULAR_ENTRIES;
+              LEFT JOIN tasks parent ON parent.id=t.parent_task_id AND %s
+              WHERE pm.user_id=? AND e.user_id=? AND e.entry_date>=? AND e.entry_date<? AND %s
+            """.formatted(TaskVisibility.visibleTo("parent", "pm.user_id", false), TaskVisibility.visibleTo("t", "pm.user_id", false)) + REGULAR_ENTRIES;
     private final JdbcTemplate db;
     private final ProjectService projects;
     private final AnalyticsSettingsService settings;

@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class TaskAssignmentViewAdvice {
     private final TaskAssignmentService assignments;
     public TaskAssignmentViewAdvice(TaskAssignmentService assignments) { this.assignments = assignments; }
-    @ModelAttribute("taskAssignees") public Map<Long,List<String>> tasks(Principal p) { return p == null ? Map.of() : assignments.visibleTaskAssignees(); }
-    @ModelAttribute("regularTaskAssignees") public Map<Long,List<String>> regular(Principal p) { return p == null ? Map.of() : assignments.visibleRegularTaskAssignees(); }
+    @ModelAttribute("taskAssignees") public Map<Long,List<String>> tasks(Principal p) { return p == null ? Map.of() : assignments.taskAssigneeLabels(); }
+    @ModelAttribute("regularTaskAssignees") public Map<Long,List<String>> regular(Principal p) { return p == null ? Map.of() : assignments.regularTaskAssigneeLabels(); }
 }
