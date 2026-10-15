@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title th:text="#{workload.analytics.title}">Workload analytics</title>
+<link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css">
+</head><body><main class="analytics-shell">
+<header class="analytics-header"><h1 th:text="#{workload.analytics.title}">Workload analytics</h1>
+<nav class="analytics-nav"><a href="/" th:text="#{nav.today}">Today</a><a href="/analytics" th:text="#{analytics.planFactTitle}">Plan / Fact</a><a href="/settings" th:text="#{nav.settings}">Settings</a></nav></header>
+<form class="analytics-filters" method="get" action="/analytics/workload">
+    <label><span th:text="#{workload.analytics.days}">Days</span><input type="number" name="days" min="1" max="366" th:value="${report.rangeDays}" required></label>
+    <label><span th:text="#{workload.analytics.until}">Through</span><input type="date" name="endDate" th:value="${report.end}" required></label>
+    <label><span th:text="#{common.project}">Project</span><select name="projectId"><option value="" th:text="#{project.all}">All projects</option><option th:each="p : ${projects}" th:value="${p.id}" th:selected="${p.id == selectedProjectId}" th:text="${p.name}">Project</option></select></label>
+    <label><span th:text="#{planning.title}">Planning</span><select name="planningType"><option value="" th:text="#{planning.all}">All categories</option><option th:each="type : ${planningTypes}" th:value="${type}" th:selected="${type == selectedPlanningType}" th:text="${@labels.planning(type)}">Required</option></select></label>
+    <button type="submit" th:text="#{workload.analytics.apply}">Apply</button>
+</form>
+<p class="meta"><time th:text="${#temporals.format(report.start,'dd.MM.yyyy')}"></time> - <time th:text="${#temporals.format(report.end,'dd.MM.yyyy')}"></time></p>
+<p class="history-note" th:text="#{workload.analytics.history(${#temporals.format(report.historySince,'dd.MM.yyyy')})}">History since</p>
+<p class="meta" th:text="#{workload.analytics.planRule}">Recorded plan rules</p>
+<p class="meta" th:if="${report.partialHistory}" th:text="#{workload.analytics.partial}">Partial history</p>
+<section class="analytics-summary" th:attr="data-planned=${report.plannedMinutes},data-actual=${report.actualMinutes}">
+    <div><span th:text="#{workload.analytics.planned}">Recorded plan</span><strong th:text="${@labels.duration(report.plannedMinutes)}"></strong></div>
+    <div><span th:text="#{workload.analytics.actual}">Tracked work</span><strong th:text="${@labels.duration(report.actualMinutes)}"></strong></div>
+    <div><span th:text="#{analytics.completed}">Completed</span><strong th:text="${report.accuracy.completed}"></strong></div>
+    <div><span th:text="#{workload.analytics.overloaded}">Overloaded days</span><strong th:text="${report.overloadedDays}"></strong></div>
+</section>
+<section class="analytics-section"><h2 th:text="#{workload.analytics.outcomes}">Outcomes</h2>
+    <dl class="workload-metrics">
+        <div><dt th:text="#{workload.analytics.moves}">Date changes</dt><dd th:text="${report.reschedules}"></dd></div>
+        <div><dt th:text="#{workload.analytics.movedTasks}">Rescheduled tasks</dt><dd th:text="${report.rescheduledTasks}"></dd></div>
+        <div><dt th:text="#{workload.analytics.cancelled}">Cancelled</dt><dd th:text="${report.cancelled}"></dd></div>
+        <div><dt th:text="#{workload.analytics.error}">Weighted estimate error</dt><dd th:text="${report.accuracy.errorPercent == null ? '-' : (report.accuracy.errorPercent > 0 ? '+' : '') + report.accuracy.errorPercent + '%'}"></dd></div>
+        <div><dt th:text="#{workload.analytics.underestimated}">Underestimated</dt><dd><span th:text="${report.accuracy.underestimated + ' / ' + report.accuracy.compared}"></span> <span th:if="${report.accuracy.underestimatedPercent != null}" th:text="${'(' + report.accuracy.underestimatedPercent + '%)'}"></span></dd></div>
+    </dl>
+    <p class="meta" th:text="#{workload.analytics.comparable}">Only completed work with both estimates and time entries.</p>
+</section>
+<section class="analytics-section"><h2 th:text="#{workload.analytics.daily}">Daily load</h2>
+    <p class="meta" th:text="#{workload.analytics.overloadRule}">Required plan or actual work above the green threshold.</p>
+    <div class="comparison-scroll"><table class="comparison-table workload-days"><thead><tr>
+        <th th:text="#{analytics.date}">Date</th><th th:text="#{planning.REQUIRED}">Required</th><th th:text="#{planning.WANTED}">Wanted</th><th th:text="#{planning.OPTIONAL}">Optional</th><th th:text="#{analytics.fact}">Fact</th>
+    </tr></thead><tbody><tr th:each="day : ${report.days}" th:classappend="${'load-' + day.level}">
+        <th><a th:href="@{/schedule(date=${day.date},projectId=${selectedProjectId},planningType=${selectedPlanningType})}" th:text="${#temporals.format(day.date,'dd.MM.yyyy')}"></a></th>
+        <td th:text="${day.planKnown ? @labels.duration(day.requiredMinutes) : '-'}"></td>
+        <td th:text="${day.planKnown ? @labels.duration(day.wantedMinutes) : '-'}"></td>
+        <td th:text="${day.planKnown ? @labels.duration(day.optionalMinutes) : '-'}"></td>
+        <td th:text="${@labels.duration(day.actualMinutes)}"></td>
+    </tr></tbody></table></div>
+</section>
+<section class="analytics-section"><h2 th:text="#{workload.analytics.projects}">Projects by actual time</h2>
+    <p class="empty" th:if="${#lists.isEmpty(report.projects)}" th:text="#{workload.analytics.noEntries}">No entries</p>
+    <div class="comparison-scroll" th:unless="${#lists.isEmpty(report.projects)}"><table class="comparison-table"><thead><tr><th th:text="#{common.project}">Project</th><th th:text="#{analytics.fact}">Fact</th></tr></thead>
+    <tbody><tr th:each="project : ${report.projects}"><th><a th:href="@{/analytics/workload(days=${report.rangeDays},endDate=${report.end},projectId=${project.id},planningType=${selectedPlanningType})}" th:text="${project.name}"></a></th><td th:text="${@labels.duration(project.minutes)}"></td></tr></tbody></table></div>
+</section>
+</main></body></html>

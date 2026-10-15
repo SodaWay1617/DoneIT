@@ -47,3 +47,5 @@ databaseChangeLog:
       file: db/changelog/changes/0023-project-task-visibility.yaml
   - include:
       file: db/changelog/changes/0024-task-end-times.yaml
+  - include:
+      file: db/changelog/changes/0025-workload-history.yaml

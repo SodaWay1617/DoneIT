@@ -1,0 +1,115 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0025-workload-history
+      author: codex
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE TABLE workload_history_origin (started_at TIMESTAMP NOT NULL);
+              INSERT INTO workload_history_origin VALUES (LOCALTIMESTAMP);
+              CREATE TABLE task_planning_history (
+                  id BIGSERIAL PRIMARY KEY,
+                  task_id BIGINT REFERENCES tasks(id) ON DELETE CASCADE,
+                  regular_task_id BIGINT REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                  project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                  responsible_users BIGINT[] NOT NULL,
+                  state JSONB NOT NULL,
+                  observed_at TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
+                  CHECK ((task_id IS NULL) <> (regular_task_id IS NULL))
+              );
+              CREATE INDEX idx_planning_history_task ON task_planning_history(task_id,observed_at,id);
+              CREATE INDEX idx_planning_history_regular ON task_planning_history(regular_task_id,observed_at,id);
+              CREATE TABLE task_reschedules (
+                  id BIGSERIAL PRIMARY KEY,
+                  task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                  project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                  responsible_users BIGINT[] NOT NULL,
+                  planning_type VARCHAR(16) NOT NULL,
+                  from_date DATE NOT NULL,
+                  to_date DATE NOT NULL,
+                  changed_at TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP
+              );
+              CREATE INDEX idx_task_reschedules_date ON task_reschedules(changed_at);
+              CREATE FUNCTION capture_planning_state(target BIGINT, recurring BOOLEAN) RETURNS void AS $$
+              DECLARE snapshot JSONB; people BIGINT[];
+              BEGIN
+                  IF recurring THEN
+                      SELECT to_jsonb(r) - ARRAY['title','description','task_key','spent_minutes','status_position','updated_at']
+                        INTO snapshot FROM regular_tasks r WHERE id=target;
+                  ELSE
+                      SELECT to_jsonb(t) - ARRAY['title','description','task_key','spent_minutes','status_position','updated_at']
+                        INTO snapshot FROM tasks t WHERE id=target;
+                  END IF;
+                  IF snapshot IS NULL OR NOT EXISTS (SELECT 1 FROM projects WHERE id=(snapshot->>'project_id')::bigint) THEN RETURN; END IF;
+                  SELECT array_agg(a.user_id ORDER BY a.user_id) INTO people
+                    FROM task_assignees a JOIN project_members m ON m.user_id=a.user_id
+                      AND m.project_id=(snapshot->>'project_id')::bigint
+                    WHERE (recurring AND a.regular_task_id=target) OR (NOT recurring AND a.task_id=target);
+                  people := COALESCE(people,ARRAY[(snapshot->>'user_id')::bigint]);
+                  IF EXISTS (SELECT 1 FROM (
+                      SELECT state,responsible_users FROM task_planning_history
+                        WHERE (recurring AND regular_task_id=target) OR (NOT recurring AND task_id=target)
+                        ORDER BY id DESC LIMIT 1
+                    ) latest WHERE latest.state=snapshot AND latest.responsible_users=people) THEN RETURN; END IF;
+                  INSERT INTO task_planning_history(task_id,regular_task_id,project_id,responsible_users,state)
+                    VALUES(CASE WHEN NOT recurring THEN target END,CASE WHEN recurring THEN target END,
+                      (snapshot->>'project_id')::bigint,people,snapshot);
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE FUNCTION record_task_planning() RETURNS trigger AS $$
+              DECLARE old_date DATE; new_date DATE; people BIGINT[];
+              BEGIN
+                  PERFORM capture_planning_state(NEW.id,TG_TABLE_NAME='regular_tasks');
+                  IF TG_TABLE_NAME='tasks' AND TG_OP='UPDATE' THEN
+                      old_date := COALESCE(OLD.planned_date,OLD.planned_for_at::date);
+                      new_date := COALESCE(NEW.planned_date,NEW.planned_for_at::date);
+                      IF old_date IS NOT NULL AND new_date IS NOT NULL AND old_date<>new_date THEN
+                          SELECT responsible_users INTO people FROM task_planning_history
+                            WHERE task_id=NEW.id ORDER BY id DESC LIMIT 1;
+                          INSERT INTO task_reschedules(task_id,project_id,responsible_users,planning_type,from_date,to_date)
+                            VALUES(NEW.id,NEW.project_id,people,NEW.planning_type,old_date,new_date);
+                      END IF;
+                  END IF;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_planning_task_insert AFTER INSERT ON tasks
+                  FOR EACH ROW EXECUTE FUNCTION record_task_planning();
+              CREATE TRIGGER trg_planning_task_update AFTER UPDATE OF planned_date,planned_for_at,estimate_minutes,
+                  status,planning_type,project_id,user_id,completed_at,closed_at ON tasks
+                  FOR EACH ROW EXECUTE FUNCTION record_task_planning();
+              CREATE TRIGGER trg_planning_regular_insert AFTER INSERT ON regular_tasks
+                  FOR EACH ROW EXECUTE FUNCTION record_task_planning();
+              CREATE TRIGGER trg_planning_regular_update AFTER UPDATE OF anchor_date,recurrence_type,repeat_interval,
+                  estimate_minutes,status,planning_type,project_id,user_id,activated_at,finished_at ON regular_tasks
+                  FOR EACH ROW EXECUTE FUNCTION record_task_planning();
+              CREATE FUNCTION record_assignment_planning() RETURNS trigger AS $$
+              BEGIN
+                  IF TG_OP='DELETE' THEN
+                      PERFORM capture_planning_state(COALESCE(OLD.task_id,OLD.regular_task_id),OLD.regular_task_id IS NOT NULL);
+                      RETURN OLD;
+                  END IF;
+                  PERFORM capture_planning_state(COALESCE(NEW.task_id,NEW.regular_task_id),NEW.regular_task_id IS NOT NULL);
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_planning_assignments AFTER INSERT OR DELETE ON task_assignees
+                  FOR EACH ROW EXECUTE FUNCTION record_assignment_planning();
+              CREATE FUNCTION record_membership_planning() RETURNS trigger AS $$
+              DECLARE project BIGINT; target BIGINT;
+              BEGIN
+                  project := CASE WHEN TG_OP='DELETE' THEN OLD.project_id ELSE NEW.project_id END;
+                  FOR target IN SELECT id FROM tasks WHERE project_id=project LOOP
+                      PERFORM capture_planning_state(target,false);
+                  END LOOP;
+                  FOR target IN SELECT id FROM regular_tasks WHERE project_id=project LOOP
+                      PERFORM capture_planning_state(target,true);
+                  END LOOP;
+                  RETURN NULL;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_planning_memberships AFTER INSERT OR DELETE ON project_members
+                  FOR EACH ROW EXECUTE FUNCTION record_membership_planning();
+              SELECT capture_planning_state(id,false) FROM tasks;
+              SELECT capture_planning_state(id,true) FROM regular_tasks;

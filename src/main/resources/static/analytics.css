@@ -42,6 +42,16 @@ h2 { font-size: 19px; margin: 0 0 14px; }
 .daily-details { margin-top: 10px; }
 .daily-details summary { color: #335d48; cursor: pointer; font-size: .85rem; }
 .empty { padding: 30px 0; }
+.analytics-filters input[type=number] { width: 88px; min-height: 40px; padding: 8px; border: 1px solid #cddbd2; border-radius: 6px; font: inherit; }
+.analytics-filters button { min-height: 40px; padding: 8px 16px; border: 1px solid #2f6b50; background: #2f6b50; color: white; border-radius: 6px; font: inherit; cursor: pointer; }
+.history-note { border-left: 3px solid #4675ad; padding: 8px 12px; font-size: .85rem; }
+.workload-metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 16px; }
+.workload-metrics dt { color: #65776c; font-size: .85rem; }
+.workload-metrics dd { margin: 8px 0 0; font-size: 22px; font-weight: 600; }
+.workload-days .load-green th { border-left: 4px solid #79a58b; }
+.workload-days .load-yellow th { border-left: 4px solid #d6b841; }
+.workload-days .load-orange th { border-left: 4px solid #cf8745; }
+.workload-days .load-red th { border-left: 4px solid #bf5656; }
 @media(max-width:600px) {
     .analytics-shell { width: calc(100% - 24px); margin-top: 16px; }
     .analytics-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }

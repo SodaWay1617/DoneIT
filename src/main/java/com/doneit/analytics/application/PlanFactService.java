@@ -71,6 +71,28 @@ public class PlanFactService {
         return new TaskComparison(own,children);
     }
 
+    public Accuracy accuracy(LocalDate start,LocalDate end,Long projectId,PlanningType category) {
+        if(projectId!=null&&!projects.canAccess(projectId))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN);
+        List<Sample> samples=new ArrayList<>(ordinary(start,end,projectId,category,null));
+        samples.addAll(regular(start,end,projectId,category,null));
+        int compared=0,underestimated=0;
+        long plan=0,actual=0;
+        for(Sample sample:samples) {
+            TimeComparison value=sample.comparison();
+            if(value.unestimatedUnits()!=0||value.untrackedUnits()!=0) continue;
+            compared++;
+            if(value.actualMinutes()>value.plannedMinutes()) underestimated++;
+            plan+=value.plannedMinutes();actual+=value.actualMinutes();
+        }
+        return new Accuracy(samples.size(),compared,underestimated,plan,actual);
+    }
+
+    public record Accuracy(int completed,int compared,int underestimated,long plan,long actual) {
+        public Long errorPercent() { return plan==0?null:Math.round((actual-plan)*100.0/plan); }
+        public Long underestimatedPercent() { return compared==0?null:Math.round(underestimated*100.0/compared); }
+    }
+
     public TaskComparison regularTask(Long id) {
         projects.requireTaskAccess(id,true);
         TimeComparison own=regular(null,null,null,null,id).stream().map(Sample::comparison)
