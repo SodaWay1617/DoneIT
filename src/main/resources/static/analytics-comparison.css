@@ -1,0 +1,15 @@
+.comparison-scroll { overflow-x: auto; max-width: 100%; }
+.comparison-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.comparison-table th, .comparison-table td { padding: 12px 10px; border-bottom: 1px solid #dce5df; text-align: right; vertical-align: top; }
+.comparison-table th:first-child { text-align: left; min-width: 150px; overflow-wrap: anywhere; }
+.comparison-table td { white-space: nowrap; }
+.comparison-table thead { color: #61736a; font-size: .8rem; }
+.comparison-table a { color: #28664f; text-decoration: none; }
+.comparison-table a:hover { text-decoration: underline; }
+.comparison-delta.over { color: #a44949; }
+.comparison-delta.under { color: #2c7350; }
+.comparison-delta.unknown, .comparison-delta.equal { color: #65766b; }
+.comparison-total { font-weight: 700; }
+.task-comparison { margin-top: 24px; padding-top: 20px; border-top: 1px solid #dce5df; }
+.task-comparison h2 { font-size: 18px; margin: 0 0 12px; }
+.comparison-meta { color: #65766b; font-size: .85rem; }

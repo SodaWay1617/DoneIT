@@ -1,0 +1,51 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #f5f7f5; color: #25372e; font: 16px system-ui,sans-serif; letter-spacing: 0; }
+.analytics-shell { width: min(1120px,calc(100% - 32px)); margin: 24px auto 48px; }
+.analytics-header, .analytics-nav, .analytics-filters, .period-navigation, .section-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.analytics-header { justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #dce5df; }
+h1 { font-size: 26px; margin: 0; }
+h2 { font-size: 19px; margin: 0 0 14px; }
+.meta, .empty { font-size: .9rem; color: #65776c; }
+.analytics-nav a, .period-navigation a { text-decoration: none; color: #335d48; background: white; border: 1px solid #cddbd2; padding: 8px 12px; border-radius: 6px; }
+.analytics-nav a:hover, .period-navigation a:hover { background: #edf5ef; }
+.analytics-filters { margin: 20px 0; align-items: end; }
+.analytics-filters > label { display: grid; gap: 5px; font-size: .85rem; min-width: 0; }
+.analytics-filters select, .analytics-filters input[type=date] { max-width: 100%; min-height: 40px; padding: 8px; border: 1px solid #cddbd2; border-radius: 6px; color: inherit; background: white; font: inherit; }
+.period-picker { display: flex; padding: 0; margin: 0; border: 0; gap: 0; }
+.period-picker legend { font-size: .85rem; margin-bottom: 5px; }
+.period-picker label { position: relative; }
+.period-picker input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.period-picker span { display: block; padding: 10px 12px; border: 1px solid #cddbd2; background: white; font-size: .85rem; cursor: pointer; }
+.period-picker label:first-of-type span { border-radius: 6px 0 0 6px; }
+.period-picker label:last-of-type span { border-radius: 0 6px 6px 0; }
+.period-picker input:checked + span { background: #2f6b50; color: white; border-color: #2f6b50; }
+.period-picker input:focus-visible + span { outline: 2px solid #2f6b50; outline-offset: 2px; }
+.period-navigation { font-size: .9rem; margin: 16px 0; }
+.period-navigation strong { overflow-wrap: anywhere; }
+.analytics-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; padding: 22px 0; border-top: 1px solid #dce5df; border-bottom: 1px solid #dce5df; }
+.analytics-summary > div { display: grid; gap: 8px; }
+.analytics-summary > div > span { font-size: .85rem; color: #65776c; }
+.analytics-summary strong { font-size: 24px; overflow-wrap: anywhere; }
+.analytics-section, .daily-comparison { margin-top: 30px; }
+.section-heading { justify-content: space-between; }
+.grouping-state { color: #65776c; font-size: .85rem; margin-bottom: 14px; }
+.row-meta { display: block; color: #65776c; font-weight: 400; font-size: .8rem; margin-top: 4px; }
+.chart-legend { display: flex; gap: 18px; font-size: .8rem; color: #65776c; margin-bottom: 12px; }
+.chart-legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; }
+.legend-plan::before, .plan-bar { background: #79a58b; }
+.legend-fact::before, .fact-bar { background: #4675ad; }
+.daily-chart { display: flex; overflow-x: auto; align-items: end; gap: 8px; padding: 0 0 10px; }
+.day-column { flex: 1 0 26px; min-width: 26px; max-width: 90px; text-align: center; }
+.day-bars { height: 160px; display: flex; align-items: end; justify-content: center; gap: 3px; border-bottom: 1px solid #cddbd2; }
+.day-bars span { width: 40%; max-width: 22px; border-radius: 3px 3px 0 0; }
+.day-column time { display: block; font-size: 10px; margin-top: 6px; color: #65776c; }
+.daily-details { margin-top: 10px; }
+.daily-details summary { color: #335d48; cursor: pointer; font-size: .85rem; }
+.empty { padding: 30px 0; }
+@media(max-width:600px) {
+    .analytics-shell { width: calc(100% - 24px); margin-top: 16px; }
+    .analytics-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+    .analytics-summary strong { font-size: 22px; }
+    .analytics-filters > label { flex: 1 1 140px; }
+    .comparison-table { min-width: 530px; }
+}

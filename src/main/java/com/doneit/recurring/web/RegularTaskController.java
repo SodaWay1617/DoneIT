@@ -1,6 +1,7 @@
 package com.doneit.recurring.web;
 
 import com.doneit.assignment.application.TaskAssignmentService;
+import com.doneit.analytics.application.PlanFactService;
 import com.doneit.project.application.ProjectService;
 import com.doneit.recurring.application.*;
 import com.doneit.recurring.domain.RecurrenceType;
@@ -18,8 +19,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class RegularTaskController {
  private final RegularTaskService service; private final ProjectService projects; private final TaskAssignmentService assignments;
+ private final PlanFactService planFact;
  public RegularTaskController(RegularTaskService service,ProjectService projects){this(service,projects,null);}
- @Autowired public RegularTaskController(RegularTaskService service,ProjectService projects,TaskAssignmentService assignments){this.service=service;this.projects=projects;this.assignments=assignments;}
+ public RegularTaskController(RegularTaskService service,ProjectService projects,TaskAssignmentService assignments){this(service,projects,assignments,null);}
+ @Autowired public RegularTaskController(RegularTaskService service,ProjectService projects,TaskAssignmentService assignments,PlanFactService planFact){this.service=service;this.projects=projects;this.assignments=assignments;this.planFact=planFact;}
  @GetMapping("/recurring/new") public String create(Model m){return page(m,new RegularTaskForm(),"Create recurring task","/recurring");}
  @PostMapping("/recurring") public String create(@Valid @ModelAttribute("form") RegularTaskForm f,BindingResult errors,Model m,RedirectAttributes flash){
   if(errors.hasErrors())return page(m,f,"Create recurring task","/recurring");
@@ -45,6 +48,7 @@ public class RegularTaskController {
  }
  @PostMapping("/recurring/{id}/track-time") public String track(@PathVariable Long id,@RequestParam int minutes,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){service.track(id,date,minutes);flash.addFlashAttribute("flashMessage","Time tracked.");return "redirect:"+(redirectTo.startsWith("/")&&!redirectTo.startsWith("//")?redirectTo:"/");}
  private String page(Model m,RegularTaskForm f,String title,String action){
+  if(planFact!=null&&f.getId()!=null)m.addAttribute("taskComparison",planFact.regularTask(f.getId()));
   if(assignments!=null&&f.getId()!=null){var a=assignments.assignmentForRegularTask(f.getId());m.addAttribute("assignmentMembers",a.members());m.addAttribute("assignedUserIds",a.assignedUserIds());m.addAttribute("taskAuthorLogin",a.authorLogin());}
   m.addAttribute("form",f);m.addAttribute("pageTitle",title);m.addAttribute("formAction",action);m.addAttribute("projects",projects.list());
   m.addAttribute("statuses",new TaskStatus[]{TaskStatus.NEW,TaskStatus.BACKLOG,TaskStatus.SPECIFICATION,TaskStatus.IN_PROGRESS,TaskStatus.DOCUMENTATION,TaskStatus.DONE,TaskStatus.CLOSED});

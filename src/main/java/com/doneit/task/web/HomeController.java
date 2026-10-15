@@ -1,6 +1,7 @@
 package com.doneit.task.web;
 
 import com.doneit.assignment.application.TaskAssignmentService;
+import com.doneit.analytics.application.PlanFactService;
 import com.doneit.project.application.ProjectService;
 import com.doneit.recurring.domain.RegularTask;
 import com.doneit.task.application.TaskApplicationService;
@@ -40,6 +41,7 @@ public class HomeController {
     private final ProjectService projectService;
     private final TaskAssignmentService taskAssignments;
     private final SubtaskService subtasks;
+    private final PlanFactService planFact;
 
     public HomeController(TaskApplicationService taskApplicationService) {
         this(taskApplicationService, null, null, null);
@@ -54,13 +56,19 @@ public class HomeController {
         this(taskApplicationService, projectService, taskAssignments, null);
     }
 
-    @Autowired
     public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService,
                           TaskAssignmentService taskAssignments, SubtaskService subtasks) {
+        this(taskApplicationService,projectService,taskAssignments,subtasks,null);
+    }
+
+    @Autowired
+    public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService,
+                          TaskAssignmentService taskAssignments, SubtaskService subtasks, PlanFactService planFact) {
         this.taskApplicationService = taskApplicationService;
         this.projectService = projectService;
         this.taskAssignments = taskAssignments;
         this.subtasks = subtasks;
+        this.planFact = planFact;
     }
 
     @ModelAttribute
@@ -387,6 +395,8 @@ public class HomeController {
     private void populateTaskFormModel(Model model, Principal principal, TaskUpsertForm form) {
         model.addAttribute("username", principal.getName());
         model.addAttribute("form", form);
+        if(planFact!=null&&form.isEditMode()&&form.getTaskId()!=null)
+            model.addAttribute("taskComparison",planFact.task(form.getTaskId()));
         if (taskAssignments != null && form.isEditMode() && form.getTaskId() != null) {
             var assignment = taskAssignments.assignmentForTask(form.getTaskId());
             model.addAttribute("assignmentMembers", assignment.members());

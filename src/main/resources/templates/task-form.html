@@ -111,7 +111,7 @@
         .comment p { margin-bottom: 0; white-space: pre-wrap; }
         [hidden] { display: none !important; }
     </style>
-<link rel="stylesheet" href="/duration-fields.css"></head>
+<link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/analytics-comparison.css"></head>
 <body>
 <div style="width:min(760px,calc(100% - 24px));margin:14px auto 0"><a class="ghost" th:href="@{/recurring/new}" th:text="#{form.switchRecurring}">Switch to recurring task</a></div>
 <div class="shell">
@@ -199,6 +199,7 @@
             <a class="ghost" th:href="@{/backlog}" th:text="#{form.openBacklog}">Open backlog</a>
         </div>
     </form>
+<section th:replace="~{analytics-comparison :: task(${taskComparison})}"></section>
     <section class="comments" th:if="${form.editMode and parentTask != null}">
         <h2 th:text="#{subtask.parent}">Parent task</h2>
         <a class="ghost" th:href="@{/tasks/{id}/edit(id=${parentTask.id})}" th:text="${parentTask.title}">Parent</a>

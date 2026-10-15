@@ -1,13 +1,60 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DoneIt Analytics</title><style>
-:root{--bg:#f4efe6;--ink:#1f2b2d;--muted:#607074;--accent:#1e6d73;--border:#d8cfbf;--track:#e8e0d3;--bar:#d39145}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px Georgia,serif}.shell{width:min(980px,calc(100% - 24px));margin:24px auto 48px}.header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:24px}.header h1{margin:0 0 6px}.muted,.meta{color:var(--muted)}.nav,.month-nav{display:flex;gap:8px;flex-wrap:wrap}.button{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:white;color:inherit;text-decoration:none;font:inherit}.active{background:var(--accent);border-color:var(--accent);color:white}.summary{padding:18px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:24px 0 28px}.summary strong{display:block;font-size:2rem}.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:30px}.section h2{margin-top:0}.task,.project{padding:14px 0;border-bottom:1px solid var(--border)}.row{display:flex;justify-content:space-between;gap:14px;align-items:baseline}.task-title{font-weight:bold;color:inherit;text-decoration:none}.meta{font-size:.92rem;margin-top:5px}.track{height:8px;background:var(--track);margin-top:10px;overflow:hidden;border-radius:4px}.fill{height:100%;background:var(--accent)}.project .fill{background:var(--bar)}.empty{padding:22px 0;color:var(--muted)}@media(max-width:720px){.header{display:block}.nav{margin-top:14px}.grid{grid-template-columns:1fr}.row{align-items:flex-start}.row strong{white-space:nowrap}}
-</style></head><body><main class="shell">
-<header class="header"><div><h1 th:text="#{analytics.title}">Analytics</h1><div class="muted" th:text="${analytics.month}">October 2026</div></div><nav class="nav"><a class="button" href="/" th:text="#{nav.tasks}">Tasks</a><a class="button" href="/kanban" th:text="#{nav.kanban}">Kanban</a><a class="button" href="/calendar" th:text="#{nav.calendar}">Calendar</a><a class="button active" th:href="@{/analytics(month=${analytics.monthValue})}" th:text="#{nav.analytics}">Analytics</a></nav></header>
-<div class="month-nav"><a class="button" th:href="@{/analytics(month=${analytics.previousMonthValue})}" th:text="#{nav.previous}">Previous</a><form method="get"><input class="button" type="month" name="month" th:value="${analytics.monthValue}" onchange="this.form.submit()"></form><a class="button" th:href="@{/analytics(month=${analytics.nextMonthValue})}" th:text="#{nav.next}">Next</a></div>
-<section class="summary"><span class="muted" th:text="#{analytics.tracked}">Tracked this month</span><strong th:text="${analytics.totalDuration}">0h 0m</strong></section>
-<div class="grid"><section class="section"><h2 th:text="#{analytics.topTasks}">Top tasks</h2><div class="empty" th:if="${#lists.isEmpty(analytics.topTasks)}" th:text="#{analytics.empty}">No tracked time for this month.</div>
-<article class="task" th:each="task:${analytics.topTasks}"><div class="row"><a class="task-title" th:href="${task.recurring} ? @{/recurring/{id}/edit(id=${task.taskId})} : @{/tasks/{id}/edit(id=${task.taskId})}" th:text="${task.title}">Task</a><strong th:text="${task.duration}">1h 20m</strong></div><div class="meta" th:text="${task.projectName}">Project</div><div class="track"><div class="fill" th:style="'width:'+${task.sharePercent}+'%'"></div></div></article></section>
-<section class="section"><h2 th:text="#{analytics.byProject}">By project</h2><div class="empty" th:if="${#lists.isEmpty(analytics.projects)}" th:text="#{analytics.emptyProjects}">No project data yet.</div>
-<article class="project" th:each="project:${analytics.projects}"><div class="row"><span th:text="${project.projectName}">Project</span><strong th:text="${project.duration}">1h 20m</strong></div><div class="track"><div class="fill" th:style="'width:'+${project.sharePercent}+'%'"></div></div><div class="meta" th:text="${project.sharePercent}+'%'">50%</div></article></section></div>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title th:text="#{analytics.planFactTitle}">Plan / Fact</title>
+<link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css">
+</head>
+<body><main class="analytics-shell">
+<header class="analytics-header">
+    <div><h1 th:text="#{analytics.planFactTitle}">Plan / Fact</h1><p class="meta"><span th:text="${report.login}">user</span> &middot; <span th:text="#{analytics.completedOnly}">Completed work</span></p></div>
+    <nav class="analytics-nav"><a href="/" th:text="#{nav.today}">Today</a><a href="/schedule" th:text="#{schedule.title}">Schedule</a><a href="/calendar" th:text="#{nav.calendar}">Calendar</a><a href="/projects" th:text="#{project.title}">Projects</a><a href="/settings" th:text="#{nav.settings}">Settings</a></nav>
+</header>
+<form class="analytics-filters" method="get" action="/analytics">
+    <fieldset class="period-picker"><legend th:text="#{analytics.period}">Period</legend>
+        <label th:each="period : ${T(com.doneit.analytics.application.AnalyticsPeriod).values()}">
+            <input type="radio" name="period" th:value="${period}" th:checked="${period == report.period}" onchange="this.form.submit()">
+            <span th:text="${#messages.msg('analytics.period.' + period.name())}">Month</span>
+        </label>
+    </fieldset>
+    <label><span th:text="#{analytics.date}">Date</span><input type="date" name="date" th:value="${selectedDate}" onchange="this.form.submit()" required></label>
+    <label><span th:text="#{common.project}">Project</span><select name="projectId" onchange="this.form.submit()"><option value="" th:text="#{project.all}">All projects</option><option th:each="p : ${projects}" th:value="${p.id}" th:selected="${p.id == selectedProjectId}" th:text="${p.name}">Project</option></select></label>
+    <label><span th:text="#{planning.title}">Planning</span><select name="planningType" onchange="this.form.submit()"><option value="" th:text="#{planning.all}">All categories</option><option th:each="type : ${planningTypes}" th:value="${type}" th:selected="${type == selectedPlanningType}" th:text="${@labels.planning(type)}">Required</option></select></label>
+</form>
+<div class="period-navigation">
+    <a th:href="@{/analytics(period=${report.period},date=${report.previousDate},projectId=${selectedProjectId},planningType=${selectedPlanningType})}" th:title="#{nav.previous}" th:aria-label="#{nav.previous}">&larr;</a>
+    <strong><time th:text="${#temporals.format(report.start,'dd.MM.yyyy')}">01.01.2026</time><th:block th:if="${report.period.name() != 'DAY'}"> - <time th:text="${#temporals.format(report.lastDate,'dd.MM.yyyy')}">31.01.2026</time></th:block></strong>
+    <a th:href="@{/analytics(period=${report.period},date=${report.nextDate},projectId=${selectedProjectId},planningType=${selectedPlanningType})}" th:title="#{nav.next}" th:aria-label="#{nav.next}">&rarr;</a>
+</div>
+<section class="analytics-summary" th:attr="data-planned=${report.total.plannedMinutes},data-actual=${report.total.actualMinutes}">
+    <div><span th:text="#{analytics.plan}">Plan</span><strong th:text="${@labels.duration(report.total.plannedMinutes)}">10h</strong></div>
+    <div><span th:text="#{analytics.fact}">Fact</span><strong th:text="${@labels.duration(report.total.actualMinutes)}">14h</strong></div>
+    <div><span th:text="#{analytics.deviation}">Deviation</span><strong><span th:replace="~{analytics-comparison :: delta(${report.total})}"></span></strong></div>
+    <div><span th:text="#{analytics.completed}">Completed</span><strong th:text="${report.total.completedUnits}">5</strong></div>
+</section>
+<p class="meta" th:if="${report.total.unestimatedUnits > 0}" th:text="#{analytics.unestimated(${report.total.unestimatedUnits})}">Without estimate</p>
+<p class="meta" th:if="${report.total.untrackedUnits > 0}" th:text="#{analytics.untracked(${report.total.untrackedUnits})}">Without tracked time</p>
+<p class="empty" th:if="${report.total.completedUnits == 0}" th:text="#{analytics.emptyCompleted}">No completed work</p>
+<section class="daily-comparison" th:if="${report.total.completedUnits > 0}">
+    <h2 th:text="#{analytics.byDay}">By day</h2>
+    <div class="chart-legend"><span class="legend-plan" th:text="#{analytics.plan}">Plan</span><span class="legend-fact" th:text="#{analytics.fact}">Fact</span></div>
+    <div class="daily-chart"><div class="day-column" th:each="day : ${report.days}">
+        <div class="day-bars" th:title="${#temporals.format(day.date,'dd.MM') + ': ' + @labels.duration(day.comparison.plannedMinutes) + ' / ' + @labels.duration(day.comparison.actualMinutes)}">
+            <span class="plan-bar" th:style="'height:' + ${100.0 * day.comparison.plannedMinutes / report.chartMaxMinutes} + '%'"></span>
+            <span class="fact-bar" th:style="'height:' + ${100.0 * day.positiveActualMinutes / report.chartMaxMinutes} + '%'"></span>
+        </div><time th:text="${#temporals.format(day.date,'dd.MM')}">01.01</time>
+    </div></div>
+    <details class="daily-details"><summary th:text="#{analytics.dailyValues}">Daily values</summary><div class="comparison-scroll"><table class="comparison-table">
+        <thead><tr><th th:text="#{analytics.date}">Date</th><th th:text="#{analytics.plan}">Plan</th><th th:text="#{analytics.fact}">Fact</th><th th:text="#{analytics.deviation}">Deviation</th></tr></thead>
+        <tbody><tr th:each="day : ${report.days}"><th th:text="${#temporals.format(day.date,'dd.MM.yyyy')}">Date</th><td th:text="${@labels.duration(day.comparison.plannedMinutes)}">0h</td><td th:text="${@labels.duration(day.comparison.actualMinutes)}">0h</td><td><span th:replace="~{analytics-comparison :: delta(${day.comparison})}"></span></td></tr></tbody>
+    </table></div></details>
+</section>
+<section class="analytics-section" th:if="${!#lists.isEmpty(report.projects)}"><h2 th:text="#{analytics.byProject}">By project</h2>
+    <div class="comparison-scroll"><table class="comparison-table"><thead><tr><th th:text="#{common.project}">Project</th><th th:text="#{analytics.plan}">Plan</th><th th:text="#{analytics.fact}">Fact</th><th th:text="#{analytics.deviation}">Deviation</th><th th:text="#{analytics.completed}">Completed</th></tr></thead>
+    <tbody><tr th:each="project : ${report.projects}"><th><a th:href="@{/analytics(period=${report.period},date=${report.start},projectId=${project.id},planningType=${selectedPlanningType})}" th:text="${project.name}">Project</a></th><td th:text="${@labels.duration(project.comparison.plannedMinutes)}">0h</td><td th:text="${@labels.duration(project.comparison.actualMinutes)}">0h</td><td><span th:replace="~{analytics-comparison :: delta(${project.comparison})}"></span></td><td th:text="${project.comparison.completedUnits}">0</td></tr></tbody></table></div>
+</section>
+<section class="analytics-section" th:if="${!#lists.isEmpty(report.tasks)}">
+    <div class="section-heading"><h2 th:text="#{analytics.byTask}">By task</h2><a class="grouping-state" href="/settings" th:text="${report.rolledUp} ? #{analytics.grouped} : #{analytics.separate}">Grouped</a></div>
+    <div class="comparison-scroll"><table class="comparison-table"><thead><tr><th th:text="#{task.title}">Task</th><th th:text="#{analytics.plan}">Plan</th><th th:text="#{analytics.fact}">Fact</th><th th:text="#{analytics.deviation}">Deviation</th></tr></thead>
+    <tbody><tr th:each="task : ${report.tasks}"><th><a th:href="${task.href}" th:text="${task.title}">Task</a><span class="row-meta" th:text="${task.projectName}">Project</span><span class="row-meta" th:if="${task.comparison.unestimatedUnits > 0}" th:text="#{analytics.unestimated(${task.comparison.unestimatedUnits})}">Without estimate</span><span class="row-meta" th:if="${task.comparison.untrackedUnits > 0}" th:text="#{analytics.untracked(${task.comparison.untrackedUnits})}">Without tracked time</span></th><td th:text="${@labels.duration(task.comparison.plannedMinutes)}">0h</td><td th:text="${@labels.duration(task.comparison.actualMinutes)}">0h</td><td><span th:replace="~{analytics-comparison :: delta(${task.comparison})}"></span></td></tr></tbody></table></div>
+</section>
 </main></body></html>

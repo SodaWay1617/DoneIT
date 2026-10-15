@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<span th:fragment="delta(comparison)" class="comparison-delta"
+      th:classappend="${comparison.deviationClass}" th:text="${comparison.deviationLabel}">+40%</span>
+<section th:fragment="task(comparison)" class="task-comparison"
+         th:if="${comparison != null and comparison.total.completedUnits > 0}">
+    <h2 th:text="#{analytics.cardTitle}">Plan / Fact</h2>
+    <div class="comparison-scroll"><table class="comparison-table">
+        <thead><tr><th th:text="#{analytics.scope}">Scope</th><th th:text="#{analytics.plan}">Plan</th><th th:text="#{analytics.fact}">Fact</th><th th:text="#{analytics.deviation}">Deviation</th></tr></thead>
+        <tbody><tr th:if="${comparison.own.completedUnits > 0}">
+            <th th:text="#{analytics.own}">Task</th>
+            <td th:text="${@labels.duration(comparison.own.plannedMinutes)}">0h</td><td th:text="${@labels.duration(comparison.own.actualMinutes)}">0h</td>
+            <td><span th:replace="~{analytics-comparison :: delta(${comparison.own})}"></span></td>
+        </tr><tr th:if="${comparison.children.completedUnits > 0}">
+            <th th:text="#{analytics.children}">Subtasks</th>
+            <td th:text="${@labels.duration(comparison.children.plannedMinutes)}">0h</td><td th:text="${@labels.duration(comparison.children.actualMinutes)}">0h</td>
+            <td><span th:replace="~{analytics-comparison :: delta(${comparison.children})}"></span></td>
+        </tr><tr class="comparison-total">
+            <th th:text="#{analytics.total}">Total</th><td th:text="${@labels.duration(comparison.total.plannedMinutes)}">0h</td><td th:text="${@labels.duration(comparison.total.actualMinutes)}">0h</td>
+            <td><span th:replace="~{analytics-comparison :: delta(${comparison.total})}"></span></td>
+        </tr></tbody>
+    </table></div>
+    <p class="comparison-meta" th:if="${comparison.total.unestimatedUnits > 0}" th:text="#{analytics.unestimated(${comparison.total.unestimatedUnits})}">No estimate</p>
+    <p class="comparison-meta" th:if="${comparison.total.untrackedUnits > 0}" th:text="#{analytics.untracked(${comparison.total.untrackedUnits})}">No tracked time</p>
+</section>
+</body></html>

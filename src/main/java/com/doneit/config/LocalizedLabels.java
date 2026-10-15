@@ -17,6 +17,11 @@ public class LocalizedLabels {
     public String planning(PlanningType value) { return message("planning." + value.name()); }
     public String priority(TaskPriority value) { return message("priority." + value.name()); }
     public String recurrence(RecurrenceType value) { return message("recurrence." + value.name()); }
+    public String duration(long minutes) {
+        long absolute=Math.abs(minutes);
+        return (minutes<0?"-":"")+messages.getMessage("analytics.duration",
+                new Object[]{absolute/60,absolute%60},LocaleContextHolder.getLocale());
+    }
     private String message(String key) {
         Locale locale = LocaleContextHolder.getLocale();
         return messages.getMessage(key, null, key, locale);
