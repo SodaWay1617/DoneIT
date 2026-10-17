@@ -183,6 +183,18 @@ class WorkloadAnalyticsTest extends IntegrationTestSupport {
         assertThat(db.queryForObject("SELECT COUNT(*) FROM task_planning_history WHERE task_id=?",Long.class,id)).isEqualTo(before);
     }
 
+    @Test void averagePanelUsesFilteredPlansAndUserThresholds() throws Exception {
+        task(owner,"Need",120,"TODO",today,"REQUIRED");
+        task(owner,"Want",60,"TODO",today,"WANTED");
+        db.update("UPDATE users SET workload_green_minutes=300,workload_yellow_minutes=600,workload_orange_minutes=900 WHERE id=?",owner);
+        var averages=analytics.report(today,1,null,null).averages();
+        assertThat(averages.scales()).extracting(WorkloadAnalyticsView.Scale::minutes).containsExactly(120L,60L,0L,180L);
+        assertThat(analytics.report(today,1,null,PlanningType.WANTED).averages().scales())
+                .extracting(WorkloadAnalyticsView.Scale::minutes).containsExactly(0L,60L,0L,60L);
+        mvc.perform(get("/analytics/workload").param("days","1").param("endDate",today.toString()))
+                .andExpect(status().isOk()).andExpect(content().string(org.hamcrest.Matchers.containsString("role=\"meter\"")));
+    }
+
     @Test void reopeningAnOrdinaryTaskDoesNotEraseItsCancellationHistory() {
         Long id=task(owner,"Reopened",60,"TODO",today,"REQUIRED");
         tasks.markClosed(id,today.atTime(10,0));

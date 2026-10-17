@@ -74,19 +74,40 @@ public class WorkloadAnalyticsService {
                 facts.stream().mapToLong(Fact::minutes).sum(),moved,movedTasks,cancelled,
                 comparisons.accuracy(start,end,projectId,category),List.copyOf(days),
                 projectRows.values().stream().sorted(Comparator.comparingLong(WorkloadAnalyticsView.Project::minutes)
-                        .reversed().thenComparing(WorkloadAnalyticsView.Project::name)).toList());
+                        .reversed().thenComparing(WorkloadAnalyticsView.Project::name)).toList(),settings,taskRows(plans,facts,user));
     }
 
     private List<Fact> facts(boolean regular,Long user,LocalDate start,LocalDate end,Long project,PlanningType category) {
         String table=regular?"regular_tasks":"tasks",entries=regular?"regular_task_time_entries":"task_time_entries";
         String column=regular?"regular_task_id":"task_id";
-        String sql="SELECT e.entry_date,p.id,p.name,SUM(e.minutes) minutes FROM "+entries+" e JOIN "+table
+        String sql="SELECT e.entry_date,p.id,p.name,t.id,SUM(e.minutes) minutes FROM "+entries+" e JOIN "+table
                 +" t ON t.id=e."+column+" JOIN projects p ON p.id=t.project_id WHERE e.user_id=?"
                 +" AND e.entry_date>=? AND e.entry_date<? AND "+TaskVisibility.memberTasks("t",regular);
         List<Object> args=new ArrayList<>(List.of(user,start,end,user));
         sql=filter(sql,args,project,category,"t");
-        return db.query(sql+" GROUP BY e.entry_date,p.id,p.name",(r,n)->new Fact(r.getObject(1,LocalDate.class),
-                r.getLong(2),r.getString(3),r.getLong(4)),args.toArray());
+        return db.query(sql+" GROUP BY e.entry_date,p.id,p.name,t.id",(r,n)->new Fact(r.getObject(1,LocalDate.class),
+                r.getLong(2),r.getString(3),r.getLong(5),new TaskKey(regular,r.getLong(4))),args.toArray());
+    }
+
+    private List<WorkloadAnalyticsView.Task> taskRows(Map<PlanKey,Plan> plans,List<Fact> facts,Long user) {
+        Map<TaskKey,Long> planned=new HashMap<>(),actual=new HashMap<>();
+        plans.forEach((key,value)->planned.merge(new TaskKey(key.regular(),key.id()),value.minutes(),Long::sum));
+        facts.forEach(fact->actual.merge(fact.task(),fact.minutes(),Long::sum));
+        List<WorkloadAnalyticsView.Task> rows=new ArrayList<>();
+        for(boolean recurring:List.of(false,true)) {
+            String table=recurring?"regular_tasks":"tasks";
+            rows.addAll(db.query("SELECT t.id,t.title,p.name,t.status FROM "+table
+                    +" t JOIN projects p ON p.id=t.project_id WHERE "+TaskVisibility.memberTasks("t",recurring),
+                    (r,n)-> {
+                        TaskKey key=new TaskKey(recurring,r.getLong(1));
+                        if(!planned.containsKey(key)&&!actual.containsKey(key)) return null;
+                        return new WorkloadAnalyticsView.Task(key.id(),recurring,r.getString(2),r.getString(3),
+                                com.doneit.task.domain.TaskStatus.valueOf(r.getString(4)),planned.getOrDefault(key,0L),
+                                actual.getOrDefault(key,0L),planned.containsKey(key),actual.containsKey(key));
+                    },user).stream().filter(Objects::nonNull).toList());
+        }
+        return rows.stream().sorted(Comparator.comparingLong(WorkloadAnalyticsView.Task::actualMinutes).reversed()
+                .thenComparing(WorkloadAnalyticsView.Task::title,String.CASE_INSENSITIVE_ORDER)).toList();
     }
 
     private void addPlans(Map<PlanKey,Plan> plans,boolean regular,Long user,LocalDate start,LocalDate end,
@@ -164,7 +185,8 @@ public class WorkloadAnalyticsService {
         return field.endsWith("_at")
                 ?LocalDateTime.parse(value.asText()).toLocalDate():LocalDate.parse(value.asText());
     }
-    private record Fact(LocalDate date,Long projectId,String projectName,long minutes) {}
+    private record Fact(LocalDate date,Long projectId,String projectName,long minutes,TaskKey task) {}
+    private record TaskKey(boolean regular,long id) {}
     private record PlanKey(boolean regular,long id,LocalDate date) {}
     private record Plan(PlanningType category,long minutes) {}
 }

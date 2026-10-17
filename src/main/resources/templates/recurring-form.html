@@ -33,4 +33,4 @@
 </section></section></main>
 <script>const r=document.getElementById('recurrence'),a=document.querySelector('[name=anchorDate]'),i=document.getElementById('repeatInterval');function sync(){const weekdays=r.value==='WEEKDAYS';if(weekdays)i.value='1';i.disabled=weekdays;a.required=!['DAILY','WEEKDAYS'].includes(r.value)||Number(i.value)>1}r.addEventListener('change',sync);i.addEventListener('input',sync);sync()</script>
 <script src="/duration-fields.js"></script>
-</body></html>
+<script src="/reminders.js" defer></script></body></html>

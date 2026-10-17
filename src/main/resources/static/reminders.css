@@ -1,0 +1,11 @@
+#doneit-reminders { position: fixed; right: 16px; bottom: 16px; z-index: 1000; width: min(380px,calc(100% - 32px)); max-height: min(60vh,480px); overflow-y: auto; box-sizing: border-box; padding: 16px; border: 1px solid #c9d7cf; border-radius: 8px; background: #fff; color: #25372e; box-shadow: 0 4px 24px #182e2626; font: 14px system-ui,sans-serif; letter-spacing: 0; }
+#doneit-reminders header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#doneit-reminders h2 { font-size: 17px; margin: 0; }
+#doneit-reminders button { flex-shrink: 0; min-height: 36px; border: 0; background: transparent; color: #335d48; cursor: pointer; font: inherit; padding: 4px; }
+#doneit-reminders ul { list-style: none; padding: 0; margin: 8px 0 0; }
+#doneit-reminders li { padding: 10px 0; border-top: 1px solid #e0e7e2; }
+#doneit-reminders a { display: block; color: #28664f; font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+#doneit-reminders a:hover { text-decoration: underline; }
+#doneit-reminders li span, #doneit-reminders p { display: block; margin: 5px 0 0; font-size: 12px; color: #627469; }
+#doneit-reminders a:focus-visible, #doneit-reminders button:focus-visible { outline: 2px solid #28664f; outline-offset: 2px; }
+@media print { #doneit-reminders { display: none; } }

@@ -1,6 +1,8 @@
 spring:
   application:
     name: doneit
+  messages:
+    fallback-to-system-locale: false
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/doneit}
     username: ${SPRING_DATASOURCE_USERNAME:doneit}

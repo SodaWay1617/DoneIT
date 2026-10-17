@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css">
 </head><body><main class="analytics-shell">
 <header class="analytics-header"><h1 th:text="#{workload.analytics.title}">Workload analytics</h1>
-<nav class="analytics-nav"><a href="/" th:text="#{nav.today}">Today</a><a href="/analytics" th:text="#{analytics.planFactTitle}">Plan / Fact</a><a href="/settings" th:text="#{nav.settings}">Settings</a></nav></header>
+<nav class="analytics-nav"><a href="/" th:text="#{nav.today}">Today</a><a href="/reports" th:text="#{reports.title}">Reports</a><a href="/analytics" th:text="#{analytics.planFactTitle}">Plan / Fact</a><a href="/settings" th:text="#{nav.settings}">Settings</a></nav></header>
 <form class="analytics-filters" method="get" action="/analytics/workload">
     <label><span th:text="#{workload.analytics.days}">Days</span><input type="number" name="days" min="1" max="366" th:value="${report.rangeDays}" required></label>
     <label><span th:text="#{workload.analytics.until}">Through</span><input type="date" name="endDate" th:value="${report.end}" required></label>
@@ -22,6 +22,22 @@
     <div><span th:text="#{workload.analytics.actual}">Tracked work</span><strong th:text="${@labels.duration(report.actualMinutes)}"></strong></div>
     <div><span th:text="#{analytics.completed}">Completed</span><strong th:text="${report.accuracy.completed}"></strong></div>
     <div><span th:text="#{workload.analytics.overloaded}">Overloaded days</span><strong th:text="${report.overloadedDays}"></strong></div>
+</section>
+<section class="analytics-section average-load" th:with="averages=${report.averages}">
+    <div class="section-heading"><h2 th:text="#{workload.average.title}">Average daily plan</h2><span class="meta" th:text="#{workload.average.days(${averages.sampleDays})}">Days</span></div>
+    <p class="meta" th:unless="${averages.available}" th:text="#{workload.average.empty}">No planning history</p>
+    <div class="load-scales" th:style="'--green-end:' + ${averages.greenEnd} + '%;--yellow-end:' + ${averages.yellowEnd} + '%;--orange-end:' + ${averages.orangeEnd} + '%'">
+        <div class="load-scale" th:each="scale : ${averages.scales}">
+            <div class="scale-heading"><span th:text="${#messages.msg(scale.labelKey)}">Required</span><strong th:text="${averages.available ? @labels.duration(scale.minutes) : '-'}">0h</strong></div>
+            <div class="scale-track" th:classappend="${averages.available ? scale.level : 'no-data'}"
+                 th:attr="role=${averages.available ? 'meter' : null},aria-label=${#messages.msg(scale.labelKey)},aria-valuemin=${averages.available ? 0 : null},aria-valuemax=${averages.available ? 1440 : null},aria-valuenow=${averages.available ? scale.meterMinutes : null},aria-valuetext=${averages.available ? @labels.duration(scale.minutes) : null}">
+                <span class="scale-marker" th:if="${averages.available}" th:style="'left:' + ${scale.position} + '%'" aria-hidden="true"></span>
+            </div>
+            <div class="scale-axis" aria-hidden="true"><span>0</span><span>6</span><span>12</span><span>18</span><span th:text="#{workload.average.axisEnd}">24h</span></div>
+            <span class="meta" th:if="${averages.available and scale.overflow}" th:text="#{workload.average.overflow}">Over 24 hours</span>
+        </div>
+    </div>
+    <div class="scale-legend"><span class="zone-green" th:text="#{workload.average.green(${@labels.duration(report.thresholds.greenMinutes)})}"></span><span class="zone-yellow" th:text="#{workload.average.yellow(${@labels.duration(report.thresholds.yellowMinutes)})}"></span><span class="zone-orange" th:text="#{workload.average.orange(${@labels.duration(report.thresholds.orangeMinutes)})}"></span><span class="zone-red" th:text="#{workload.average.red(${@labels.duration(report.thresholds.orangeMinutes)})}"></span></div>
 </section>
 <section class="analytics-section"><h2 th:text="#{workload.analytics.outcomes}">Outcomes</h2>
     <dl class="workload-metrics">
@@ -50,4 +66,4 @@
     <div class="comparison-scroll" th:unless="${#lists.isEmpty(report.projects)}"><table class="comparison-table"><thead><tr><th th:text="#{common.project}">Project</th><th th:text="#{analytics.fact}">Fact</th></tr></thead>
     <tbody><tr th:each="project : ${report.projects}"><th><a th:href="@{/analytics/workload(days=${report.rangeDays},endDate=${report.end},projectId=${project.id},planningType=${selectedPlanningType})}" th:text="${project.name}"></a></th><td th:text="${@labels.duration(project.minutes)}"></td></tr></tbody></table></div>
 </section>
-</main></body></html>
+</main><script src="/reminders.js" defer></script></body></html>
