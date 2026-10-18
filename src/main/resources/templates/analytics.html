@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title th:text="#{analytics.planFactTitle}">Plan / Fact</title>
 <link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css">
-</head>
-<body><main class="analytics-shell">
+<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1"><main class="analytics-shell">
 <header class="analytics-header">
     <div><h1 th:text="#{analytics.planFactTitle}">Plan / Fact</h1><p class="meta"><span th:text="${report.login}">user</span> &middot; <span th:text="#{analytics.completedOnly}">Completed work</span></p></div>
-    <nav class="analytics-nav"><a href="/" th:text="#{nav.today}">Today</a><a href="/reports" th:text="#{reports.title}">Reports</a><a href="/analytics/workload" th:text="#{workload.analytics.title}">Workload</a><a href="/schedule" th:text="#{schedule.title}">Schedule</a><a href="/calendar" th:text="#{nav.calendar}">Calendar</a><a href="/projects" th:text="#{project.title}">Projects</a><a href="/settings" th:text="#{nav.settings}">Settings</a></nav>
+    <nav th:replace="~{app-shell :: analytics-tabs}"></nav>
 </header>
 <form class="analytics-filters" method="get" action="/analytics">
     <fieldset class="period-picker"><legend th:text="#{analytics.period}">Period</legend>
@@ -57,4 +57,4 @@
     <div class="comparison-scroll"><table class="comparison-table"><thead><tr><th th:text="#{task.title}">Task</th><th th:text="#{analytics.plan}">Plan</th><th th:text="#{analytics.fact}">Fact</th><th th:text="#{analytics.deviation}">Deviation</th></tr></thead>
     <tbody><tr th:each="task : ${report.tasks}"><th><a th:href="${task.href}" th:text="${task.title}">Task</a><span class="row-meta" th:text="${task.projectName}">Project</span><span class="row-meta" th:if="${task.comparison.unestimatedUnits > 0}" th:text="#{analytics.unestimated(${task.comparison.unestimatedUnits})}">Without estimate</span><span class="row-meta" th:if="${task.comparison.untrackedUnits > 0}" th:text="#{analytics.untracked(${task.comparison.untrackedUnits})}">Without tracked time</span></th><td th:text="${@labels.duration(task.comparison.plannedMinutes)}">0h</td><td th:text="${@labels.duration(task.comparison.actualMinutes)}">0h</td><td><span th:replace="~{analytics-comparison :: delta(${task.comparison})}"></span></td></tr></tbody></table></div>
 </section>
-</main><script src="/reminders.js" defer></script></body></html>
+</main><script src="/reminders.js" defer></script></div></body></html>

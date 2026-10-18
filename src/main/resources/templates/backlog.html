@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>DoneIt Backlog</title>
     <style>
         :root {
@@ -136,8 +136,8 @@
         form.inline { margin: 0; }
     </style>
 <link rel="stylesheet" href="/planning.css">
-</head>
-<body>
+<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1">
 <div th:replace="~{planning :: filters}"></div>
 <div class="shell">
     <section class="hero">
@@ -149,13 +149,6 @@
             <span>Keep reminders here when timing is unclear, then schedule them into the main list once they become real work.</span>
         </div>
         <div class="actions">
-            <a class="ghost" th:href="@{/}" th:text="#{nav.today}">Back to today</a>
-            <a class="ghost" th:href="@{/inbox}" th:text="#{nav.inbox}">Inbox</a>
-            <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
-            <a class="ghost" th:href="@{/kanban}" th:text="#{nav.kanban}">Kanban</a>
-            <a class="ghost" th:href="@{/calendar}" th:text="#{nav.calendar}">Calendar</a><a class="ghost" th:href="@{/schedule}" th:text="#{schedule.title}">Schedule</a>
-            <a th:replace="~{planning :: projectsLink}"></a>
-            <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
             <a class="solid" th:href="@{/tasks/new}" th:text="#{task.create}">Create task</a>
             <a class="ghost" th:href="@{/recurring/new}" th:text="#{task.createRecurring}">Create recurring</a>
         </div>
@@ -220,5 +213,5 @@
 <script src="/time-tracking.js"></script>
 <script src="/reschedule.js"></script>
 <script src="/planning.js"></script>
-<script src="/reminders.js" defer></script></body>
+<script src="/reminders.js" defer></script></div></body>
 </html>

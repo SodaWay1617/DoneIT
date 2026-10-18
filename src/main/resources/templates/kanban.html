@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title>DoneIt Kanban</title>
@@ -74,25 +74,15 @@
         @media (max-width: 940px) { .board { grid-auto-columns: minmax(250px, 82vw); } }
     </style>
 <link rel="stylesheet" href="/planning.css">
-</head>
-<body>
+<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1">
 <div th:replace="~{planning :: filters}"></div>
 <div class="shell">
     <section class="hero">
         <div>
             <p class="meta" th:text="#{common.signedInAs(${username})}">Signed in</p>
             <h1 th:text="#{kanban.title(${#temporals.format(kanban.selectedDate, 'dd MMM yyyy')})}">Kanban</h1>
-            <div class="nav">
-                <a class="pill" th:href="@{/}" th:text="#{nav.list}">List</a>
-                <a class="pill" th:href="@{/kanban(date=${kanban.selectedDate})}" th:text="#{nav.kanban}">Kanban</a>
-                <a class="pill" th:href="@{/calendar(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}" th:text="#{nav.calendar}">Calendar</a><a class="ghost" th:href="@{/schedule(date=${kanban.selectedDate})}" th:text="#{schedule.title}">Schedule</a>
-                <a class="pill" th:href="@{/analytics(month=${#temporals.format(kanban.selectedDate, 'yyyy-MM')})}" th:text="#{nav.analytics}">Analytics</a>
-                <a class="ghost" th:href="@{/backlog}">Backlog</a>
-                <a class="ghost" th:href="@{/inbox}">Inbox</a>
-                <a class="ghost" th:href="@{/finished}">Done and closed</a>
-                <a th:replace="~{planning :: projectsLink}"></a>
-                <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
-            </div>
+            <nav th:replace="~{app-shell :: view-tabs}"></nav>
             <form class="date-picker" method="get" th:action="@{/kanban}">
                 <input class="date-input" type="date" name="date" th:value="${#temporals.format(kanban.selectedDate, 'yyyy-MM-dd')}" />
                 <button class="secondary" type="submit">Open day</button>
@@ -193,5 +183,5 @@
 </script>
 <script src="/time-tracking.js"></script>
 <script src="/planning.js"></script>
-<script src="/reminders.js" defer></script></body>
+<script src="/reminders.js" defer></script></div></body>
 </html>

@@ -88,12 +88,12 @@ class PlanningTypeTest extends IntegrationTestSupport {
 
     @ParameterizedTest
     @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/kanban?date=2026-04-08", "/calendar?month=2026-04", "/backlog", "/inbox", "/finished"})
-    void projectManagementRemainsAccessibleAlongsideSettings(String path) throws Exception {
+    void projectManagementAndSettingsRemainAccessibleInCommonNavigation(String path) throws Exception {
         String html = mvc.perform(get(path).param("planningType", "WANTED").param("projectId", projectId.toString()))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        assertThat(html).contains("class=\"ghost projects-link\"", "name=\"projectId\"", "name=\"planningType\"")
-                .containsPattern("href=\"/projects\"[^>]*>[^<]+</a>\\s*<a[^>]*href=\"/settings\"");
+        assertThat(html).contains("class=\"app-navigation\"", "class=\"app-project-heading\"",
+                "href=\"/projects\"", "href=\"/settings\"", "name=\"projectId\"", "name=\"planningType\"");
     }
 
     @Test

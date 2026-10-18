@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>DoneIt Calendar</title>
     <style>
         :root {
@@ -71,25 +71,15 @@
         }
     </style>
 <link rel="stylesheet" href="/planning.css">
-</head>
-<body>
+<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1">
 <div th:replace="~{planning :: filters}"></div>
 <div class="shell">
     <section class="hero">
         <div>
             <p class="meta" th:text="#{common.signedInAs(${username})}">Signed in</p>
             <h1 th:text="#{calendar.title(${calendar.month})}">Calendar</h1>
-            <div class="nav">
-                <a class="pill" th:href="@{/}" th:text="#{nav.list}">List</a>
-                <a class="pill" th:href="@{/kanban}" th:text="#{nav.kanban}">Kanban</a>
-                <a class="pill" th:href="@{/calendar(month=${calendar.monthValue})}" th:text="#{nav.calendar}">Calendar</a><a class="ghost" th:href="@{/schedule}" th:text="#{schedule.title}">Schedule</a>
-                <a class="pill" th:href="@{/analytics(month=${calendar.monthValue})}" th:text="#{nav.analytics}">Analytics</a>
-                <a class="ghost" th:href="@{/backlog}" th:text="#{nav.backlog}">Backlog</a>
-                <a class="ghost" th:href="@{/inbox}" th:text="#{nav.inbox}">Inbox</a>
-                <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
-                <a th:replace="~{planning :: projectsLink}"></a>
-                <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
-            </div>
+            <nav th:replace="~{app-shell :: view-tabs}"></nav>
         </div>
         <div class="nav">
             <a class="ghost" th:href="@{/calendar(month=${calendar.previousMonthValue})}" th:text="#{nav.previous}">Previous</a>
@@ -149,5 +139,5 @@
     });
 </script>
 <script src="/planning.js"></script>
-<script src="/reminders.js" defer></script></body>
+<script src="/reminders.js" defer></script></div></body>
 </html>

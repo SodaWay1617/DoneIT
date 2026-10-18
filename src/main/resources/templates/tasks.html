@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>DoneIt Tasks</title>
     <style>
         :root {
@@ -278,8 +278,8 @@
         }
     </style>
 <link rel="stylesheet" href="/planning.css">
-</head>
-<body>
+<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content app-tasks" id="app-main" tabindex="-1">
 <div th:replace="~{planning :: filters}"></div>
 <div class="shell">
     <section class="hero">
@@ -291,20 +291,10 @@
                 <span class="badge status-open" th:text="${todayPage} ? #{task.activeToday(${daily.activeTaskCount() + regularActive.size()})} : #{task.activeCount(${daily.activeTaskCount() + regularActive.size()})}">Active tasks</span>
             </div>
             <div th:replace="~{planning :: load(${planningLoad})}"></div>
-            <div class="nav">
-                <a class="pill" th:classappend="${todayPage} ? ' active'" th:href="@{/}" th:text="#{nav.today}">Today</a>
-                <a class="pill" th:href="@{/kanban(date=${daily.selectedDate})}" th:text="#{nav.kanban}">Kanban</a>
-                <a class="pill" th:href="@{/calendar(month=${#temporals.format(daily.selectedDate, 'yyyy-MM')})}" th:text="#{nav.calendar}">Calendar</a><a class="ghost" th:href="@{/schedule(date=${daily.selectedDate})}" th:text="#{schedule.title}">Schedule</a>
-                <a class="pill" th:href="@{/analytics(month=${#temporals.format(daily.selectedDate, 'yyyy-MM')})}" th:text="#{nav.analytics}">Analytics</a>
+            <nav th:replace="~{app-shell :: view-tabs}"></nav><div class="nav day-navigation">
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.minusDays(1)})}" th:text="#{nav.previousDay}">Previous day</a>
                 <a class="pill" th:href="@{/tasks(date=${daily.selectedDate.plusDays(1)})}" th:text="#{nav.nextDay}">Next day</a>
-                <a class="ghost" th:href="@{/backlog}" th:text="#{nav.backlog}">Backlog</a>
-                <a class="ghost" th:href="@{/inbox}" th:text="#{nav.inbox}">Inbox</a>
-                <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
-                <a th:replace="~{planning :: projectsLink}"></a>
-                <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
-                <a class="ghost" href="/learn" th:text="#{learn.title}">Getting started</a>
-            </div>
+</div>
             <form class="date-picker" method="get" th:action="@{/tasks}">
                 <label for="selectedDate" th:text="#{task.jumpDate}">Jump to date</label>
                 <input id="selectedDate" class="date-input" type="date" name="date" th:value="${#temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
@@ -338,10 +328,6 @@
         <div class="actions">
             <a class="solid" th:href="@{/tasks/new}" th:text="#{task.create}">Create task</a>
             <a class="ghost" th:href="@{/recurring/new}" th:text="#{task.createRecurring}">Create recurring</a>
-            <form class="inline" th:action="@{/logout}" method="post">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <button class="logout" type="submit" th:text="#{common.signOut}">Sign out</button>
-            </form>
         </div>
     </section>
 
@@ -538,5 +524,5 @@ document.querySelectorAll('.done-with-time').forEach(form => form.addEventListen
 </script>
 <script src="/reschedule.js"></script>
 <script src="/planning.js"></script>
-<script src="/reminders.js" defer></script></body>
+<script src="/reminders.js" defer></script></div></body>
 </html>

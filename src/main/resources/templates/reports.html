@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title th:text="#{reports.title}">Reports</title><link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css"></head>
-<body><main class="analytics-shell">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title th:text="#{reports.title}">Reports</title><link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css"><th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1"><main class="analytics-shell">
 <header class="analytics-header"><div><h1 th:text="#{reports.title}">Reports</h1><p class="meta" th:text="#{reports.personal(${login})}">Personal report</p></div>
-<nav class="analytics-nav"><a href="/" th:text="#{nav.today}">Today</a><a href="/analytics" th:text="#{analytics.planFactTitle}">Plan / Fact</a><a href="/analytics/workload" th:text="#{workload.analytics.title}">Workload</a><a href="/projects" th:text="#{project.title}">Projects</a></nav></header>
+<nav th:replace="~{app-shell :: analytics-tabs}"></nav></header>
 <form class="analytics-filters" method="get" action="/reports">
     <fieldset class="period-picker"><legend th:text="#{reports.scope}">Scope</legend><label th:each="option : ${types}"><input type="radio" name="type" th:value="${option}" th:checked="${option == type}" onchange="this.form.submit()"><span th:text="${#messages.msg('reports.type.' + option.name())}">Month</span></label></fieldset>
     <label th:if="${type.name() != 'PROJECT'}"><span th:text="#{analytics.date}">Date</span><input type="date" name="date" th:value="${selectedDate}" onchange="this.form.submit()" required></label>
@@ -37,4 +37,4 @@
     <section class="analytics-section" th:unless="${#lists.isEmpty(p.recurringTasks)}"><h2 th:text="#{reports.recurringTasks}">Recurring tasks</h2><div class="comparison-scroll"><table class="comparison-table"><thead><tr><th th:text="#{task.title}">Task</th><th th:text="#{reports.currentStatus}">Status</th><th th:text="#{reports.perOccurrence}">Estimate per occurrence</th><th th:text="#{analytics.fact}">Fact</th></tr></thead><tbody><tr th:each="task : ${p.recurringTasks}"><th><a th:href="${task.href}" th:text="${task.title}"></a></th><td th:text="${@labels.status(task.status)}"></td><td th:text="${task.estimateMinutes == null ? '-' : @labels.duration(task.estimateMinutes)}"></td><td th:text="${@labels.duration(task.actualMinutes)}"></td></tr></tbody></table></div></section>
 </th:block>
 <section class="analytics-section"><h2 th:text="#{reports.quality}">Estimate accuracy</h2><dl class="workload-metrics"><div><dt th:text="#{workload.analytics.error}">Weighted error</dt><dd th:text="${quality.errorPercent == null ? '-' : (quality.errorPercent > 0 ? '+' : '') + quality.errorPercent + '%'}"></dd></div><div><dt th:text="#{workload.analytics.underestimated}">Underestimated</dt><dd th:text="${quality.underestimated + ' / ' + quality.compared}"></dd></div></dl><p class="meta" th:text="#{workload.analytics.comparable}"></p></section>
-</main><script src="/reminders.js" defer></script></body></html>
+</main><script src="/reminders.js" defer></script></div></body></html>

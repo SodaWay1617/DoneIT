@@ -10,6 +10,7 @@
         return url.pathname + url.search + url.hash;
     }
     document.querySelectorAll('a[href]').forEach(link => {
+        if (link.closest('.app-navigation, .app-view-tabs')) return;
         const url = new URL(link.href);
         if (url.origin === location.origin && views.has(url.pathname)) {
             link.setAttribute('href', preserve(link.getAttribute('href')));

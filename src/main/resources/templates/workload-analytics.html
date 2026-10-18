@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title th:text="#{workload.analytics.title}">Workload analytics</title>
 <link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css">
-</head><body><main class="analytics-shell">
+<th:block th:replace="~{app-shell :: assets}"></th:block></head><body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1"><main class="analytics-shell">
 <header class="analytics-header"><h1 th:text="#{workload.analytics.title}">Workload analytics</h1>
-<nav class="analytics-nav"><a href="/" th:text="#{nav.today}">Today</a><a href="/reports" th:text="#{reports.title}">Reports</a><a href="/analytics" th:text="#{analytics.planFactTitle}">Plan / Fact</a><a href="/settings" th:text="#{nav.settings}">Settings</a></nav></header>
+<nav th:replace="~{app-shell :: analytics-tabs}"></nav></header>
 <form class="analytics-filters" method="get" action="/analytics/workload">
     <label><span th:text="#{workload.analytics.days}">Days</span><input type="number" name="days" min="1" max="366" th:value="${report.rangeDays}" required></label>
     <label><span th:text="#{workload.analytics.until}">Through</span><input type="date" name="endDate" th:value="${report.end}" required></label>
@@ -66,4 +66,4 @@
     <div class="comparison-scroll" th:unless="${#lists.isEmpty(report.projects)}"><table class="comparison-table"><thead><tr><th th:text="#{common.project}">Project</th><th th:text="#{analytics.fact}">Fact</th></tr></thead>
     <tbody><tr th:each="project : ${report.projects}"><th><a th:href="@{/analytics/workload(days=${report.rangeDays},endDate=${report.end},projectId=${project.id},planningType=${selectedPlanningType})}" th:text="${project.name}"></a></th><td th:text="${@labels.duration(project.minutes)}"></td></tr></tbody></table></div>
 </section>
-</main><script src="/reminders.js" defer></script></body></html>
+</main><script src="/reminders.js" defer></script></div></body></html>

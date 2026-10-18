@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title th:text="${pageTitle}">Recurring task</title><style>
 *{box-sizing:border-box}body{margin:0;background:#f4efe6;color:#1f2b2d;font-family:Georgia,serif}.shell{width:min(760px,calc(100% - 24px));margin:24px auto}.panel{background:#fffaf1;border:1px solid #d8cfbf;border-radius:8px;padding:24px}form,.field{display:grid;gap:14px}.field{gap:6px}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}input,textarea,select,button,a{font:inherit;padding:10px 12px;border:1px solid #d8cfbf;border-radius:6px;background:white;color:inherit}textarea{min-height:110px}.actions{display:flex;gap:10px;flex-wrap:wrap}button{background:#1e6d73;color:white;border-color:#1e6d73}a{text-decoration:none}.error{color:#9f4d36}.comments{margin-top:24px;padding-top:20px;border-top:1px solid #d8cfbf}.comment-list{display:grid;gap:10px;margin-bottom:16px}.comment{padding:12px;border:1px solid #d8cfbf;border-radius:8px;background:white}.comment-meta{display:flex;justify-content:space-between;gap:12px;color:#607074}.comment p{white-space:pre-wrap}@media(max-width:600px){.row{grid-template-columns:1fr}}
-</style><link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/analytics-comparison.css"><link rel="stylesheet" href="/task-history.css"></head><body><main class="shell"><section class="panel"><h1 th:text="${form.id != null} ? #{task.editRecurringTitle} : #{task.createRecurringTitle}">Recurring task</h1>
+</style><link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/analytics-comparison.css"><link rel="stylesheet" href="/task-history.css"><th:block th:replace="~{app-shell :: assets}"></th:block></head><body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1"><main class="shell"><section class="panel"><h1 th:text="${form.id != null} ? #{task.editRecurringTitle} : #{task.createRecurringTitle}">Recurring task</h1>
 <p th:replace="~{task-people :: author}"></p>
 <form method="post" th:action="${formAction}" th:object="${form}">
 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -33,4 +33,4 @@
 </section><details th:replace="~{task-history :: history}"></details></section></main>
 <script>const r=document.getElementById('recurrence'),a=document.querySelector('[name=anchorDate]'),i=document.getElementById('repeatInterval');function sync(){const weekdays=r.value==='WEEKDAYS';if(weekdays)i.value='1';i.disabled=weekdays;a.required=!['DAILY','WEEKDAYS'].includes(r.value)||Number(i.value)>1}r.addEventListener('change',sync);i.addEventListener('input',sync);sync()</script>
 <script src="/duration-fields.js"></script>
-<script src="/reminders.js" defer></script></body></html>
+<script src="/reminders.js" defer></script></div></body></html>

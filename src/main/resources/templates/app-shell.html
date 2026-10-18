@@ -1,0 +1,97 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<th:block th:fragment="assets">
+    <link rel="stylesheet" href="/app-shell.css">
+    <script src="/vendor/lucide-0.468.0.min.js" defer></script>
+    <script src="/app-shell.js" defer></script>
+</th:block>
+<th:block th:fragment="icon(name)"><i th:attr="data-lucide=${name}" aria-hidden="true"></i></th:block>
+<span th:fragment="badge(count)" class="app-badge" th:if="${count > 0}" th:text="${count}">3</span>
+<a th:fragment="item(item)" class="app-link" th:href="${item.href}" th:classappend="${item.active} ? 'is-active'"
+   th:attr="aria-current=${item.active ? 'page' : null},data-nav-key=${item.key}">
+    <th:block th:replace="~{app-shell :: icon(${item.icon})}"></th:block>
+    <span class="app-link-label" th:text="${#messages.msg(item.label)}">Section</span>
+    <span th:replace="~{app-shell :: badge(${item.count})}"></span>
+</a>
+<div th:fragment="account" class="app-account">
+    <a class="app-link" href="/settings" th:classappend="${appNav.section == 'settings'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'settings' ? 'page' : null}">
+        <th:block th:replace="~{app-shell :: icon('settings')}"></th:block><span th:text="#{nav.settings}">Settings</span>
+    </a>
+    <a class="app-link" href="/learn" th:classappend="${appNav.section == 'learn'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'learn' ? 'page' : null}">
+        <th:block th:replace="~{app-shell :: icon('book-open')}"></th:block><span th:text="#{learn.title}">Getting started</span>
+    </a>
+    <div class="app-language" th:attr="aria-label=#{settings.language}">
+        <a th:href="${appNav.russianHref}" lang="ru" th:classappend="${#locale.language == 'ru'} ? 'is-active'" th:text="#{language.russian}">Russian</a>
+        <a th:href="${appNav.englishHref}" lang="en" th:classappend="${#locale.language == 'en'} ? 'is-active'" th:text="#{language.english}">English</a>
+    </div>
+    <div class="app-user"><th:block th:replace="~{app-shell :: icon('circle-user-round')}"></th:block><span th:text="${appNav.username}">User</span></div>
+    <form method="post" th:action="@{/logout}"><button class="app-link" type="submit"><th:block th:replace="~{app-shell :: icon('log-out')}"></th:block><span th:text="#{common.signOut}">Sign out</span></button></form>
+</div>
+<div th:fragment="project-list" class="app-project-section">
+    <div class="app-project-heading">
+        <a href="/projects" th:classappend="${appNav.projectSectionActive} ? 'is-active'" th:text="#{project.title}">Projects</a>
+        <a class="app-icon-button" href="/projects#new-project" th:title="#{project.new}" th:aria-label="#{project.new}"><th:block th:replace="~{app-shell :: icon('plus')}"></th:block></a>
+    </div>
+    <details class="app-project-disclosure" open>
+        <summary th:text="#{shell.projectList}">Project list</summary>
+        <div class="app-project-scroll">
+            <a class="app-link" th:href="${appNav.allProjectsHref}" th:classappend="${appNav.allProjectsActive} ? 'is-active'" data-project="all">
+                <th:block th:replace="~{app-shell :: icon('folders')}"></th:block><span class="app-link-label" th:text="#{project.all}">All projects</span>
+            </a>
+            <a class="app-link" th:each="project : ${appNav.projects}" th:href="${project.href}" th:classappend="${project.active} ? 'is-active'"
+               th:attr="data-project=${project.id},aria-current=${project.active ? 'page' : null}" th:title="${project.name}">
+                <th:block th:replace="~{app-shell :: icon('folder')}"></th:block><span class="app-link-label" th:text="${project.name}">MAIN</span>
+            </a>
+        </div>
+    </details>
+</div>
+<aside th:fragment="sidebar(variant)" class="app-sidebar" th:classappend="${'app-sidebar-' + variant}" th:attr="aria-label=#{shell.navigation}">
+    <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
+    <div class="app-sidebar-body">
+        <nav th:attr="aria-label=#{shell.sections}"><th:block th:each="item : ${appNav.main}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+        <nav class="app-analytics-subnav" th:if="${appNav.section == 'analytics'}" th:attr="aria-label=#{nav.analytics}"><th:block th:each="item : ${appNav.analytics}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+        <nav class="app-secondary-nav" th:attr="aria-label=#{shell.views}"><th:block th:each="item : ${appNav.views}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+        <div th:replace="~{app-shell :: project-list}"></div>
+    </div>
+    <div th:replace="~{app-shell :: account}"></div>
+</aside>
+<div th:fragment="navigation" th:if="${appNav != null}" class="app-navigation">
+    <a class="app-skip" href="#app-main" th:text="#{shell.skip}">Skip to content</a>
+    <aside th:replace="~{app-shell :: sidebar('desktop')}"></aside>
+    <header class="app-topbar">
+        <button class="app-icon-button app-drawer-toggle" type="button" data-open-menu="app-drawer" aria-controls="app-drawer" aria-expanded="false" th:title="#{shell.openMenu}" th:aria-label="#{shell.openMenu}"><th:block th:replace="~{app-shell :: icon('menu')}"></th:block></button>
+        <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
+        <span class="app-topbar-user" th:text="${appNav.username}">User</span>
+    </header>
+    <nav class="app-bottom-nav" th:attr="aria-label=#{shell.navigation}">
+        <a class="app-bottom-item" th:each="item : ${appNav.mobile}" th:href="${item.href}" th:classappend="${item.active} ? 'is-active'" th:attr="aria-current=${item.active ? 'page' : null},data-nav-key=${item.key}">
+            <th:block th:replace="~{app-shell :: icon(${item.icon})}"></th:block><span th:text="${#messages.msg(item.label)}">Today</span><span th:replace="~{app-shell :: badge(${item.count})}"></span>
+        </a>
+        <button class="app-bottom-item" type="button" data-open-menu="app-more" aria-controls="app-more" aria-expanded="false" th:classappend="${appNav.moreActive} ? 'is-active'">
+            <th:block th:replace="~{app-shell :: icon('ellipsis')}"></th:block><span th:text="#{shell.more}">More</span>
+        </button>
+    </nav>
+    <dialog id="app-drawer" class="app-menu app-drawer" aria-labelledby="app-drawer-title">
+        <header class="app-menu-header"><strong id="app-drawer-title" th:text="#{shell.navigation}">Navigation</strong><button class="app-icon-button" type="button" data-close-menu th:title="#{shell.closeMenu}" th:aria-label="#{shell.closeMenu}"><th:block th:replace="~{app-shell :: icon('x')}"></th:block></button></header>
+        <aside th:replace="~{app-shell :: sidebar('drawer')}"></aside>
+    </dialog>
+    <dialog id="app-more" class="app-menu app-more" aria-labelledby="app-more-title">
+        <header class="app-menu-header"><strong id="app-more-title" th:text="#{shell.more}">More</strong><button class="app-icon-button" type="button" data-close-menu th:title="#{shell.closeMenu}" th:aria-label="#{shell.closeMenu}"><th:block th:replace="~{app-shell :: icon('x')}"></th:block></button></header>
+        <div class="app-more-body">
+            <h2 th:text="#{shell.sections}">Sections</h2><nav><th:block th:each="item : ${appNav.more.subList(0,4)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+            <h2 th:text="#{shell.views}">Views</h2><nav><th:block th:each="item : ${appNav.more.subList(4,5)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+            <h2 th:text="#{nav.analytics}">Analytics</h2><nav><th:block th:each="item : ${appNav.more.subList(5,7)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+            <h2 th:text="#{shell.additional}">Additional</h2><nav><th:block th:each="item : ${appNav.more.subList(7,9)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+            <div class="app-language" th:attr="aria-label=#{settings.language}"><a th:href="${appNav.russianHref}" lang="ru" th:text="#{language.russian}">Russian</a><a th:href="${appNav.englishHref}" lang="en" th:text="#{language.english}">English</a></div>
+            <div class="app-user"><th:block th:replace="~{app-shell :: icon('circle-user-round')}"></th:block><span th:text="${appNav.username}">User</span></div>
+            <form method="post" th:action="@{/logout}"><button class="app-link" type="submit"><th:block th:replace="~{app-shell :: icon('log-out')}"></th:block><span th:text="#{common.signOut}">Sign out</span></button></form>
+        </div>
+    </dialog>
+</div>
+<nav th:fragment="view-tabs" th:if="${appNav != null}" class="app-view-tabs" th:attr="aria-label=#{shell.views}">
+    <a th:href="${appNav.listHref}" th:classappend="${appNav.section == 'today'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'today' ? 'page' : null}"><i data-lucide="list" aria-hidden="true"></i><span th:text="#{nav.list}">List</span></a>
+    <a th:href="${appNav.views[0].href}" th:classappend="${appNav.section == 'kanban'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'kanban' ? 'page' : null}"><i data-lucide="columns-3" aria-hidden="true"></i><span th:text="#{nav.kanban}">Kanban</span></a>
+    <a th:href="${appNav.main[3].href}" th:classappend="${appNav.section == 'calendar'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'calendar' ? 'page' : null}"><i data-lucide="calendar-days" aria-hidden="true"></i><span th:text="#{nav.calendar}">Calendar</span></a>
+</nav>
+<nav th:fragment="analytics-tabs" th:if="${appNav != null}" class="app-view-tabs" th:attr="aria-label=#{nav.analytics}"><th:block th:each="item : ${appNav.analytics}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+</body></html>

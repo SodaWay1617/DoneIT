@@ -1,20 +1,13 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title th:text="#{schedule.title}">Schedule</title>
 <link rel="stylesheet" href="/schedule.css"><link rel="stylesheet" href="/planning.css">
-</head>
-<body>
+<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1">
 <header class="schedule-header">
     <div class="schedule-title"><h1 th:text="#{schedule.title}">Schedule</h1><time th:text="${#temporals.format(selectedDate,'dd.MM.yyyy')}">01.01.2026</time></div>
-    <nav class="schedule-nav">
-        <a href="/" th:text="#{nav.today}">Today</a>
-        <a th:href="@{/kanban(date=${selectedDate})}" th:text="#{nav.kanban}">Kanban</a>
-        <a th:href="@{/calendar(month=${#temporals.format(selectedDate,'yyyy-MM')})}" th:text="#{nav.calendar}">Calendar</a>
-        <a th:replace="~{planning :: projectsLink}"></a>
-        <a href="/settings" th:text="#{nav.settings}">Settings</a>
-        <a class="create-task" href="/tasks/new" th:text="#{task.create}">Create task</a>
-    </nav>
+    <div class="schedule-nav"><a class="create-task" href="/tasks/new" th:text="#{task.create}">Create task</a></div>
     <div class="schedule-date">
         <a th:href="@{/schedule(date=${selectedDate.minusDays(1)})}" th:aria-label="#{nav.previousDay}" th:title="#{nav.previousDay}">&larr;</a>
         <form method="get" action="/schedule"><input type="date" name="date" th:value="${selectedDate}" th:aria-label="#{task.plannedDay}" onchange="this.form.submit()"></form>
@@ -73,4 +66,4 @@
     const scroll = document.getElementById('scheduleScroll');
     scroll.scrollTop = selected === today ? Math.max(0, now * 2 - 160) : 7 * 120;
 </script>
-<script src="/reminders.js" defer></script></body></html>
+<script src="/reminders.js" defer></script></div></body></html>

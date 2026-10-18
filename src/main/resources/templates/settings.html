@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title th:text="'DoneIt — ' + #{settings.title}">DoneIt Settings</title>
     <style>
         :root { --bg:#f4efe6; --panel:#fffaf1; --ink:#1f2b2d; --muted:#607074; --accent:#1e6d73; --border:#d8cfbf; }
@@ -23,9 +23,9 @@
         button,.button { display:inline-flex; min-height:40px; align-items:center; padding:9px 14px; border:0; border-radius:6px; background:var(--accent); color:white; font:inherit; text-decoration:none; }
         .flash { color:var(--accent); }
     </style>
-</head>
-<body><main class="shell"><section class="panel">
-    <header class="bar"><h1 th:text="#{settings.title}">Settings</h1><a class="button" href="/" th:text="#{nav.tasks}">Tasks</a></header>
+<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1"><main class="shell"><section class="panel">
+    <header class="bar"><h1 th:text="#{settings.title}">Settings</h1></header>
     <p class="flash" th:if="${settingsSaved}" th:text="#{settings.saved}">Settings saved.</p>
     <div class="setting">
         <span><strong th:text="#{settings.language}">Language</strong><span th:text="#{settings.languageHint}">Choose language.</span></span>
@@ -49,5 +49,5 @@
         </div>
         <button type="submit" th:text="#{common.save}">Save</button>
     </form>
-</section><p><a class="button" href="/settings/devices" th:text="#{devices.title}">Remembered devices</a></p><p><a class="button" href="/learn" th:text="#{learn.title}">Getting started</a></p></main><script src="/reminders.js" defer></script></body>
+</section><p><a class="button" href="/settings/devices" th:text="#{devices.title}">Remembered devices</a></p><p><a class="button" href="/learn" th:text="#{learn.title}">Getting started</a></p></main><script src="/reminders.js" defer></script></div></body>
 </html>

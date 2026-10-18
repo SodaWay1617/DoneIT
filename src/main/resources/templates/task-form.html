@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title th:text="${pageTitle}">Task Form</title>
     <style>
         :root {
@@ -111,8 +111,8 @@
         .comment p { margin-bottom: 0; white-space: pre-wrap; }
         [hidden] { display: none !important; }
     </style>
-<link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/analytics-comparison.css"><link rel="stylesheet" href="/task-history.css"></head>
-<body>
+<link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/analytics-comparison.css"><link rel="stylesheet" href="/task-history.css"><th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1">
 <div style="width:min(760px,calc(100% - 24px));margin:14px auto 0"><a class="ghost" th:href="@{/recurring/new}" th:text="#{form.switchRecurring}">Switch to recurring task</a></div>
 <div class="shell">
     <h1 th:text="${form.editMode} ? #{task.editTitle} : #{task.createTitle}">Create Task</h1>
@@ -290,5 +290,5 @@
     updateDateFields();
 </script>
 <script src="/duration-fields.js"></script>
-<script src="/reminders.js" defer></script></body>
+<script src="/reminders.js" defer></script></div></body>
 </html>
