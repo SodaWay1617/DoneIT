@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0027-user-learning
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE users ADD COLUMN learning_read_mask INTEGER NOT NULL DEFAULT 0;
+              ALTER TABLE users ADD COLUMN learning_dismissed BOOLEAN NOT NULL DEFAULT false;
+              ALTER TABLE users ADD CONSTRAINT users_learning_mask_check CHECK (learning_read_mask BETWEEN 0 AND 255);

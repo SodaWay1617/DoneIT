@@ -1,0 +1,11 @@
+<!doctype html><html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="#{devices.title}">Remembered devices</title><link rel="stylesheet" href="/analytics.css"><link rel="stylesheet" href="/analytics-comparison.css"></head>
+<body><main class="analytics-shell">
+<header class="analytics-header"><h1 th:text="#{devices.title}">Remembered devices</h1><nav class="analytics-nav"><a href="/settings" th:text="#{settings.title}">Settings</a><a href="/" th:text="#{nav.today}">Today</a></nav></header>
+<p class="history-note" th:unless="${secureConnection}" th:text="#{devices.httpWarning}">HTTP does not encrypt login tokens.</p>
+<p class="empty" th:if="${#lists.isEmpty(devices)}" th:text="#{devices.empty}">No remembered devices</p>
+<ul class="devices-list" th:unless="${#lists.isEmpty(devices)}"><li class="device-row" th:each="device : ${devices}">
+<div><strong th:text="${device.name}"></strong><span class="row-meta" th:if="${device.current}" th:text="#{devices.current}">This device</span><dl><dt th:text="#{devices.lastUsed}"></dt><dd th:text="${#temporals.format(device.lastUsed,'dd.MM.yyyy HH:mm')}"></dd><dt th:text="#{devices.expires}"></dt><dd th:text="${#temporals.format(device.expiresAt,'dd.MM.yyyy HH:mm')}"></dd></dl></div><form method="post" th:action="@{/settings/devices/{id}/revoke(id=${device.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button type="submit" th:text="#{devices.revoke}">Revoke</button></form>
+</li></ul>
+<div class="device-actions"><form method="post" action="/settings/devices/revoke-others"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button type="submit" th:text="#{devices.revokeOthers}">Sign out other devices</button></form><form method="post" action="/logout"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button type="submit" th:text="#{devices.logout}">Sign out here</button></form></div>
+</main><script src="/reminders.js" defer></script></body></html>

@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0026-persistent-logins
+      author: codex
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              ALTER TABLE users ADD CONSTRAINT uq_users_login_persistent UNIQUE(login);
+              CREATE TABLE persistent_logins (
+                  username VARCHAR(255) NOT NULL REFERENCES users(login) ON DELETE CASCADE ON UPDATE CASCADE,
+                  series VARCHAR(64) PRIMARY KEY,
+                  token VARCHAR(64) NOT NULL,
+                  last_used TIMESTAMP NOT NULL,
+                  id BIGSERIAL UNIQUE NOT NULL,
+                  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  device_name VARCHAR(255) NOT NULL DEFAULT 'Browser'
+              );
+              CREATE INDEX idx_persistent_logins_username ON persistent_logins(username);
+              CREATE TABLE remembered_device_sessions (
+                  session_id VARCHAR(128) PRIMARY KEY,
+                  series VARCHAR(64) NOT NULL REFERENCES persistent_logins(series) ON DELETE CASCADE
+              );
+              CREATE INDEX idx_remembered_device_sessions_series ON remembered_device_sessions(series);
+              CREATE FUNCTION revoke_remembered_logins_after_password_change() RETURNS trigger AS $$
+              BEGIN
+                  IF NEW.password_hash IS DISTINCT FROM OLD.password_hash THEN
+                      DELETE FROM persistent_logins WHERE username=NEW.login;
+                  END IF;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_revoke_remembered_password AFTER UPDATE OF password_hash ON users
+                  FOR EACH ROW EXECUTE FUNCTION revoke_remembered_logins_after_password_change();

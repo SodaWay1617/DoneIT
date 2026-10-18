@@ -303,6 +303,7 @@
                 <a class="ghost" th:href="@{/finished}" th:text="#{nav.finished}">Done and closed</a>
                 <a th:replace="~{planning :: projectsLink}"></a>
                 <a class="ghost" th:href="@{/settings}" th:text="#{nav.settings}">Settings</a>
+                <a class="ghost" href="/learn" th:text="#{learn.title}">Getting started</a>
             </div>
             <form class="date-picker" method="get" th:action="@{/tasks}">
                 <label for="selectedDate" th:text="#{task.jumpDate}">Jump to date</label>
@@ -323,10 +324,14 @@
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <button class="secondary" type="submit" th:text="#{task.random}">Pick random task</button>
             </form>
-            <div class="guide">
-                <strong>Quick guide</strong>
-                <span>Use the main column for dated work, keep may-be-later reminders in backlog, and check the finished section only for recent context.</span>
-            </div>
+            <aside class="guide" th:if="${learningProgress != null && learningProgress.invite()}" aria-labelledby="learning-invite">
+                <strong id="learning-invite" th:text="#{learn.invite}">New to DoneIt?</strong>
+                <p th:text="#{learn.inviteHint}">Eight short topics. Continue whenever you like.</p>
+                <a class="ghost" href="/learn" th:text="${learningProgress.count() > 0} ? #{learn.resume} : #{learn.begin}">Start learning</a>
+                <form method="post" th:action="@{/learn/dismiss}" style="display:inline">
+                    <button class="ghost" type="submit" th:text="#{learn.later}">Later</button>
+                </form>
+            </aside>
             <div class="flash" th:if="${flashMessage != null}" th:text="${flashMessage}">Task created.</div>
             <div class="flash" th:if="${randomTaskTitle != null}" th:text="#{task.randomResult(${randomTaskTitle})}">Random task: Task title</div>
         </div>

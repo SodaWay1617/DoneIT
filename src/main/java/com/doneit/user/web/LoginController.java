@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class LoginController {
 
     @GetMapping("/login")
-    public String login() {
+    public String login(jakarta.servlet.http.HttpServletRequest request,org.springframework.ui.Model model) {
+        model.addAttribute("secureConnection",request.isSecure());
         return "login";
     }
 }

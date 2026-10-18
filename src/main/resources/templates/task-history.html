@@ -1,0 +1,15 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<details th:fragment="history" th:if="${changeHistory != null}" class="task-history">
+    <summary><strong th:text="#{history.title}">Change history</strong><span th:text="#{history.summary(${changeHistory.total},${changeHistory.reschedules})}">Changes: 0. Reschedules: 0.</span></summary>
+    <p class="history-hint" th:text="#{history.hint}">Changes are recorded from the introduction of this feature.</p>
+    <p th:if="${changeHistory.entries.isEmpty()}" th:text="#{history.empty}">No changes recorded yet.</p>
+    <p th:if="${changeHistory.truncated()}" th:text="#{history.recent}">Showing the latest 100 changes.</p>
+    <ol class="history-entries" th:unless="${changeHistory.entries.isEmpty()}" tabindex="0" th:attr="aria-label=#{history.title}">
+        <li th:each="entry : ${changeHistory.entries}">
+            <div class="history-meta"><strong th:text="${entry.field}">Status</strong><time th:datetime="${entry.changedAt}" th:text="${#temporals.format(entry.changedAt,'dd.MM.yyyy HH:mm')}">Date</time></div>
+            <div class="history-values"><span th:text="${entry.before}">Before</span><span aria-hidden="true">&#8594;</span><span th:text="${entry.after}">After</span></div>
+        </li>
+    </ol>
+</details>
+</body></html>

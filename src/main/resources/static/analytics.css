@@ -42,6 +42,13 @@ h2 { font-size: 19px; margin: 0 0 14px; }
 .daily-details { margin-top: 10px; }
 .daily-details summary { color: #335d48; cursor: pointer; font-size: .85rem; }
 .empty { padding: 30px 0; }
+.device-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+.device-actions button, .device-row button { border:1px solid #cddbd2; background:white; color:#335d48; padding:9px 12px; border-radius:6px; font:inherit; cursor:pointer; }
+.devices-list { list-style:none; margin:20px 0 0; padding:0; }
+.device-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding:18px 0; border-bottom:1px solid #dce5df; }
+.device-row dl { display:grid; grid-template-columns:auto auto; gap:4px 12px; font-size:13px; color:#65776c; }
+.device-row dd { margin:0; }
+@media(max-width:400px) { .device-row dl { grid-template-columns:1fr; } .device-row dd { margin-bottom:5px; } }
 .analytics-filters input[type=number] { width: 88px; min-height: 40px; padding: 8px; border: 1px solid #cddbd2; border-radius: 6px; font: inherit; }
 .analytics-filters button { min-height: 40px; padding: 8px 16px; border: 1px solid #2f6b50; background: #2f6b50; color: white; border-radius: 6px; font: inherit; cursor: pointer; }
 .history-note { border-left: 3px solid #4675ad; padding: 8px 12px; font-size: .85rem; }

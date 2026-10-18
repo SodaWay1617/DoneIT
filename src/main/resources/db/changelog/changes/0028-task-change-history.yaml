@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0028-task-change-history
+      author: codex
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE TABLE task_change_history (
+                  id BIGSERIAL PRIMARY KEY,
+                  task_id BIGINT REFERENCES tasks(id) ON DELETE CASCADE,
+                  regular_task_id BIGINT REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                  field VARCHAR(16) NOT NULL CHECK (field IN ('PLANNED','STATUS','ESTIMATE','DEADLINE')),
+                  old_value TEXT,
+                  new_value TEXT,
+                  changed_at TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
+                  CHECK ((task_id IS NULL) <> (regular_task_id IS NULL))
+              );
+              CREATE INDEX idx_task_changes ON task_change_history(task_id,id DESC);
+              CREATE INDEX idx_regular_task_changes ON task_change_history(regular_task_id,id DESC);
+              CREATE FUNCTION record_task_change_history() RETURNS trigger AS $$
+              DECLARE before_state JSONB; after_state JSONB; recurring BOOLEAN;
+              BEGIN
+                  recurring := TG_TABLE_NAME='regular_tasks';
+                  IF recurring THEN
+                      before_state := jsonb_build_object(
+                          'PLANNED',NULLIF(concat_ws(' ',to_char(OLD.anchor_date,'DD.MM.YYYY'),to_char(OLD.occurrence_time,'HH24:MI')),''),
+                          'STATUS',OLD.status,'ESTIMATE',OLD.estimate_minutes);
+                      after_state := jsonb_build_object(
+                          'PLANNED',NULLIF(concat_ws(' ',to_char(NEW.anchor_date,'DD.MM.YYYY'),to_char(NEW.occurrence_time,'HH24:MI')),''),
+                          'STATUS',NEW.status,'ESTIMATE',NEW.estimate_minutes);
+                  ELSE
+                      before_state := jsonb_build_object(
+                          'PLANNED',COALESCE(to_char(OLD.planned_date,'DD.MM.YYYY'),to_char(OLD.planned_for_at,'DD.MM.YYYY HH24:MI')),
+                          'STATUS',OLD.status,'ESTIMATE',OLD.estimate_minutes,
+                          'DEADLINE',to_char(OLD.deadline_at,'DD.MM.YYYY HH24:MI'));
+                      after_state := jsonb_build_object(
+                          'PLANNED',COALESCE(to_char(NEW.planned_date,'DD.MM.YYYY'),to_char(NEW.planned_for_at,'DD.MM.YYYY HH24:MI')),
+                          'STATUS',NEW.status,'ESTIMATE',NEW.estimate_minutes,
+                          'DEADLINE',to_char(NEW.deadline_at,'DD.MM.YYYY HH24:MI'));
+                  END IF;
+                  INSERT INTO task_change_history(task_id,regular_task_id,field,old_value,new_value)
+                      SELECT CASE WHEN NOT recurring THEN NEW.id END,CASE WHEN recurring THEN NEW.id END,
+                          key,before_state->>key,after_state->>key
+                      FROM jsonb_object_keys(after_state) AS fields(key)
+                      WHERE before_state->key IS DISTINCT FROM after_state->key;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_task_change_history AFTER UPDATE ON tasks
+                  FOR EACH ROW EXECUTE FUNCTION record_task_change_history();
+              CREATE TRIGGER trg_regular_task_change_history AFTER UPDATE ON regular_tasks
+                  FOR EACH ROW EXECUTE FUNCTION record_task_change_history();

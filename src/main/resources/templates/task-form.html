@@ -111,7 +111,7 @@
         .comment p { margin-bottom: 0; white-space: pre-wrap; }
         [hidden] { display: none !important; }
     </style>
-<link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/analytics-comparison.css"></head>
+<link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/analytics-comparison.css"><link rel="stylesheet" href="/task-history.css"></head>
 <body>
 <div style="width:min(760px,calc(100% - 24px));margin:14px auto 0"><a class="ghost" th:href="@{/recurring/new}" th:text="#{form.switchRecurring}">Switch to recurring task</a></div>
 <div class="shell">
@@ -245,6 +245,7 @@
             <div class="actions"><button class="solid" type="submit" th:text="#{task.addComment}">Add comment</button></div>
         </form>
     </section>
+    <details th:replace="~{task-history :: history}"></details>
 </div>
 <script>
     const status = document.getElementById('status');

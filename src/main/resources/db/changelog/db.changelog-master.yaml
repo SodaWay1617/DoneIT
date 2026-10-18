@@ -49,3 +49,9 @@ databaseChangeLog:
       file: db/changelog/changes/0024-task-end-times.yaml
   - include:
       file: db/changelog/changes/0025-workload-history.yaml
+  - include:
+      file: db/changelog/changes/0026-persistent-logins.yaml
+  - include:
+      file: db/changelog/changes/0027-user-learning.yaml
+  - include:
+      file: db/changelog/changes/0028-task-change-history.yaml

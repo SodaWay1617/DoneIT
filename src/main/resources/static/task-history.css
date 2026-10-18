@@ -1,0 +1,10 @@
+.task-history { margin-top:24px; padding-top:18px; border-top:1px solid #d8cfbf; font-size:16px; }
+.task-history summary { cursor:pointer; min-height:44px; padding:8px 0; }
+.task-history summary > span { display:block; margin:6px 0 0 20px; color:#607074; font-size:14px; }
+.task-history summary:focus-visible,.history-entries:focus-visible { outline:2px solid #1e6d73; outline-offset:4px; }
+.history-hint { color:#607074; line-height:1.5; }
+.history-entries { list-style:none; padding:0; max-height:380px; overflow-y:auto; }
+.history-entries li { padding:12px 0; border-top:1px solid #d8cfbf; }
+.history-meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 12px; }
+.history-meta time { color:#607074; font-size:14px; }
+.history-values { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; line-height:1.5; overflow-wrap:anywhere; }

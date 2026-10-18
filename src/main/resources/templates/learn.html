@@ -1,0 +1,57 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="#{learn.title} + ' | DoneIt'">Learning | DoneIt</title>
+    <link rel="stylesheet" href="/learn.css">
+</head>
+<body>
+<main class="learning-shell">
+    <header class="learning-header">
+        <div><a class="learning-brand" href="/">DoneIt</a><h1 th:text="#{learn.title}">Getting started</h1></div>
+        <a class="learning-button secondary" href="/" th:text="#{nav.tasks}">Tasks</a>
+    </header>
+    <div class="learning-progress">
+        <label for="learning-progress" th:text="#{learn.progress(${progress.count()},8)}">0 of 8 topics read</label>
+        <progress id="learning-progress" max="8" th:value="${progress.count()}">0</progress>
+    </div>
+    <p class="learning-success" role="status" th:if="${progress.complete()}" th:text="#{learn.complete}">All topics read.</p>
+    <div class="learning-layout">
+        <nav class="learning-topics" th:attr="aria-label=#{learn.topics}">
+            <a th:each="index : ${#numbers.sequence(0,7)}" th:href="@{/learn/{topic}(topic=${index})}"
+               th:classappend="${index == topic} ? 'selected'" th:attr="aria-current=${index == topic ? 'step' : null}">
+                <span class="topic-number" th:text="${index + 1}">1</span>
+                <span th:text="#{${'learn.' + index + '.title'}}">Topic</span>
+                <span class="topic-read" th:if="${progress.read(index)}" th:text="#{learn.read}">Read</span>
+            </a>
+        </nav>
+        <article class="learning-content">
+            <p class="learning-step" th:text="#{learn.step(${topic + 1},8)}">Topic 1 of 8</p>
+            <h2 th:text="#{${'learn.' + topic + '.title'}}">Your day in DoneIt</h2>
+            <p class="learning-lead" th:text="#{${'learn.' + topic + '.lead'}}">Introduction</p>
+            <ol class="learning-points">
+                <li th:each="point : ${#numbers.sequence(1,3)}" th:text="#{${'learn.' + topic + '.point' + point}}">Point</li>
+            </ol>
+            <aside class="learning-example">
+                <h3 th:text="#{learn.example}">Example</h3>
+                <p th:text="#{${'learn.' + topic + '.example'}}">Example</p>
+            </aside>
+            <a class="learning-destination" th:href="${destination}" th:text="#{${'learn.' + topic + '.action'}}">Open screen</a>
+            <footer class="learning-controls">
+                <a class="learning-button secondary" th:if="${topic > 0}" th:href="@{/learn/{topic}(topic=${topic - 1})}" th:text="#{learn.previous}">Previous</a>
+                <form th:unless="${progress.read(topic)}" method="post" th:action="@{/learn/{topic}/read(topic=${topic})}">
+                    <button class="learning-button" type="submit" th:text="${progress.count() == 7} ? #{learn.finish} : #{learn.next}">Read and continue</button>
+                </form>
+                <a class="learning-button" th:if="${progress.read(topic) && !progress.complete()}" href="/learn" th:text="#{learn.resume}">Continue learning</a>
+                <a class="learning-button" th:if="${progress.complete()}" href="/" th:text="#{learn.start}">Go to my tasks</a>
+            </footer>
+        </article>
+    </div>
+    <div class="learning-bottom">
+        <form method="post" th:action="@{/learn/dismiss}"><button class="learning-text-button" th:text="#{learn.later}">Later</button></form>
+        <form method="post" th:action="@{/learn/restart}"><button class="learning-text-button" th:text="#{learn.restart}">Start over</button></form>
+    </div>
+</main>
+</body>
+</html>

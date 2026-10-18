@@ -72,8 +72,9 @@
 
         h1 {
             margin: 0;
-            font-size: clamp(2.4rem, 5vw, 4.2rem);
-            line-height: 0.94;
+            font-size: 32px;
+            line-height: 1.15;
+            overflow-wrap: anywhere;
         }
 
         .story p {
@@ -123,6 +124,11 @@
             outline: 2px solid rgba(36, 107, 98, 0.25);
             border-color: var(--accent);
         }
+        .remember-device { display:flex; align-items:center; gap:10px; }
+        .remember-device input { width:20px; min-height:20px; height:20px; flex-shrink:0; }
+        .remember-device span { min-width:0; overflow-wrap:anywhere; }
+        .story, .form-panel { min-width:0; }
+        small { color:var(--muted); line-height:1.4; overflow-wrap:anywhere; }
 
         button {
             min-height: 50px;
@@ -186,16 +192,19 @@
     <section class="form-panel">
         <div th:if="${param.error}" class="feedback error" th:text="#{login.error}">Login or password is incorrect.</div>
         <div th:if="${param.logout}" class="feedback ok" th:text="#{login.logout}">You have signed out.</div>
+        <div th:if="${param.expired}" class="feedback ok" th:text="#{login.expired}">This sign-in was revoked.</div>
         <form th:action="@{/login}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
             <label>
                 <span th:text="#{login.username}">Login</span>
-                <input type="text" name="username" autocomplete="username" required />
+                <input type="text" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required />
             </label>
             <label>
                 <span th:text="#{login.password}">Password</span>
                 <input type="password" name="password" autocomplete="current-password" required />
             </label>
+            <label class="remember-device"><input type="checkbox" name="remember-me" value="true"><span th:text="#{login.rememberDevice}">Remember this device for 90 days</span></label>
+            <small th:unless="${secureConnection}" th:text="#{devices.httpWarning}"></small>
             <button type="submit" th:text="#{login.submit}">Sign in</button>
         </form>
     </section>

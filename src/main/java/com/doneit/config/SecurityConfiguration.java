@@ -18,7 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,DeviceRememberMeServices remember,
+            com.doneit.user.application.RememberedDevicesService devices,org.springframework.security.core.session.SessionRegistry sessions) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/login").permitAll()
@@ -30,11 +31,36 @@ public class SecurityConfiguration {
                         .failureUrl("/login?error")
                         .permitAll()
                 )
+                .rememberMe(config->config.rememberMeServices(remember).key(remember.getKey()))
+                .sessionManagement(config->config.maximumSessions(-1).sessionRegistry(sessions).expiredUrl("/login?expired"))
+                .addFilterAfter(new RememberedDeviceSessionFilter(remember,devices,sessions),
+                        org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")
                 );
 
         return http.build();
+    }
+
+    @Bean public org.springframework.security.core.session.SessionRegistry sessionRegistry() {
+        return new org.springframework.security.core.session.SessionRegistryImpl();
+    }
+    @Bean public org.springframework.security.web.session.HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new org.springframework.security.web.session.HttpSessionEventPublisher();
+    }
+    @Bean public org.springframework.security.web.authentication.rememberme.PersistentTokenRepository persistentTokens(javax.sql.DataSource dataSource,
+            com.doneit.user.application.RememberedDevicesService devices) {
+        var tokens=new org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl() {
+            // Spring bulk-revokes tokens on reuse; the live sessions must also be expired.
+            @Override public void removeUserTokens(String username) {devices.revokeOthers(username,null,null);}
+        };
+        tokens.setDataSource(dataSource);return tokens;
+    }
+    @Bean public DeviceRememberMeServices rememberMeServices(UserDetailsService users,
+            org.springframework.security.web.authentication.rememberme.PersistentTokenRepository tokens,
+            com.doneit.user.application.RememberedDevicesService devices) {
+        // Persistent cookies use DB validation; this key only pairs Spring's authentication objects and provider.
+        return new DeviceRememberMeServices(java.util.UUID.randomUUID().toString(),users,tokens,devices);
     }
 
     @Bean
