@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0029-schedule-only-visibility
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE projects DROP CONSTRAINT chk_project_task_visibility;
+              ALTER TABLE projects ADD CONSTRAINT chk_project_task_visibility CHECK (task_visibility IN ('ALL_MEMBERS', 'AUTHOR_AND_ASSIGNEES', 'SCHEDULE_ONLY'));

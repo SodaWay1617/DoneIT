@@ -68,6 +68,21 @@ class LearningTest extends IntegrationTestSupport {
         assertThat(learning.progress("owner").invite()).isTrue();
     }
 
+    @Test void resumedInvitationAndBothDismissButtonsPreserveReadProgress() throws Exception {
+        learning.markRead("owner", 0);
+        String html = mvc.perform(get("/").param("lang", "en").with(user("owner")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String invitation = html.substring(html.indexOf("<aside class=\"today-onboarding\""), html.indexOf("<div class=\"grid\""));
+        assertThat(invitation).contains("Continue exploring DoneIt", "Continue learning",
+                "today-learning-dismiss", "Hide learning invitation");
+        assertThat(invitation.split("action=\"/learn/dismiss\"", -1)).hasSize(3);
+        mvc.perform(get("/learn").with(user("owner"))).andExpect(redirectedUrl("/learn/1"));
+        mvc.perform(post("/learn/dismiss").with(user("owner")).with(csrf())).andExpect(redirectedUrl("/"));
+        assertThat(learning.progress("owner").read(0)).isTrue();
+        assertThat(learning.progress("owner").complete()).isFalse();
+        mvc.perform(get("/").with(user("owner"))).andExpect(content().string(not(containsString("today-onboarding"))));
+    }
+
     @Test void allTopicsRenderInBothLanguagesAndCompletionHidesInvitation() throws Exception {
         for (String language : new String[]{"ru", "en"}) {
             for (int topic = 0; topic < LearningService.TOPIC_COUNT; topic++) {

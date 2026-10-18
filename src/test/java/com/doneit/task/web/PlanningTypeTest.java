@@ -97,6 +97,44 @@ class PlanningTypeTest extends IntegrationTestSupport {
     }
 
     @Test
+    void todayHeaderUsesRealLoadAndKeepsActionsAfterTheTaskList() throws Exception {
+        ordinary("Required summary", PlanningType.REQUIRED, 60, "2026-04-08");
+        ordinary("Wanted summary", PlanningType.WANTED, 30, "2026-04-08");
+        recurring("Optional summary", PlanningType.OPTIONAL, 30);
+        String html = mvc.perform(get("/").param("lang", "en"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String summary = html.substring(html.indexOf("<section class=\"today-summary\""), html.indexOf("<aside class=\"today-onboarding\""));
+        assertThat(summary).contains("--required-end:50.0%;--wanted-end:75.0%;",
+                "data-minutes=\"60\"", "data-minutes=\"30\"", "Required: 1 h; Wanted: 30 min; Optional: 30 min");
+        assertThat(summary).doesNotContain("is-empty");
+        assertThat(html.indexOf("class=\"today-header\"")).isLessThan(html.indexOf("class=\"today-summary\""));
+        assertThat(html.indexOf("class=\"today-summary\"")).isLessThan(html.indexOf("class=\"today-onboarding\""));
+        assertThat(html.indexOf("id=\"active-tasks\"")).isLessThan(html.indexOf("class=\"today-tools\""));
+        String header = html.substring(html.indexOf("<header class=\"today-header\""), html.indexOf("<section class=\"today-summary\""));
+        assertThat(header).contains("Wednesday", "href=\"/tasks/new\"").doesNotContain("view-tabs", "Signed in");
+        assertThat(html).doesNotContain("<select name=\"projectId\"");
+    }
+
+    @Test
+    void emptySummaryAndSelectedDateAreLocalizedAndKeepFilterContext() throws Exception {
+        for (String language : List.of("en", "ru")) {
+            var result = mvc.perform(get("/tasks").param("date", "2026-04-08").param("lang", language)
+                            .param("projectId", projectId.toString()).param("planningType", "WANTED"))
+                    .andExpect(status().isOk()).andReturn();
+            assertThat(result.getModelAndView().getModel().get("selectedDayIsToday")).isEqualTo(true);
+            String html = result.getResponse().getContentAsString();
+            assertThat(html).contains("today-ring is-empty", "--required-end:0%;--wanted-end:0%;",
+                    language.equals("ru") ? "0 ч" : "0 h",
+                    "date=2026-04-07&amp;projectId=" + projectId + "&amp;planningType=WANTED",
+                    "date=2026-04-09&amp;projectId=" + projectId + "&amp;planningType=WANTED");
+        }
+        var result = mvc.perform(get("/tasks").param("date", "2026-04-09").param("lang", "en"))
+                .andExpect(status().isOk()).andReturn();
+        assertThat(result.getModelAndView().getModel().get("selectedDayIsToday")).isEqualTo(false);
+        assertThat(result.getResponse().getContentAsString()).contains("Selected date view", "Thursday");
+    }
+
+    @Test
     void remainingLoadUsesOnlyScheduledActiveTasksAndOccurrences() throws Exception {
         Long required = ordinary("Required", PlanningType.REQUIRED, 60, "2026-04-08");
         ordinary("Wanted", PlanningType.WANTED, 30, "2026-04-08");

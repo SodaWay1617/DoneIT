@@ -9,8 +9,12 @@ import java.util.List;
 public record ScheduleView(LocalDate date, List<Column> columns, List<Entry> unscheduled) {
     public record Person(Long id, String login) {}
     public record Entry(Long id, boolean recurring, String title, LocalDateTime start, LocalDateTime end,
-                        PlanningType planningType, TaskStatus status, List<Person> people) {
-        public String href() { return (recurring ? "/recurring/" : "/tasks/") + id + "/edit"; }
+                        PlanningType planningType, TaskStatus status, List<Person> people, boolean editable) {
+        public Entry(Long id, boolean recurring, String title, LocalDateTime start, LocalDateTime end,
+                     PlanningType planningType, TaskStatus status, List<Person> people) {
+            this(id, recurring, title, start, end, planningType, status, people, true);
+        }
+        public String href() { return editable ? (recurring ? "/recurring/" : "/tasks/") + id + "/edit" : null; }
         public String timeLabel() {
             if (start == null) return "";
             return start.toLocalTime().toString() + (end == null ? "" : " - " + end.toLocalTime()

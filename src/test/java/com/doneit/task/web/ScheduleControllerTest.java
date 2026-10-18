@@ -131,6 +131,51 @@ class ScheduleControllerTest extends IntegrationTestSupport {
         assertThat(schedule("2026-04-08","owner").columns().getFirst().blocks())
                 .noneMatch(b->b.entry().recurring());
     }
+    @Test void scheduleOnlySharesOthersEventsWithoutTaskAccessOrPersonalLoad() throws Exception {
+        Long client=task("Katya schedule client","katya","2026-04-08T10:00",null,90);
+        task("Katya undated schedule","katya",null,null,30);
+        mvc.perform(post("/recurring").with(user("katya")).with(csrf()).param("title","Katya schedule training")
+                .param("projectId",project.toString()).param("status","IN_PROGRESS").param("recurrenceType","DAILY")
+                .param("occurrenceTime","18:00").param("estimateMinutes","60")).andExpect(status().is3xxRedirection());
+        Long regular=db.queryForObject("SELECT id FROM regular_tasks WHERE title='Katya schedule training'",Long.class);
+        asOwner();
+        mvc.perform(post("/projects/{id}",project).with(user("owner")).with(csrf()).param("name","Shared")
+                .param("code","SHARED").param("taskVisibility","SCHEDULE_ONLY")).andExpect(status().is3xxRedirection());
+        for(String path:List.of("/","/tasks?date=2026-04-08","/kanban?date=2026-04-08",
+                "/calendar?month=2026-04","/inbox","/backlog","/finished","/analytics","/analytics/workload","/reports")) {
+            String html=mvc.perform(get(path).with(user("owner"))).andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+            assertThat(html).doesNotContain("Katya schedule client","Katya undated schedule","Katya schedule training");
+        }
+        var result=mvc.perform(get("/").with(user("owner"))).andExpect(status().isOk()).andReturn();
+        assertThat(result.getModelAndView().getModel().get("planningLoad"))
+                .isEqualTo(com.doneit.task.application.view.PlanningLoad.empty());
+        var view=schedule("2026-04-08","owner");
+        assertThat(view.columns().get(1).blocks()).extracting(b->b.entry().title())
+                .contains("Katya schedule client","Katya schedule training");
+        assertThat(view.columns().get(1).blocks()).allSatisfy(b->{
+            assertThat(b.entry().editable()).isFalse();assertThat(b.entry().href()).isNull();
+        });
+        assertThat(view.unscheduled()).extracting(Entry::title).contains("Katya undated schedule");
+        assertThat(view.unscheduled()).allSatisfy(e->assertThat(e.href()).isNull());
+        String scheduleHtml=mvc.perform(get("/schedule").param("date","2026-04-08").with(user("owner")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(scheduleHtml).doesNotContain("href=" + (char)34 + "/tasks/"+client+"/edit",
+                "href=" + (char)34 + "/recurring/"+regular+"/edit");
+        var readonlyTags=java.util.regex.Pattern.compile("<a[^>]+data-readonly=" + (char)34 + "true" + (char)34 + "[^>]*>")
+                .matcher(scheduleHtml).results().map(java.util.regex.MatchResult::group).toList();
+        assertThat(readonlyTags).hasSize(3).allSatisfy(tag->assertThat(tag).doesNotContain("href="));
+        mvc.perform(get("/tasks/{id}/edit",client).with(user("owner"))).andExpect(status().isNotFound());
+        mvc.perform(get("/recurring/{id}/edit",regular).with(user("owner"))).andExpect(status().isNotFound());
+        mvc.perform(get("/tasks/{id}/edit",client).with(user("katya"))).andExpect(status().isOk());
+        assertThat(schedule("2026-04-08","katya").columns().getFirst().blocks())
+                .allSatisfy(b->assertThat(b.entry().editable()).isTrue());
+        userId("outsider");
+        assertThat(schedule("2026-04-08","outsider").columns().stream().flatMap(c->c.blocks().stream())).isEmpty();
+        asOwner();projects.remove(project,katya);
+        assertThat(schedule("2026-04-08","katya").columns().stream().flatMap(c->c.blocks().stream())).isEmpty();
+    }
+
     private Long task(String title,String login,String start,String end,Integer estimate) throws Exception {
         var request=post("/tasks").with(user(login)).with(csrf()).param("title",title).param("projectId",project.toString()).param("status","IN_PROGRESS");
         if(start!=null)request.param("plannedWithTime","true").param("plannedForAt",start);

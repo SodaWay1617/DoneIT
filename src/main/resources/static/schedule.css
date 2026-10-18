@@ -33,7 +33,8 @@ body { margin: 0; color: #253833; background: #f5f7f5; font: 16px system-ui,sans
 .schedule-event.is-done { opacity: .65; }
 .schedule-event.planning-wanted { border-style: dashed; }
 .schedule-event.planning-optional { opacity: .72; }
-.schedule-event:hover, .schedule-event:focus-visible { filter: brightness(.96); outline: 2px solid #426d5c; outline-offset: -2px; opacity: 1; z-index: 2; }
+.schedule-event[href]:hover, .schedule-event[href]:focus-visible { filter: brightness(.96); outline: 2px solid #426d5c; outline-offset: -2px; opacity: 1; z-index: 2; }
+.schedule-event:not([href]), .unscheduled-list a:not([href]) { cursor: default; }
 .now-line { position: absolute; left: 0; right: 0; border-top: 2px solid #bc4e58; pointer-events: none; z-index: 3; }
 .unscheduled { padding: 20px 24px; }
 .unscheduled h2 { font-size: 18px; margin: 0 0 12px; }

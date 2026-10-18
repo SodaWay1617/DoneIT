@@ -41,13 +41,26 @@ public class RegularTaskService {
  @Transactional public void complete(Long id,LocalDate date,Integer minutes){RegularTask t=get(id);if(!t.occursOn(date)||t.status().isFinished())throw new IllegalArgumentException();validateMinutes(minutes);int inserted=db.update("INSERT INTO regular_task_completions VALUES(?,?,?) ON CONFLICT DO NOTHING",id,date,LocalDateTime.now(clock));if(inserted>0&&minutes!=null)addTimeEntry(id,date,minutes);}
  @Transactional public void skipToday(Long id){LocalDate date=today();RegularTask t=get(id);if(!active(t.status())||!t.occursOn(date)||completed(id,date))throw new IllegalArgumentException("No active recurring occurrence today");db.update("INSERT INTO regular_task_skips VALUES(?,?,?) ON CONFLICT DO NOTHING",id,date,LocalDateTime.now(clock));}
  @Transactional public void track(Long id,LocalDate date,int minutes){RegularTask task=get(id);validateMinutes(minutes);if(!task.occursOn(date)||task.status().isFinished())throw new IllegalArgumentException("No recurring occurrence on this date");addTimeEntry(id,date,minutes);}
- public List<RegularTask> all(){return db.query("SELECT r.*,COALESCE((SELECT SUM(e.minutes) FROM regular_task_time_entries e WHERE e.regular_task_id=r.id),0) spent_minutes FROM regular_tasks r JOIN project_members m ON m.project_id=r.project_id WHERE m.user_id=? AND "+TaskVisibility.visibleTo("r","m.user_id",true)+" ORDER BY r.status_position,r.id",RegularTaskService::map,projects.user().id());}
+ public List<RegularTask> all(){return all(false);}
+ public List<RegularTask> allForSchedule(){return all(true);}
+ private List<RegularTask> all(boolean schedule){
+  String visibility=schedule?TaskVisibility.visibleInSchedule("r","m.user_id",true):TaskVisibility.visibleTo("r","m.user_id",true);
+  return db.query("SELECT r.*,COALESCE((SELECT SUM(e.minutes) FROM regular_task_time_entries e WHERE e.regular_task_id=r.id),0) spent_minutes FROM regular_tasks r JOIN project_members m ON m.project_id=r.project_id WHERE m.user_id=? AND "+visibility+" ORDER BY r.status_position,r.id",RegularTaskService::map,projects.user().id());
+ }
  public List<RegularTask> activeFor(LocalDate date,Long projectId){return all().stream().filter(t->match(t,projectId)&&active(t.status())&&t.occursOn(date)&&!completed(t.id(),date)&&!skipped(t.id(),date)).toList();}
  public List<RegularTask> inbox(Long projectId){return all().stream().filter(t->match(t,projectId)&&t.status()==TaskStatus.NEW).toList();}
  public List<RegularTask> backlog(Long projectId){return all().stream().filter(t->match(t,projectId)&&t.status()==TaskStatus.BACKLOG).toList();}
  public List<RegularTask> finished(Long projectId){return all().stream().filter(t->match(t,projectId)&&t.status().isFinished()).toList();}
  public List<RegularTask> kanbanFor(LocalDate date,Long projectId){return all().stream().filter(t->match(t,projectId)).filter(t->t.status().isFinished()?t.finishedAt()!=null&&t.finishedAt().toLocalDate().equals(date):t.regularStatus()==RegularStatus.INACTIVE||(t.occursOn(date)&&!completed(t.id(),date)&&!skipped(t.id(),date))).toList();}
- public List<Occurrence> occurrences(LocalDate start,LocalDate end,Long projectId){List<Occurrence> out=new ArrayList<>();for(RegularTask t:all())if(match(t,projectId)&&(active(t.status())||t.status().isFinished())&&t.activatedAt()!=null)for(LocalDate d=start;d.isBefore(end);d=d.plusDays(1))if(t.occursOn(d)&&!skipped(t.id(),d))out.add(new Occurrence(t,d,completed(t.id(),d)));return out;}
+ public List<Occurrence> occurrences(LocalDate start,LocalDate end,Long projectId){return occurrences(start,end,projectId,all());}
+ public List<Occurrence> occurrencesForSchedule(LocalDate start,LocalDate end,Long projectId){return occurrences(start,end,projectId,allForSchedule());}
+ private List<Occurrence> occurrences(LocalDate start,LocalDate end,Long projectId,List<RegularTask> tasks){
+  List<Occurrence> out=new ArrayList<>();
+  for(RegularTask t:tasks)if(match(t,projectId)&&(active(t.status())||t.status().isFinished())&&t.activatedAt()!=null)
+   for(LocalDate d=start;d.isBefore(end);d=d.plusDays(1))if(t.occursOn(d)&&!skipped(t.id(),d))
+    out.add(new Occurrence(t,d,completed(t.id(),d)));
+  return out;
+ }
  public record Occurrence(RegularTask task,LocalDate date,boolean completed){}
  public boolean completed(Long id,LocalDate d){Integer n=db.queryForObject("SELECT COUNT(*) FROM regular_task_completions WHERE regular_task_id=? AND occurrence_date=?",Integer.class,id,d);return n!=null&&n>0;}
  public boolean skipped(Long id,LocalDate d){Integer n=db.queryForObject("SELECT COUNT(*) FROM regular_task_skips WHERE regular_task_id=? AND occurrence_date=?",Integer.class,id,d);return n!=null&&n>0;}

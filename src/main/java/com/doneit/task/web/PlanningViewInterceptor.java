@@ -67,6 +67,7 @@ public class PlanningViewInterceptor implements HandlerInterceptor {
             if (model.containsKey(key)) model.put(key, filtered(list(model, key, TaskListItemView.class), selected, TaskListItemView::planningType));
         }
         if (model.get("daily") instanceof DailyTasksView daily) {
+            model.put("selectedDayIsToday", daily.selectedDate().equals(LocalDate.now(clock)));
             DailyTasksView filtered = new DailyTasksView(daily.selectedDate(),
                     filtered(daily.activeTasks(), selected, TaskListItemView::planningType),
                     filtered(daily.completedTasks(), selected, TaskListItemView::planningType));

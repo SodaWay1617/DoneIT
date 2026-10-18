@@ -37,10 +37,10 @@
             <section class="person-column" th:each="column : ${schedule.columns}"
                      th:classappend="${column.mine} ? ' mine'" th:style="'width:' + ${column.widthPixels} + 'px'"
                      th:aria-label="${column.person.login}" th:attr="data-person=${column.person.login}">
-                <a class="schedule-event" th:each="block : ${column.blocks}" th:href="${block.entry.href}"
+                <a class="schedule-event" th:each="block : ${column.blocks}"
                    th:classappend="${' planning-' + block.entry.planningType.name().toLowerCase() + (block.entry.status.name() == 'DONE' ? ' is-done' : '')}"
                    th:style="'top:' + ${block.topPixels} + 'px; height:' + ${block.heightPixels} + 'px; left:' + ${block.lane * 224 + 5} + 'px'"
-                   th:attr="data-lane=${block.lane},data-compact=${block.compact},data-task-id=${block.entry.id},data-recurring=${block.entry.recurring}"
+                   th:attr="href=${block.entry.href},data-lane=${block.lane},data-compact=${block.compact},data-task-id=${block.entry.id},data-recurring=${block.entry.recurring},data-readonly=${!block.entry.editable}"
                    th:title="${block.entry.timeLabel + ' · ' + block.entry.title + ' · ' + column.person.login}"
                    th:aria-label="${block.entry.timeLabel + ' ' + block.entry.title + ' ' + column.person.login}">
                     <time th:text="${block.entry.timeLabel}">09:00 - 10:00</time>
@@ -53,7 +53,7 @@
 </div>
 <section class="unscheduled" th:if="${!#lists.isEmpty(schedule.unscheduled)}">
     <h2 th:text="#{schedule.unscheduled}">Without interval</h2>
-    <div class="unscheduled-list"><a th:each="entry : ${schedule.unscheduled}" th:href="${entry.href}">
+    <div class="unscheduled-list"><a th:each="entry : ${schedule.unscheduled}" th:attr="href=${entry.href},data-readonly=${!entry.editable}">
         <strong th:text="${entry.title}">Task</strong><span th:text="${entry.peopleLabel}">user</span>
     </a></div>
 </section>

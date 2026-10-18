@@ -100,9 +100,10 @@ class ProjectTaskVisibilityTest extends IntegrationTestSupport {
         assertThat(html(path, "other")).doesNotContain("Mine", "Delegated", "Joint", "Katya private", "Shared collection");
     }
 
-    @Test
-    void directAccessAndMutationsToHiddenTasksAreRejected() throws Exception {
-        restrict();
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(value=TaskVisibilityMode.class, names={"AUTHOR_AND_ASSIGNEES","SCHEDULE_ONLY"})
+    void directAccessAndMutationsToHiddenTasksAreRejected(TaskVisibilityMode mode) throws Exception {
+        projects.update(project, "Family", "FAMILY", null, mode);
         mvc.perform(get("/tasks/{id}/edit", hers)).andExpect(status().isNotFound());
         mvc.perform(get("/recurring/{id}/edit", hersRegular)).andExpect(status().isNotFound());
         for (String action : List.of("done", "closed", "track-time", "comments", "assignees", "reschedule")) {

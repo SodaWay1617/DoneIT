@@ -27,6 +27,8 @@ public class TaskAssignmentService {
     @Transactional public void assignRegularTask(Long id, List<Long> users) { replace(id, users, true); }
     public Map<Long, List<String>> visibleTaskAssignees() { return visible(false); }
     public Map<Long, List<String>> visibleRegularTaskAssignees() { return visible(true); }
+    public Map<Long, List<String>> scheduleTaskAssignees() { return visible(false, true); }
+    public Map<Long, List<String>> scheduleRegularTaskAssignees() { return visible(true, true); }
     public Map<Long, List<String>> taskAssigneeLabels() { return labels(false); }
     public Map<Long, List<String>> regularTaskAssigneeLabels() { return labels(true); }
 
@@ -64,6 +66,10 @@ public class TaskAssignmentService {
     }
 
     private Map<Long, List<String>> visible(boolean regular) {
+        return visible(regular, false);
+    }
+
+    private Map<Long, List<String>> visible(boolean regular, boolean schedule) {
         String column = regular ? "regular_task_id" : "task_id";
         String table = regular ? "regular_tasks" : "tasks";
         List<Row> rows = db.query("""
@@ -74,7 +80,9 @@ public class TaskAssignmentService {
                 JOIN project_members assignee_member ON assignee_member.project_id=t.project_id AND assignee_member.user_id=u.id
                 WHERE %s
                 ORDER BY a.%s,u.login
-                """.formatted(column, table, column, TaskVisibility.visibleTo("t","viewer.user_id",regular), column),
+                """.formatted(column, table, column, schedule
+                        ? TaskVisibility.visibleInSchedule("t","viewer.user_id",regular)
+                        : TaskVisibility.visibleTo("t","viewer.user_id",regular), column),
                 (rs, row) -> new Row(rs.getLong("task_id"), rs.getString("assignee")), projects.user().id());
         Map<Long, List<String>> result = new LinkedHashMap<>();
         rows.forEach(row -> result.computeIfAbsent(row.id(), ignored -> new ArrayList<>()).add(row.name()));

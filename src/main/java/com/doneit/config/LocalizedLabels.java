@@ -22,6 +22,12 @@ public class LocalizedLabels {
         return (minutes<0?"-":"")+messages.getMessage("analytics.duration",
                 new Object[]{absolute/60,absolute%60},LocaleContextHolder.getLocale());
     }
+    public String compactDuration(long minutes) {
+        if (minutes == 0) return messages.getMessage("today.zeroHours", null, LocaleContextHolder.getLocale());
+        if (minutes < 60) return messages.getMessage("today.minutes", new Object[]{minutes}, LocaleContextHolder.getLocale());
+        if (minutes % 60 == 0) return messages.getMessage("today.hours", new Object[]{minutes / 60}, LocaleContextHolder.getLocale());
+        return duration(minutes);
+    }
     private String message(String key) {
         Locale locale = LocaleContextHolder.getLocale();
         return messages.getMessage(key, null, key, locale);

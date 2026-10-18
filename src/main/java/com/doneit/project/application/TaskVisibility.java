@@ -22,6 +22,18 @@ public final class TaskVisibility {
                 + task + ".user_id=" + viewer + " AND NOT EXISTS (" + assignments + ")))";
     }
 
+    public static String visibleInSchedule(String task, String viewer, boolean regular) {
+        return "(" + visibleTo(task, viewer, regular)
+                + " OR EXISTS (SELECT 1 FROM projects schedule_project WHERE schedule_project.id="
+                + task + ".project_id AND schedule_project.task_visibility='SCHEDULE_ONLY'))";
+    }
+
+    public static String scheduleMemberTasks(String task, boolean regular) {
+        return "EXISTS (SELECT 1 FROM project_members access_member WHERE access_member.project_id="
+                + task + ".project_id AND access_member.user_id=? AND "
+                + visibleInSchedule(task, "access_member.user_id", regular) + ")";
+    }
+
     public static String memberTasks(String task, boolean regular) {
         return memberTasks(task, regular, false);
     }

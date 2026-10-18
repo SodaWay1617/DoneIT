@@ -38,8 +38,10 @@ public class ScheduleService {
                 """, (r,n)->new Person(r.getLong("id"),r.getString("login")),viewer,projectId,projectId);
         Map<String,Person> byLogin = new HashMap<>();
         people.forEach(p -> byLogin.put(p.login(),p));
-        Map<Long,List<String>> ordinaryAssignments = assignments.visibleTaskAssignees();
-        Map<Long,List<String>> regularAssignments = assignments.visibleRegularTaskAssignees();
+        Map<Long,List<String>> ordinaryAssignments = assignments.scheduleTaskAssignees();
+        Map<Long,List<String>> regularAssignments = assignments.scheduleRegularTaskAssignees();
+        Set<Long> editableTasks = projects.accessibleTaskIds(false);
+        Set<Long> editableRegularTasks = projects.accessibleTaskIds(true);
         LocalDateTime start = date.atStartOfDay(), end = start.plusDays(1);
         List<Task> tasks = db.query("""
                 SELECT t.* FROM tasks t WHERE %s
@@ -49,7 +51,7 @@ public class ScheduleService {
                          OR t.planned_for_at+t.estimate_minutes*INTERVAL '1 minute'>?))
                       OR t.planned_date=?
                       OR (t.planned_for_at IS NULL AND t.planned_date IS NULL AND t.status<>'DONE'))
-                """.formatted(TaskVisibility.memberTasks("t",false)),
+                """.formatted(TaskVisibility.scheduleMemberTasks("t",false)),
                 mapper,viewer,projectId,projectId,end,start.minusDays(1),start,date);
         List<Entry> entries = new ArrayList<>(), unscheduled = new ArrayList<>();
         for (Task task : tasks) {
@@ -57,19 +59,19 @@ public class ScheduleService {
             List<Person> responsible = responsible(task.userId(),ordinaryAssignments.get(task.id()),people,byLogin);
             Entry event = new Entry(task.id(),false,task.title(),task.plannedForAt(),
                     TaskInterval.endAt(task.plannedForAt(),task.endTime(),task.estimateMinutes()),
-                    task.planningType(),task.status(),responsible);
+                    task.planningType(),task.status(),responsible,editableTasks.contains(task.id()));
             add(date,event,entries,unscheduled);
         }
-        int lookback = recurring.all().stream().filter(t -> projectId == null || projectId.equals(t.projectId()))
+        int lookback = recurring.allForSchedule().stream().filter(t -> projectId == null || projectId.equals(t.projectId()))
                 .mapToInt(t -> t.estimateMinutes()==null ? 1 : Math.max(1,Math.ceilDiv(t.estimateMinutes(),1440))).max().orElse(1);
-        for (var occurrence : recurring.occurrences(date.minusDays(lookback),date.plusDays(1),projectId)) {
+        for (var occurrence : recurring.occurrencesForSchedule(date.minusDays(lookback),date.plusDays(1),projectId)) {
             var task = occurrence.task();
             if (category != null && category != task.planningType()) continue;
             LocalDateTime begins = task.occurrenceTime()==null ? null : occurrence.date().atTime(task.occurrenceTime());
             Entry event = new Entry(task.id(),true,task.title(),begins,
                     TaskInterval.endAt(begins,task.endTime(),task.estimateMinutes()),task.planningType(),
                     occurrence.completed() ? TaskStatus.DONE : task.status(),
-                    responsible(task.userId(),regularAssignments.get(task.id()),people,byLogin));
+                    responsible(task.userId(),regularAssignments.get(task.id()),people,byLogin),editableRegularTasks.contains(task.id()));
             if (begins != null && event.end()!=null || occurrence.date().equals(date))
                 add(date,event,entries,unscheduled);
         }

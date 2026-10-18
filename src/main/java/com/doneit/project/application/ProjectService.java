@@ -41,8 +41,14 @@ public class ProjectService {
    .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Task not found"));
  }
  public Set<Long> personalTaskIds(boolean regular){
+  return taskIds(regular,true);
+ }
+ public Set<Long> accessibleTaskIds(boolean regular){
+  return taskIds(regular,false);
+ }
+ private Set<Long> taskIds(boolean regular,boolean personal){
   String table=regular?"regular_tasks":"tasks";
-  return new HashSet<>(db.query("SELECT t.id FROM "+table+" t WHERE "+TaskVisibility.memberTasks("t",regular,true),
+  return new HashSet<>(db.query("SELECT t.id FROM "+table+" t WHERE "+TaskVisibility.memberTasks("t",regular,personal),
    (rs,row)->rs.getLong(1),user().id()));
  }
  private static Project map(java.sql.ResultSet r,int n)throws java.sql.SQLException{return new Project(r.getLong("id"),r.getString("name"),r.getString("code"),r.getString("description"),r.getLong("owner_user_id"),r.getBoolean("default_project"),r.getBoolean("owner"),TaskVisibilityMode.valueOf(r.getString("task_visibility")));}
