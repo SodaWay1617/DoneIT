@@ -1,5 +1,9 @@
 (() => {
     if (!document.querySelector('.app-navigation')) return;
+    const standalone = matchMedia('(display-mode: standalone)');
+    const syncDisplayMode = () => document.documentElement.classList.toggle('app-standalone', standalone.matches || navigator.standalone === true);
+    syncDisplayMode();
+    standalone.addEventListener('change', syncDisplayMode);
     window.lucide?.createIcons();
     const menus = [...document.querySelectorAll('.app-menu')];
     const openers = new Map();

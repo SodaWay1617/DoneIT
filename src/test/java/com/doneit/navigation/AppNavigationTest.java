@@ -104,7 +104,7 @@ class AppNavigationTest extends IntegrationTestSupport {
         assertThat(workload.section()).isEqualTo("analytics");
         assertThat(workload.analytics().get(1).active()).isTrue();
         assertThat(nav("owner", "/settings/devices").section()).isEqualTo("settings");
-        assertThat(nav("owner", "/learn/2").section()).isEqualTo("learn");
+        assertThat(nav("owner", "/learn/2").section()).isEqualTo("settings");
     }
 
     @Test void zeroBadgesAreHiddenAndCurrentCountsUpdateAfterStatusChanges() throws Exception {
@@ -114,6 +114,21 @@ class AppNavigationTest extends IntegrationTestSupport {
         assertThat(nav("owner", "/").main().get(1).count()).isEqualTo(1);
         db.update("UPDATE tasks SET status='TODO' WHERE id=?", task);
         assertThat(nav("owner", "/").main().get(1).count()).isZero();
+    }
+
+    @Test void accountActionsAndLearningLiveOnlyInSettings() throws Exception {
+        var result = mvc.perform(get("/").with(user("owner"))).andExpect(status().isOk()).andReturn();
+        String html = result.getResponse().getContentAsString();
+        String navigation = html.substring(html.indexOf("class=\"app-navigation\""), html.indexOf("id=\"app-main\""));
+        assertThat(navigation).contains("href=\"/settings\"").doesNotContain("href=\"/learn\"", "action=\"/logout\"", "lang=\"ru\"", "app-topbar-user");
+        assertThat(nav("owner", "/").more()).extracting(AppNavigationService.Item::key).doesNotContain("learn");
+        mvc.perform(get("/settings").with(user("owner"))).andExpect(status().isOk())
+                .andExpect(model().attribute("profileLogin", "owner"))
+                .andExpect(model().attribute("profileName", "owner"))
+                .andExpect(content().string(containsString("href=\"/learn\"")))
+                .andExpect(content().string(containsString("action=\"/logout\"")))
+                .andExpect(content().string(containsString("href=\"/settings/devices\"")))
+                .andExpect(content().string(containsString("href=\"/settings?lang=ru\"")));
     }
 
     private Navigation nav(String login, String path) throws Exception {

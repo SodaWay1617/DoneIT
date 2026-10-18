@@ -64,7 +64,6 @@ public class AppNavigationService {
         List<Item> more = new ArrayList<>(List.of(main.get(2), main.get(4), main.get(5), views.get(1), views.get(0)));
         more.addAll(analytics.subList(1, 3));
         more.add(item("settings", "/settings", "settings", "nav.settings", 0, section));
-        more.add(item("learn", "/learn", "book-open", "learn.title", 0, section));
         final String selectedPlanning = planning;
         List<ProjectItem> projectItems = available.stream().map(p -> new ProjectItem(p.id(),
                 p.defaultProject() ? "MAIN" : p.name().split("___", 2)[0],
@@ -92,7 +91,7 @@ public class AppNavigationService {
     private static String section(String path) {
         if (path.startsWith("/settings")) return "settings";
         if (path.startsWith("/projects")) return "projects";
-        if (path.startsWith("/learn")) return "learn";
+        if (path.startsWith("/learn")) return "settings";
         if (path.startsWith("/analytics") || path.equals("/reports")) return "analytics";
         for (String section : List.of("inbox", "backlog", "calendar", "schedule", "kanban", "finished"))
             if (path.equals("/" + section)) return section;

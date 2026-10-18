@@ -22,14 +22,36 @@
         .setting span { display:block; color:var(--muted); margin-top:5px; }
         button,.button { display:inline-flex; min-height:40px; align-items:center; padding:9px 14px; border:0; border-radius:6px; background:var(--accent); color:white; font:inherit; text-decoration:none; }
         .flash { color:var(--accent); }
+        .profile-settings { padding-bottom:20px; }
+        .profile-settings h2 { font-size:20px; margin:0 0 12px; }
+        .profile-info,.profile-actions,.settings-utilities,.language-options { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .profile-info { margin-bottom:14px; overflow-wrap:anywhere; }
+        .profile-info strong { min-width:0; }
+        .profile-info .lucide,.profile-actions .lucide,.settings-utilities .lucide { width:20px; height:20px; flex-shrink:0; }
+        .profile-login { color:var(--muted); font-size:14px; margin:0 0 14px; overflow-wrap:anywhere; }
+        .profile-actions form { margin:0; }
+        .profile-actions .button,.profile-actions button,.settings-utilities .button,.language-options .button { min-height:44px; gap:8px; }
+        .profile-actions .sign-out { background:transparent; color:var(--ink); border:1px solid var(--border); }
+        .setting-language { flex-wrap:wrap; align-items:center; justify-content:space-between; }
+        .setting-language > span:first-child { flex:1 1 200px; }
+        .settings-utilities { padding-top:20px; margin-top:20px; border-top:1px solid var(--border); }
     </style>
 <th:block th:replace="~{app-shell :: assets}"></th:block></head>
 <body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content" id="app-main" tabindex="-1"><main class="shell"><section class="panel">
     <header class="bar"><h1 th:text="#{settings.title}">Settings</h1></header>
     <p class="flash" th:if="${settingsSaved}" th:text="#{settings.saved}">Settings saved.</p>
-    <div class="setting">
+    <section class="profile-settings" aria-labelledby="profile-title">
+        <h2 id="profile-title" th:text="#{settings.profile}">Profile</h2>
+        <div class="profile-info"><th:block th:replace="~{app-shell :: icon('circle-user-round')}"></th:block><strong th:text="${profileName}">User</strong></div>
+        <p class="profile-login" th:if="${profileName != profileLogin}" th:text="#{common.signedInAs(${profileLogin})}">Signed in as user</p>
+        <div class="profile-actions">
+            <a class="button" href="/settings/devices"><th:block th:replace="~{app-shell :: icon('monitor-smartphone')}"></th:block><span th:text="#{devices.title}">Remembered devices</span></a>
+            <form method="post" th:action="@{/logout}"><button class="sign-out" type="submit"><th:block th:replace="~{app-shell :: icon('log-out')}"></th:block><span th:text="#{common.signOut}">Sign out</span></button></form>
+        </div>
+    </section>
+    <div class="setting setting-language">
         <span><strong th:text="#{settings.language}">Language</strong><span th:text="#{settings.languageHint}">Choose language.</span></span>
-        <span><a class="button" th:href="@{/settings(lang=en)}" th:text="#{language.english}">English</a> <a class="button" th:href="@{/settings(lang=ru)}" th:text="#{language.russian}">Русский</a></span>
+        <div class="language-options"><a class="button" th:href="@{/settings(lang=en)}" lang="en" th:text="#{language.english}">English</a><a class="button" th:href="@{/settings(lang=ru)}" lang="ru" th:text="#{language.russian}">Русский</a></div>
     </div>
     <form method="post" action="/settings">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -49,5 +71,6 @@
         </div>
         <button type="submit" th:text="#{common.save}">Save</button>
     </form>
-</section><p><a class="button" href="/settings/devices" th:text="#{devices.title}">Remembered devices</a></p><p><a class="button" href="/learn" th:text="#{learn.title}">Getting started</a></p></main><script src="/reminders.js" defer></script></div></body>
+    <div class="settings-utilities"><a class="button" href="/learn"><th:block th:replace="~{app-shell :: icon('book-open')}"></th:block><span th:text="#{learn.title}">Getting started</span></a></div>
+</section></main><script src="/reminders.js" defer></script></div></body>
 </html>

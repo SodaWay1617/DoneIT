@@ -17,15 +17,6 @@
     <a class="app-link" href="/settings" th:classappend="${appNav.section == 'settings'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'settings' ? 'page' : null}">
         <th:block th:replace="~{app-shell :: icon('settings')}"></th:block><span th:text="#{nav.settings}">Settings</span>
     </a>
-    <a class="app-link" href="/learn" th:classappend="${appNav.section == 'learn'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'learn' ? 'page' : null}">
-        <th:block th:replace="~{app-shell :: icon('book-open')}"></th:block><span th:text="#{learn.title}">Getting started</span>
-    </a>
-    <div class="app-language" th:attr="aria-label=#{settings.language}">
-        <a th:href="${appNav.russianHref}" lang="ru" th:classappend="${#locale.language == 'ru'} ? 'is-active'" th:text="#{language.russian}">Russian</a>
-        <a th:href="${appNav.englishHref}" lang="en" th:classappend="${#locale.language == 'en'} ? 'is-active'" th:text="#{language.english}">English</a>
-    </div>
-    <div class="app-user"><th:block th:replace="~{app-shell :: icon('circle-user-round')}"></th:block><span th:text="${appNav.username}">User</span></div>
-    <form method="post" th:action="@{/logout}"><button class="app-link" type="submit"><th:block th:replace="~{app-shell :: icon('log-out')}"></th:block><span th:text="#{common.signOut}">Sign out</span></button></form>
 </div>
 <div th:fragment="project-list" class="app-project-section">
     <div class="app-project-heading">
@@ -49,7 +40,6 @@
     <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
     <div class="app-sidebar-body">
         <nav th:attr="aria-label=#{shell.sections}"><th:block th:each="item : ${appNav.main}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
-        <nav class="app-analytics-subnav" th:if="${appNav.section == 'analytics'}" th:attr="aria-label=#{nav.analytics}"><th:block th:each="item : ${appNav.analytics}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
         <nav class="app-secondary-nav" th:attr="aria-label=#{shell.views}"><th:block th:each="item : ${appNav.views}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
         <div th:replace="~{app-shell :: project-list}"></div>
     </div>
@@ -61,7 +51,6 @@
     <header class="app-topbar">
         <button class="app-icon-button app-drawer-toggle" type="button" data-open-menu="app-drawer" aria-controls="app-drawer" aria-expanded="false" th:title="#{shell.openMenu}" th:aria-label="#{shell.openMenu}"><th:block th:replace="~{app-shell :: icon('menu')}"></th:block></button>
         <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
-        <span class="app-topbar-user" th:text="${appNav.username}">User</span>
     </header>
     <nav class="app-bottom-nav" th:attr="aria-label=#{shell.navigation}">
         <a class="app-bottom-item" th:each="item : ${appNav.mobile}" th:href="${item.href}" th:classappend="${item.active} ? 'is-active'" th:attr="aria-current=${item.active ? 'page' : null},data-nav-key=${item.key}">
@@ -81,10 +70,7 @@
             <h2 th:text="#{shell.sections}">Sections</h2><nav><th:block th:each="item : ${appNav.more.subList(0,4)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
             <h2 th:text="#{shell.views}">Views</h2><nav><th:block th:each="item : ${appNav.more.subList(4,5)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
             <h2 th:text="#{nav.analytics}">Analytics</h2><nav><th:block th:each="item : ${appNav.more.subList(5,7)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
-            <h2 th:text="#{shell.additional}">Additional</h2><nav><th:block th:each="item : ${appNav.more.subList(7,9)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
-            <div class="app-language" th:attr="aria-label=#{settings.language}"><a th:href="${appNav.russianHref}" lang="ru" th:text="#{language.russian}">Russian</a><a th:href="${appNav.englishHref}" lang="en" th:text="#{language.english}">English</a></div>
-            <div class="app-user"><th:block th:replace="~{app-shell :: icon('circle-user-round')}"></th:block><span th:text="${appNav.username}">User</span></div>
-            <form method="post" th:action="@{/logout}"><button class="app-link" type="submit"><th:block th:replace="~{app-shell :: icon('log-out')}"></th:block><span th:text="#{common.signOut}">Sign out</span></button></form>
+            <h2 th:text="#{shell.additional}">Additional</h2><nav><th:block th:each="item : ${appNav.more.subList(7,8)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
         </div>
     </dialog>
 </div>

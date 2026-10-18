@@ -36,6 +36,8 @@ public class SettingsController {
     @GetMapping("/settings")
     public String settings(Principal principal, Model model) {
         User user = requireUser(principal);
+        model.addAttribute("profileLogin", user.login());
+        model.addAttribute("profileName", user.displayName() == null || user.displayName().isBlank() ? user.login() : user.displayName());
         model.addAttribute("showProjectInTaskTitle", user.showProjectInTaskTitle());
         model.addAttribute("workload", workloadSettings.current());
         model.addAttribute("rollUpSubtaskTime", analyticsSettings != null && analyticsSettings.rollUpSubtaskTime());
