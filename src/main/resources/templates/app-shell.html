@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="/app-shell.css">
     <script src="/vendor/lucide-0.468.0.min.js" defer></script>
     <script src="/app-shell.js" defer></script>
+    <script src="/form-security.js" defer th:attr="data-user=${appUserLogin},data-login-required=#{security.loginRequired},data-refresh-failed=#{security.refreshFailed}"></script>
 </th:block>
 <th:block th:fragment="icon(name)"><i th:attr="data-lucide=${name}" aria-hidden="true"></i></th:block>
 <span th:fragment="badge(count)" class="app-badge" th:if="${count > 0}" th:text="${count}">3</span>

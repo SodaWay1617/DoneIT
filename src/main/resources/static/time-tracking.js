@@ -8,21 +8,26 @@ document.querySelectorAll('.track-time-button').forEach(button => button.addEven
         return;
     }
     form.querySelector('[name=minutes]').value = minutes;
-    form.submit();
+    form.requestSubmit();
 }));
 
 document.querySelectorAll('.done-with-time').forEach(form => form.addEventListener('submit', event => {
     if (form.dataset.confirmed) return;
-    event.preventDefault();
     const value = window.prompt('Time spent, minutes (optional)');
-    if (value !== null && value.trim() !== '') {
-        const minutes = Number(value);
-        if (!Number.isInteger(minutes) || minutes <= 0) {
-            window.alert('Enter a positive whole number of minutes.');
-            return;
-        }
-        form.querySelector('[name=spentMinutes]').value = minutes;
+    if (value === null) {
+        event.preventDefault();
+        return;
     }
+    const minutes = value.trim() === '' ? '' : Number(value);
+    if (minutes !== '' && (!Number.isInteger(minutes) || minutes <= 0)) {
+        event.preventDefault();
+        window.alert('Enter a positive whole number of minutes.');
+        return;
+    }
+    form.querySelector('[name=spentMinutes]').value = minutes;
     form.dataset.confirmed = 'true';
-    form.requestSubmit();
 }));
+
+window.addEventListener('pageshow', () => {
+    document.querySelectorAll('.done-with-time').forEach(form => { delete form.dataset.confirmed; });
+});

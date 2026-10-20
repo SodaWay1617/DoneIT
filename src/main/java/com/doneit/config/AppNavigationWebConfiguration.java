@@ -37,6 +37,7 @@ public class AppNavigationWebConfiguration implements WebMvcConfigurer {
                 if ("project-detail".equals(view.getViewName()) && view.getModel().get("project") instanceof Project project)
                     selected = project.id();
                 view.addObject("appNav", navigation.build(request, available, selected));
+                view.addObject("appUserLogin", request.getUserPrincipal().getName());
             }
         });
     }

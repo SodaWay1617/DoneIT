@@ -339,7 +339,7 @@
                             <button class="solid" type="submit" th:text="#{common.done}">Done</button>
                         </form>
                         <form class="inline track-time" method="post" th:action="@{/tasks/{id}/track-time(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + daily.selectedDate}" /><input type="hidden" name="minutes" /><button class="secondary track-time-button" type="button" th:text="#{task.trackTime}">Track time</button>
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" /><input type="hidden" name="minutes" /><button class="secondary track-time-button" type="button" th:text="#{task.trackTime}">Track time</button>
                         </form>
                         <form class="inline" method="post" th:action="@{/tasks/{id}/closed(id=${task.id})}">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -370,16 +370,16 @@
                     <form class="inline done-with-time" method="post" th:action="@{/recurring/{id}/done-today(id=${task.id})}">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" name="date" th:value="${daily.selectedDate}">
-                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + daily.selectedDate}">
+                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}">
                         <input type="hidden" name="spentMinutes">
                         <button class="solid" type="submit" th:text="#{task.doneToday}">Done today</button>
                     </form>
                     <form class="inline" method="post" th:if="${daily.selectedDate == regularToday}" th:action="@{/recurring/{id}/skip-today(id=${task.id})}">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + daily.selectedDate}">
+                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}">
                         <button class="secondary" type="submit" th:text="#{task.skipToday}">Skip today</button>
                     </form>
-                    <form class="inline track-time" method="post" th:action="@{/recurring/{id}/track-time(id=${task.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${daily.selectedDate}"><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + daily.selectedDate}"><input type="hidden" name="minutes"><button class="secondary track-time-button" type="button" th:text="#{task.trackTime}">Track time</button></form>
+                    <form class="inline track-time" method="post" th:action="@{/recurring/{id}/track-time(id=${task.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${daily.selectedDate}"><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}"><input type="hidden" name="minutes"><button class="secondary track-time-button" type="button" th:text="#{task.trackTime}">Track time</button></form>
                 </article>
                 </th:block>
             </div>
@@ -496,29 +496,7 @@
         </aside>
     </div>
 </div>
-<script>
-document.querySelectorAll('.track-time-button').forEach(button => button.addEventListener('click', () => {
-    const form = button.closest('form');
-    const value = window.prompt('Time spent, minutes');
-    if (value === null) return;
-    const minutes = Number(value);
-    if (!Number.isInteger(minutes) || minutes <= 0) return window.alert('Enter a positive whole number of minutes.');
-    form.querySelector('[name=minutes]').value = minutes;
-    form.submit();
-}));
-document.querySelectorAll('.done-with-time').forEach(form => form.addEventListener('submit', event => {
-    if (form.dataset.confirmed) return;
-    event.preventDefault();
-    const value = window.prompt('Time spent, minutes (optional)');
-    if (value !== null && value.trim() !== '') {
-        const minutes = Number(value);
-        if (!Number.isInteger(minutes) || minutes <= 0) return window.alert('Enter a positive whole number of minutes.');
-        form.querySelector('[name=spentMinutes]').value = minutes;
-    }
-    form.dataset.confirmed = 'true';
-    form.requestSubmit();
-}));
-</script>
+<script src="/time-tracking.js"></script>
 <script src="/reschedule.js"></script>
 <script src="/planning.js"></script>
 <script src="/reminders.js" defer></script></div></body>
