@@ -48,5 +48,7 @@ public interface TaskRepository {
 
     int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt);
 
+    long countMoveCandidates(Long userId, LocalDate beforeDay);
+
     int bulkMoveOverdueOpenDatedTasksToDate(Long userId, LocalDate date, LocalDateTime updatedAt);
 }

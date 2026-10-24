@@ -1,0 +1,27 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<div th:fragment="badges(tags)" class="task-tags" th:if="${tags != null && !#lists.isEmpty(tags)}">
+    <a class="tag-link" th:each="tag : ${tags}" th:href="@{/tags/{id}(id=${tag.id})}" th:text="${'#' + tag.name}">#Prime</a>
+</div>
+<span th:fragment="plain(tags)" class="task-tags" th:if="${tags != null && !#lists.isEmpty(tags)}">
+    <span class="tag-link" th:each="tag : ${tags}" th:text="${'#' + tag.name}">#Prime</span>
+</span>
+<fieldset th:fragment="editor" class="tag-editor" data-tag-editor>
+    <legend th:text="#{tag.personal}">Personal tags</legend>
+    <input type="hidden" name="tagsPresent" value="true">
+    <div class="tag-selected">
+        <label class="tag-option" th:each="name : ${form.tagNames}">
+            <input type="checkbox" name="tagNames" th:value="${name}" checked><span th:text="${'#' + name}">#Prime</span>
+        </label>
+    </div>
+    <div class="tag-entry">
+        <input type="text" list="tag-suggestions" maxlength="41" autocomplete="off" data-tag-input
+               th:aria-label="#{tag.name}" th:placeholder="#{tag.name}">
+        <button type="button" class="tag-add" data-add-tag th:title="#{tag.add}" th:aria-label="#{tag.add}"><i data-lucide="plus" aria-hidden="true"></i></button>
+    </div>
+    <datalist id="tag-suggestions"><option th:each="tag : ${availableTags}" th:value="${tag.name}"></option></datalist>
+    <p class="tag-error" hidden data-tag-error th:text="#{tag.invalid}">Invalid tags</p>
+    <p class="tag-error" th:if="${#fields.hasErrors('validTags')}" th:text="#{tag.invalid}">Invalid tags</p>
+    <noscript><select name="tagNames" multiple th:aria-label="#{tag.title}"><option th:each="tag : ${availableTags}" th:value="${tag.name}" th:text="${tag.name}"></option></select></noscript>
+</fieldset>
+</body></html>

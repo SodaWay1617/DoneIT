@@ -123,7 +123,7 @@
         <strong th:text="#{task.plannedFor}">Choose a day or an exact time for one-time work.</strong>
     </div>
 
-    <form method="post" th:action="${formAction}" th:object="${form}">
+    <form data-refresh-csrf method="post" th:action="${formAction}" th:object="${form}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <input type="hidden" name="parentTaskId" th:if="${parentTaskId != null}" th:value="${parentTaskId}" />
         <p th:if="${parentTaskId != null}" th:text="#{subtask.creatingFor(${parentTaskTitle})}">Creating for parent</p>
@@ -171,6 +171,7 @@
             <span th:text="#{common.description}">Description</span>
             <textarea th:field="*{description}" th:placeholder="#{form.notes}"></textarea>
         </label>
+        <fieldset th:replace="~{task-tags :: editor}"></fieldset>
         <div id="dateOptions" class="date-fields">
             <label class="choice"><input type="checkbox" th:field="*{withoutPlannedDate}" /> <span th:text="#{task.withoutPlanned}">Without planned date</span></label>
             <label class="choice"><input type="checkbox" th:field="*{withoutDeadline}" /> <span th:text="#{task.withoutDeadline}">Without deadline</span></label>

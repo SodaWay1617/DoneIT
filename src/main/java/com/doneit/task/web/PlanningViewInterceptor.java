@@ -55,6 +55,7 @@ public class PlanningViewInterceptor implements HandlerInterceptor {
         Set<Long> personalTasks = projects.personalTaskIds(false);
         Set<Long> personalRegularTasks = projects.personalTaskIds(true);
         Map<String, Object> model = view.getModel();
+        if ("tasks".equals(view.getViewName())) model.put("compactCandidates", model.get("activeEntries"));
         model.put("selectedPlanningType", selected);
         model.put("planningTypes", PlanningType.values());
         model.put("filterDate", request.getParameter("date"));

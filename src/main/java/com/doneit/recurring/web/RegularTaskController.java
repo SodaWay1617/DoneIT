@@ -20,13 +20,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class RegularTaskController {
  private final RegularTaskService service; private final ProjectService projects; private final TaskAssignmentService assignments;
  private final PlanFactService planFact;
+ private final com.doneit.tag.application.TaggedTaskService taggedTasks;
  public RegularTaskController(RegularTaskService service,ProjectService projects){this(service,projects,null);}
  public RegularTaskController(RegularTaskService service,ProjectService projects,TaskAssignmentService assignments){this(service,projects,assignments,null);}
- @Autowired public RegularTaskController(RegularTaskService service,ProjectService projects,TaskAssignmentService assignments,PlanFactService planFact){this.service=service;this.projects=projects;this.assignments=assignments;this.planFact=planFact;}
+ public RegularTaskController(RegularTaskService service,ProjectService projects,TaskAssignmentService assignments,PlanFactService planFact){this(service,projects,assignments,planFact,null);}
+ @Autowired public RegularTaskController(RegularTaskService service,ProjectService projects,TaskAssignmentService assignments,PlanFactService planFact,com.doneit.tag.application.TaggedTaskService taggedTasks){this.service=service;this.projects=projects;this.assignments=assignments;this.planFact=planFact;this.taggedTasks=taggedTasks;}
  @GetMapping("/recurring/new") public String create(Model m){return page(m,new RegularTaskForm(),"Create recurring task","/recurring");}
  @PostMapping("/recurring") public String create(@Valid @ModelAttribute("form") RegularTaskForm f,BindingResult errors,Model m,RedirectAttributes flash){
   if(errors.hasErrors())return page(m,f,"Create recurring task","/recurring");
-  try{service.create(f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Create recurring task","/recurring");}
+  try{if(taggedTasks==null)service.create(f);else taggedTasks.createRegular(f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Create recurring task","/recurring");}
   flash.addFlashAttribute("flashMessage","Recurring task created.");return "redirect:"+redirect(f.getStatus());
  }
  @GetMapping("/recurring/{id}/edit") public String edit(@PathVariable Long id,Model m){
@@ -35,7 +37,7 @@ public class RegularTaskController {
  @PostMapping("/recurring/{id}") public String edit(@PathVariable Long id,@Valid @ModelAttribute("form") RegularTaskForm f,BindingResult errors,Model m,RedirectAttributes flash){
   f.setId(id);
   if(errors.hasErrors())return page(m,f,"Edit recurring task","/recurring/"+id);
-  try{service.update(id,f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Edit recurring task","/recurring/"+id);}
+  try{if(taggedTasks==null)service.update(id,f);else taggedTasks.editRegular(id,f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Edit recurring task","/recurring/"+id);}
   flash.addFlashAttribute("flashMessage","Recurring task updated.");return "redirect:"+redirect(f.getStatus());
  }
  @PostMapping("/recurring/{id}/done-today") public String done(@PathVariable Long id,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(required=false) Integer spentMinutes,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){

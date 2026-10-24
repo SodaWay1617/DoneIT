@@ -109,7 +109,7 @@ class PlanningTypeTest extends IntegrationTestSupport {
         assertThat(summary).doesNotContain("is-empty");
         assertThat(html.indexOf("class=\"today-header\"")).isLessThan(html.indexOf("class=\"today-summary\""));
         assertThat(html.indexOf("class=\"today-summary\"")).isLessThan(html.indexOf("class=\"today-onboarding\""));
-        assertThat(html.indexOf("id=\"active-tasks\"")).isLessThan(html.indexOf("class=\"today-tools\""));
+        assertThat(html.indexOf("id=\"active-tasks\"")).isLessThan(html.indexOf("class=\"today-tools day-tools\""));
         String header = html.substring(html.indexOf("<header class=\"today-header\""), html.indexOf("<section class=\"today-summary\""));
         assertThat(header).contains("Wednesday", "href=\"/tasks/new\"").doesNotContain("view-tabs", "Signed in");
         assertThat(html).doesNotContain("<select name=\"projectId\"");

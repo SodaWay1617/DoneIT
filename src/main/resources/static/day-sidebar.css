@@ -1,0 +1,74 @@
+.app-tasks .grid { grid-template-columns:minmax(0,1fr) 260px; gap:20px; }
+.day-sidebar { display:grid; align-content:start; gap:16px; min-width:0; }
+.day-sidebar h2 { margin:0 0 12px; font:700 17px/1.3 Georgia,serif; letter-spacing:0; }
+.day-mini-calendar { padding:12px; border:1px solid var(--border); border-radius:6px; background:var(--panel); }
+.day-calendar-heading { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:10px; }
+.day-calendar-heading h3 { margin:0; font:600 13px/1.4 system-ui,sans-serif; overflow-wrap:anywhere; min-width:0; }
+.day-calendar-heading nav { display:flex; gap:2px; flex-shrink:0; }
+.day-month-button { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--ink); text-decoration:none; cursor:pointer; }
+.day-month-button .lucide { width:16px; height:16px; }
+.day-month-button:disabled { opacity:.4; cursor:default; }
+.day-calendar-weekdays,.day-calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; font:12px/1.3 system-ui,sans-serif; }
+.day-calendar-weekdays { color:var(--muted); text-align:center; margin-bottom:6px; }
+.day-calendar-weekdays span { padding:4px 0; }
+.day-calendar-grid a { display:flex; align-items:center; justify-content:center; position:relative; min-width:0; aspect-ratio:1; padding:0; border:1px solid transparent; border-radius:50%; color:var(--ink); background:transparent; font:12px/1 system-ui,sans-serif; text-decoration:none; }
+.day-calendar-grid a.is-outside { color:#8c9691; }
+.day-calendar-grid a.is-today::after { content:""; position:absolute; bottom:2px; width:4px; height:4px; border-radius:50%; background:#1e6d73; }
+.day-calendar-grid a.is-selected { border-color:#1e6d73; background:#1e6d73; color:white; font-weight:700; }
+.day-calendar-grid a.is-selected.is-today::after { background:white; }
+.day-calendar-grid a:hover:not(.is-selected),.day-month-button:hover:not(:disabled) { background:#e3eee7; border-color:#b8cfc2; }
+.day-calendar-grid a:focus-visible,.day-month-button:focus-visible,.day-schedule-entry:focus-visible,.day-create-options a:focus-visible,.day-create-choice summary:focus-visible,.day-schedule-list:focus-visible { outline:2px solid #1e6d73; outline-offset:2px; }
+.day-schedule { min-width:0; padding:0 4px 12px; border-bottom:1px solid var(--border); }
+.day-schedule-list { display:grid; max-height:360px; overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain; padding:2px; }
+.day-schedule-entry { display:grid; grid-template-columns:38px 10px minmax(0,1fr); gap:8px; padding:9px 0; color:var(--ink); text-decoration:none; font:12px/1.4 system-ui,sans-serif; }
+.day-schedule-entry:hover strong { color:#1e6d73; text-decoration:underline; }
+.day-schedule-entry time { color:var(--muted); font-size:12px; }
+.day-schedule-dot { width:8px; height:8px; margin-top:4px; border-radius:50%; background:#537e70; }
+.day-schedule-dot.priority-low { background:#7d989b; }
+.day-schedule-dot.priority-normal { background:#b89753; }
+.day-schedule-dot.priority-high { background:#ca7b3a; }
+.day-schedule-dot.priority-critical { background:#c74c48; }
+.day-schedule-task { display:grid; gap:3px; min-width:0; overflow-wrap:anywhere; }
+.day-schedule-task strong { font-weight:600; }
+.day-schedule-task small { color:var(--muted); font-size:11px; }
+.day-schedule-empty { margin:0; color:var(--muted); font:13px/1.5 system-ui,sans-serif; }
+.day-sidebar .day-tools { padding:0 4px 12px; }
+.day-sidebar .day-tools h2 { margin-top:0; }
+.day-tools .today-quick-actions-body { gap:6px; }
+.day-tools .secondary { display:grid; grid-template-columns:18px minmax(0,1fr) auto; width:100%; gap:8px; align-items:center; min-height:52px; padding:8px; background:#edece3; border:1px solid transparent; border-radius:4px; color:var(--ink); font:12px/1.35 system-ui,sans-serif; text-align:left; cursor:pointer; }
+.day-tools .secondary:hover:not(:disabled) { background:#e2ebe2; border-color:#b5caba; }
+.day-tools .secondary:disabled { opacity:.5; cursor:default; }
+.day-tools .secondary > span:not(.day-action-count) { display:grid; gap:3px; min-width:0; overflow-wrap:anywhere; }
+.day-tools .secondary small { font-size:10px; color:var(--muted); }
+.day-action-count { font-size:11px; color:var(--muted); }
+.day-tools form[aria-busy=true] button { pointer-events:none; opacity:.6; }
+.day-create-split { display:flex; align-items:stretch; position:relative; }
+.day-create-split .day-create-main { border-radius:6px 0 0 6px; }
+.day-create-choice summary { min-width:44px; width:44px; padding:0; border-left-color:#45888a; border-radius:0 6px 6px 0; list-style:none; }
+.day-create-choice summary::-webkit-details-marker { display:none; }
+.day-create-choice .day-create-mobile-icon { display:none; }
+.day-create-options { position:absolute; z-index:45; right:0; top:calc(100% + 6px); width:240px; max-width:calc(100vw - 24px); padding:6px; border:1px solid var(--border); border-radius:6px; background:white; box-shadow:0 5px 18px #23363822; }
+.day-create-options a { display:flex; gap:10px; align-items:center; min-height:44px; padding:10px; border-radius:4px; color:var(--ink); text-decoration:none; font:14px/1.4 system-ui,sans-serif; overflow-wrap:anywhere; }
+.day-create-options a:hover { background:#e3eee7; }
+.day-create-options .lucide { width:18px; height:18px; flex-shrink:0; }
+@media(min-width:1200px) {
+    .app-tasks .today-day-navigation { display:none; }
+    .app-tasks .today-controls { align-self:center; }
+}
+@media(max-width:1199px) {
+    .app-tasks .grid { grid-template-columns:minmax(0,1fr); }
+    .day-mini-calendar,.day-schedule { display:none; }
+    .day-sidebar { display:block; }
+    .day-sidebar .day-tools { margin-top:4px; }
+    .day-tools .today-quick-actions-body { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .day-tools .secondary { height:100%; }
+}
+@media(max-width:767px) {
+    .day-create-split .day-create-main { display:none; }
+    .day-create-choice summary { border-radius:6px; border-left-color:#1e6d73; }
+    .day-create-choice .day-create-arrow { display:none; }
+    .day-create-choice .day-create-mobile-icon { display:block; }
+    .day-tools .today-quick-actions-body { grid-template-columns:minmax(0,1fr); }
+    .day-tools .secondary { min-height:52px; }
+    .day-tools .secondary small { font-size:11px; }
+}

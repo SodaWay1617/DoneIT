@@ -1,0 +1,29 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title th:text="${'#' + detail.tag.name}">Tag</title><th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div>
+<main class="app-content" id="app-main" tabindex="-1"><div class="tags-page">
+    <header class="tags-heading">
+        <div><a class="tag-back" href="/tags"><i data-lucide="arrow-left" aria-hidden="true"></i><span th:text="#{tag.title}">Tags</span></a><h1 th:text="${'#' + detail.tag.name}">#Prime</h1></div>
+        <nav class="tag-period" th:aria-label="#{tag.period}">
+            <a class="tag-icon-button" th:href="@{/tags/{id}(id=${detail.tag.id},month=${detail.month.minusMonths(1)})}" th:title="#{tag.previousMonth}" th:aria-label="#{tag.previousMonth}"><i data-lucide="chevron-left" aria-hidden="true"></i></a>
+            <form method="get"><input type="month" name="month" min="1900-01" max="9998-12" th:value="${detail.month}" required th:aria-label="#{tag.period}" onchange="this.form.requestSubmit()"><noscript><button type="submit" th:text="#{common.save}">Open</button></noscript></form>
+            <a class="tag-icon-button" th:href="@{/tags/{id}(id=${detail.tag.id},month=${detail.month.plusMonths(1)})}" th:title="#{tag.nextMonth}" th:aria-label="#{tag.nextMonth}"><i data-lucide="chevron-right" aria-hidden="true"></i></a>
+        </nav>
+    </header>
+    <dl class="tag-summary">
+        <div><dt th:text="#{tag.actual}">Your tracked time this month</dt><dd th:text="${@labels.duration(detail.actualMinutes())}">0h</dd></div>
+        <div><dt th:text="#{tag.ordinary}">Tasks</dt><dd th:text="${detail.ordinaryCount()}">0</dd></div>
+        <div><dt th:text="#{tag.recurring}">Recurring tasks</dt><dd th:text="${detail.recurringCount()}">0</dd></div>
+    </dl>
+    <section class="tag-task-list"><h2 th:text="#{tag.tasks}">Tasks across projects</h2>
+        <p class="tag-empty" th:if="${#lists.isEmpty(detail.tasks)}" th:text="#{tag.noTasks}">No tasks</p>
+        <article class="tag-task-row" th:each="task : ${detail.tasks}" th:attr="data-task-id=${task.id},data-recurring=${task.recurring}">
+            <div class="tag-task-name"><a th:href="${task.href}" th:text="${task.title}">Task</a><span th:text="${task.project}">Project</span></div>
+            <div class="tag-task-status"><span th:text="${@labels.status(task.status)}">Status</span><span th:if="${task.recurring}" th:text="#{tag.recurringSingle}">Recurring</span></div>
+            <div class="tag-task-metric"><span th:text="#{tag.estimate}">Estimate</span><strong th:text="${task.estimateMinutes == null ? #messages.msg('tag.unestimated') : @labels.compactDuration(task.estimateMinutes)}">30 min</strong></div>
+            <div class="tag-task-metric"><span th:text="#{tag.actualShort}">Tracked this month</span><strong th:text="${@labels.duration(task.actualMinutes)}">0h</strong></div>
+        </article>
+    </section>
+</div></main></body></html>

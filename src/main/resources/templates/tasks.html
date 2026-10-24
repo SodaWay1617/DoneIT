@@ -241,7 +241,7 @@
 <link rel="stylesheet" href="/planning.css">
 <link rel="stylesheet" href="/today.css">
 <script src="/today.js" defer></script>
-<th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<th:block th:replace="~{app-shell :: assets}"></th:block><link rel="stylesheet" href="/compact-list.css"><link rel="stylesheet" href="/day-sidebar.css"><script src="/day-sidebar.js" defer></script></head>
 <body class="app-page"><div th:replace="~{app-shell :: navigation}"></div><div class="app-content app-tasks" id="app-main" tabindex="-1">
 <div class="shell">
     <header class="today-header">
@@ -265,7 +265,7 @@
                 </details>
                 <a class="today-button today-icon" th:href="@{/tasks(date=${daily.selectedDate.plusDays(1)},projectId=${selectedProjectId},planningType=${selectedPlanningType})}" th:title="#{nav.nextDay}" th:aria-label="#{nav.nextDay}"><i data-lucide="chevron-right" aria-hidden="true"></i></a>
             </nav>
-            <a class="today-button today-primary today-create" href="/tasks/new" th:title="#{task.create}" th:aria-label="#{task.create}"><i data-lucide="plus" aria-hidden="true"></i><span th:text="#{task.create}">Create task</span></a>
+            <div th:replace="~{day-sidebar :: create}"></div>
         </div>
     </header>
     <section class="today-summary" th:aria-label="#{today.summary}" data-workload-kind="planned"
@@ -298,204 +298,13 @@
     <div class="flash" th:if="${randomTaskTitle != null}" th:text="#{task.randomResult(${randomTaskTitle})}">Random task</div>
 
     <div class="grid">
-        <section id="active-tasks" class="card">
-            <h2 th:text="#{task.active(${daily.activeTaskCount() + regularActive.size()})}">Active tasks (0)</h2>
-            <p class="section-note">Unfinished tasks stay in the main flow until they are done, closed, or moved to backlog.</p>
-            <div class="stack" th:if="!${#lists.isEmpty(activeEntries)}">
-                <th:block th:each="entry : ${activeEntries}">
-                <article class="task" th:if="${entry.task != null}" th:with="task=${entry.task}" th:classappend="${' planning-' + task.planningType.name().toLowerCase() + (task.overdue ? ' overdue' : '')}">
-                    <div class="task-top">
-                        <div class="task-top-main">
-                            <div class="badges">
-                                <span class="badge status-open" th:text="${@labels.status(task.status)}">Status</span>
-                                <span class="badge status-today" th:if="${todayPage}">TODAY</span>
-                                <span class="badge status-overdue" th:if="${task.overdue}" th:text="#{task.overdue}">OVERDUE</span>
-                                <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${@labels.priority(task.priority)}">Priority</span>
-                            </div>
-                            <h3 class="task-title" th:text="${task.title}">Task title</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
+        <section th:replace="~{compact-list :: list}"></section>
 
-                        </div>
-                        <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}" th:text="#{common.edit}">Edit</a>
-                    </div>
-                    <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
-                    <p class="meta" th:if="${task.plannedForAt != null}" th:text="#{task.planned(${#temporals.format(task.plannedForAt, 'dd MMM yyyy HH:mm')})}">Planned time</p>
-                    <p class="meta" th:if="${task.plannedForAt == null and task.plannedDate == null}" th:text="#{task.alwaysActive}">Always active</p>
-                    <p class="meta" th:if="${task.deadlineAt != null}" th:text="#{task.deadline(${#temporals.format(task.deadlineAt, 'dd MMM yyyy HH:mm')})}">Deadline</p>
-                    <p class="meta" th:if="${task.estimateMinutes != null}" th:text="#{common.estimate(${task.estimateMinutes})}">Estimate</p>
-                    <p class="meta" th:if="${task.spentMinutes > 0}" th:text="#{common.spent(${task.spentMinutes})}">Spent</p>
-                    <form class="reschedule-form" method="post" th:action="@{/tasks/{id}/reschedule(id=${task.id})}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
-                        <input class="compact-input" type="date" name="plannedDate" required th:aria-label="#{task.plannedDay}" th:value="${task.plannedDate != null ? task.plannedDate : (task.plannedForAt == null ? daily.selectedDate : task.plannedForAt.toLocalDate())}" />
-                        <input class="compact-input" type="datetime-local" name="plannedForAt" hidden disabled th:aria-label="#{task.plannedWithTime}" th:value="${task.plannedForAt == null ? '' : #temporals.format(task.plannedForAt, 'yyyy-MM-dd''T''HH:mm')}" />
-                        <label class="reschedule-mode"><input type="checkbox" name="plannedWithTime" value="true" /><span th:text="#{task.plannedWithTime}">Set exact time</span></label>
-                        <button class="secondary" type="submit" th:text="#{task.move}">Move</button>
-                    </form>
-                    <div class="task-actions">
-                        <form class="inline done-with-time" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
-                            <input type="hidden" name="spentMinutes" />
-                            <button class="solid" type="submit" th:text="#{common.done}">Done</button>
-                        </form>
-                        <form class="inline track-time" method="post" th:action="@{/tasks/{id}/track-time(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" /><input type="hidden" name="minutes" /><button class="secondary track-time-button" type="button" th:text="#{task.trackTime}">Track time</button>
-                        </form>
-                        <form class="inline" method="post" th:action="@{/tasks/{id}/closed(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
-                            <button class="secondary" type="submit" th:text="#{common.close}">Close</button>
-                        </form>
-                        <form class="inline" method="post" th:action="@{/tasks/{id}/backlog(id=${task.id})}">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <input type="hidden" name="redirectTo" value="/backlog" />
-                            <button class="secondary" type="submit" th:text="#{task.toBacklog}">To backlog</button>
-                        </form>
-                    </div>
-                    <p class='meta' th:if='${task.plannedDate != null}' th:text='${task.plannedDate}'>Planned day</p>
-                    <form method='post' th:action='@{/tasks/{id}/project(id=${task.id})}'><input type='hidden' th:name='${_csrf.parameterName}' th:value='${_csrf.token}'><input type='hidden' name='redirectTo' value='/'><select name='projectId'><option th:each='p:${projects}' th:value='${p.id}' th:text='${p.name}' th:selected='${p.id == task.projectId}'>Project</option></select><button class='secondary' th:text="#{task.moveProject}">Move project</button></form>
-                </article>
-                <article class="task" th:if="${entry.regularTask != null}" th:with="task=${entry.regularTask}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
-                    <div class="task-top"><div class="task-top-main"><div class="badges">
-                        <span class="badge status-open" th:text="${@labels.status(task.status)}">Status</span>
-                        <span class="badge" th:text="#{task.recurring}">RECURRING</span>
-                        <span class="badge" th:text="${@labels.recurrence(task.recurrenceType)}">Every day</span>
-                        <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${@labels.priority(task.priority)}">Priority</span>
-                    </div><h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span></div>
-                    <a class="ghost" th:href="@{/recurring/{id}/edit(id=${task.id})}" th:text="#{common.edit}">Edit</a></div>
-                    <p class="meta" th:if="${task.description != null}" th:text="${task.description}">Description</p>
-                    <p class="meta" th:if="${task.occurrenceTime != null}" th:text="'At ' + ${task.occurrenceTime}">At 10:00</p>
-                    <p class="meta" th:if="${task.estimateMinutes != null}" th:text="#{common.estimate(${task.estimateMinutes})}">Estimate</p>
-                    <p class="meta" th:if="${task.spentMinutes > 0}" th:text="#{common.spent(${task.spentMinutes})}">Spent</p>
-                    <form class="inline done-with-time" method="post" th:action="@{/recurring/{id}/done-today(id=${task.id})}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <input type="hidden" name="date" th:value="${daily.selectedDate}">
-                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}">
-                        <input type="hidden" name="spentMinutes">
-                        <button class="solid" type="submit" th:text="#{task.doneToday}">Done today</button>
-                    </form>
-                    <form class="inline" method="post" th:if="${daily.selectedDate == regularToday}" th:action="@{/recurring/{id}/skip-today(id=${task.id})}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}">
-                        <button class="secondary" type="submit" th:text="#{task.skipToday}">Skip today</button>
-                    </form>
-                    <form class="inline track-time" method="post" th:action="@{/recurring/{id}/track-time(id=${task.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="date" th:value="${daily.selectedDate}"><input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}"><input type="hidden" name="minutes"><button class="secondary track-time-button" type="button" th:text="#{task.trackTime}">Track time</button></form>
-                </article>
-                </th:block>
-            </div>
-            <p class="empty" th:if="${#lists.isEmpty(activeEntries)}" th:text="#{task.noActive}">No active tasks for this screen yet.</p>
-        </section>
-
-        <aside class="stack">
-            <section class="today-tools" aria-labelledby="today-actions-title">
-                <form class="today-planning-filter" method="get">
-                    <input type="hidden" name="date" th:if="${filterDate != null}" th:value="${filterDate}">
-                    <input type="hidden" name="projectId" th:if="${selectedProjectId != null}" th:value="${selectedProjectId}">
-                    <label for="today-planning-type" th:text="#{planning.title}">Planning</label>
-                    <select id="today-planning-type" name="planningType" onchange="this.form.submit()">
-                        <option value="" th:text="#{planning.all}">All categories</option>
-                        <option th:each="type : ${planningTypes}" th:value="${type}" th:selected="${type == selectedPlanningType}" th:text="${@labels.planning(type)}">Required</option>
-                    </select>
-                </form>
-                <div class="today-quick-actions">
-                    <h2 id="today-actions-title" th:text="#{today.actions}">Actions</h2>
-                    <div class="today-quick-actions-body">
-                    <form class="bulk-action" method="post" th:action="@{/tasks/bulk-move-to-tomorrow}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <input type="hidden" name="date" th:value="${#temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
-                        <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
-                        <button class="secondary" type="submit"><i data-lucide="calendar-arrow-up" aria-hidden="true"></i><span th:text="#{task.moveTomorrow}">Move unfinished to tomorrow</span></button>
-                    </form>
-                    <form class="bulk-action" method="post" th:action="@{/tasks/bulk-move-overdue-to-today}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <button class="secondary" type="submit"><i data-lucide="calendar-check" aria-hidden="true"></i><span th:text="#{task.moveOverdue}">Move overdue to today</span></button>
-                    </form>
-                    <form class="random-action" method="post" th:action="@{/tasks/random-today}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <button class="secondary" type="submit"><i data-lucide="shuffle" aria-hidden="true"></i><span th:text="#{task.random}">Pick random task</span></button>
-                    </form>
-                        <a class="today-button" href="/recurring/new"><i data-lucide="repeat" aria-hidden="true"></i><span th:text="#{task.createRecurring}">Create recurring</span></a>
-                    </div>
-                </div>
-            </section>
-            <section id="inbox-preview" class="card">
-                <h2><a class="ghost" th:href="@{/inbox}">Inbox</a></h2>
-                <p class="section-note">New tasks waiting for triage.</p>
-                <div class="stack">
-                    <article class="task backlog-task" th:each="task : ${inboxPreview}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
-                        <div class="badges"><span class="badge">NEW</span></div>
-                        <h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
-                    </article>
-                    <article class="task backlog-task" th:each="task : ${regularInbox}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
-                        <div class="badges"><span class="badge">NEW</span><span class="badge">RECURRING</span></div>
-                        <h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span>
-                    </article>
-                </div>
-                <p class="empty" th:if="${#lists.isEmpty(inboxPreview) and #lists.isEmpty(regularInbox)}">Inbox is empty.</p>
-            </section>
-            <section id="backlog-preview" class="card">
-                <h2><a class="ghost" th:href="@{/backlog}">Backlog</a></h2>
-                <p class="section-note">Undated low-priority reminders stay separate until you schedule them.</p>
-                <div class="stack" th:if="!${#lists.isEmpty(backlogPreview)}">
-                    <article class="task backlog-task" th:each="task : ${backlogPreview}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
-                        <div class="task-top">
-                            <div class="task-top-main">
-                                <div class="badges">
-                                    <span class="badge status-backlog">BACKLOG</span>
-                                    <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
-                                </div>
-                                <h3 class="task-title" th:text="${task.title}">Backlog task</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
-                            </div>
-                            <a class="ghost" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>
-                        </div>
-                        <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
-                        <div class="task-actions">
-                            <form class="inline done-with-time" method="post" th:action="@{/tasks/{id}/done(id=${task.id})}">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
-                                <input type="hidden" name="spentMinutes" />
-                                <button class="solid" type="submit">Done</button>
-                            </form>
-                            <form class="inline" method="post" th:action="@{/tasks/{id}/closed(id=${task.id})}">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                <input type="hidden" name="redirectTo" th:value="${todayPage ? '/' : '/tasks?date=' + #temporals.format(daily.selectedDate, 'yyyy-MM-dd')}" />
-                                <button class="secondary" type="submit">Close</button>
-                            </form>
-                        </div>
-                    </article>
-                </div>
-                <div class="stack" th:if="!${#lists.isEmpty(regularBacklog)}"><article class="task backlog-task" th:each="task:${regularBacklog}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}"><div class="badges"><span class="badge">BACKLOG</span><span class="badge">RECURRING</span></div><h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span></article></div>
-                <p class="empty" th:if="${#lists.isEmpty(backlogPreview) and #lists.isEmpty(regularBacklog)}">Backlog is empty for now.</p>
-            </section>
-
-            <section id="completed-tasks" class="card">
-                <h2><a class="ghost" th:href="@{/finished}">Done and closed</a></h2>
-                <p class="section-note">Recently completed and cancelled work.</p>
-                <div class="stack" th:if="!${#lists.isEmpty(finishedPreview)}">
-                    <article class="task completed-task" th:each="task : ${finishedPreview}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
-                        <div class="task-top">
-                            <div class="task-top-main">
-                                <div class="badges">
-                                    <span class="badge" th:classappend="${task.status.name() == 'DONE'} ? ' status-done' : ' status-closed'" th:text="${task.status}">DONE</span>
-                                    <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
-                                </div>
-                                <h3 class="task-title" th:text="${task.title}">Completed task</h3><span th:replace="~{task-people :: assignees(${taskAssignees[task.id]})}"></span>
-                            </div>
-                        </div>
-                        <p class="meta" th:if="${task.description != null and !task.description.isBlank()}" th:text="${task.description}">Description</p>
-                    </article>
-                </div>
-                <div class="stack" th:if="!${#lists.isEmpty(regularFinished)}">
-                    <article class="task completed-task" th:each="task : ${regularFinished}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
-                        <div class="badges"><span class="badge" th:text="${task.status.displayName()}">DONE</span><span class="badge">RECURRING</span></div>
-                        <h3 class="task-title" th:text="${task.title}">Task</h3><span th:replace="~{task-people :: assignees(${regularTaskAssignees[task.id]})}"></span>
-                    </article>
-                </div>
-                <p class="empty" th:if="${#lists.isEmpty(finishedPreview) and #lists.isEmpty(regularFinished)}">Completed and closed tasks will appear here.</p>
-            </section>
-        </aside>
+        <aside th:replace="~{day-sidebar :: sidebar}"></aside>
     </div>
 </div>
+<dialog th:replace="~{compact-list :: move-dialog}"></dialog>
+<script src="/compact-list.js"></script>
 <script src="/time-tracking.js"></script>
 <script src="/reschedule.js"></script>
 <script src="/planning.js"></script>

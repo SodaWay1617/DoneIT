@@ -2,11 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org"><body>
 <th:block th:fragment="assets">
     <link rel="stylesheet" href="/app-shell.css">
+    <link rel="stylesheet" href="/tags.css">
+    <script src="/tags.js" defer></script>
     <script src="/vendor/lucide-0.468.0.min.js" defer></script>
     <script src="/app-shell.js" defer></script>
     <script src="/form-security.js" defer th:attr="data-user=${appUserLogin},data-login-required=#{security.loginRequired},data-refresh-failed=#{security.refreshFailed}"></script>
 </th:block>
 <th:block th:fragment="icon(name)"><i th:attr="data-lucide=${name}" aria-hidden="true"></i></th:block>
+<a th:fragment="tags-link" class="app-link" href="/tags" th:classappend="${appNav.section == 'tags'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'tags' ? 'page' : null}">
+    <th:block th:replace="~{app-shell :: icon('tags')}"></th:block><span th:text="#{tag.title}">Tags</span>
+</a>
 <span th:fragment="badge(count)" class="app-badge" th:if="${count > 0}" th:text="${count}">3</span>
 <a th:fragment="item(item)" class="app-link" th:href="${item.href}" th:classappend="${item.active} ? 'is-active'"
    th:attr="aria-current=${item.active ? 'page' : null},data-nav-key=${item.key}">
@@ -41,7 +46,7 @@
     <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
     <div class="app-sidebar-body">
         <nav th:attr="aria-label=#{shell.sections}"><th:block th:each="item : ${appNav.main}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
-        <nav class="app-secondary-nav" th:attr="aria-label=#{shell.views}"><th:block th:each="item : ${appNav.views}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+        <nav class="app-secondary-nav" th:attr="aria-label=#{shell.views}"><th:block th:each="item : ${appNav.views}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block><a th:replace="~{app-shell :: tags-link}"></a></nav>
         <div th:replace="~{app-shell :: project-list}"></div>
     </div>
     <div th:replace="~{app-shell :: account}"></div>
@@ -71,7 +76,7 @@
             <h2 th:text="#{shell.sections}">Sections</h2><nav><th:block th:each="item : ${appNav.more.subList(0,4)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
             <h2 th:text="#{shell.views}">Views</h2><nav><th:block th:each="item : ${appNav.more.subList(4,5)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
             <h2 th:text="#{nav.analytics}">Analytics</h2><nav><th:block th:each="item : ${appNav.more.subList(5,7)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
-            <h2 th:text="#{shell.additional}">Additional</h2><nav><th:block th:each="item : ${appNav.more.subList(7,8)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
+            <h2 th:text="#{shell.additional}">Additional</h2><nav><a th:replace="~{app-shell :: tags-link}"></a><th:block th:each="item : ${appNav.more.subList(7,8)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
         </div>
     </dialog>
 </div>

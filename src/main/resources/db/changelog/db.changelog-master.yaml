@@ -57,3 +57,5 @@ databaseChangeLog:
       file: db/changelog/changes/0028-task-change-history.yaml
   - include:
       file: db/changelog/changes/0029-schedule-only-visibility.yaml
+  - include:
+      file: db/changelog/changes/0030-personal-tags.yaml

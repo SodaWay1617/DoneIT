@@ -102,7 +102,7 @@
                         <span class="badge open" th:text="${task.status.displayName()}">Status</span>
                         <span class="badge" th:if="${task.priority.name() != 'NONE'}" th:classappend="${' priority-' + task.priority.name().toLowerCase()}" th:text="${task.priority.displayName()}">Priority</span>
                     </div>
-                    <h3 th:text="${task.title}">Task</h3>
+                    <h3 th:text="${task.title}">Task</h3><div th:replace="~{task-tags :: badges(${taskTags[task.id]})}"></div>
                     <p class="meta" th:if="${taskAssignees[task.id] != null}" th:text="#{assignment.list(${#strings.listJoin(taskAssignees[task.id], ', ')})}">Assignees</p>
                     <p class="meta" th:if="${task.plannedForAt != null}" th:text="${#temporals.format(task.plannedForAt, 'HH:mm')}">09:00</p>
                     <p class="meta" th:if="${task.plannedDate != null}" th:text="${task.plannedDate}">Planned day</p>
@@ -114,7 +114,7 @@
                 <th:block th:each="task : ${regularKanban}">
                     <article class="task" th:if="${task.status == column.status}" th:classappend="${' planning-' + task.planningType.name().toLowerCase()}">
                         <div class="badges"><span class="badge open" th:text="${task.status.displayName()}">Status</span><span class="badge">RECURRING</span></div>
-                        <h3 th:text="${task.title}">Task</h3>
+                        <h3 th:text="${task.title}">Task</h3><div th:replace="~{task-tags :: badges(${regularTaskTags[task.id]})}"></div>
                         <p class="meta" th:if="${regularTaskAssignees[task.id] != null}" th:text="#{assignment.list(${#strings.listJoin(regularTaskAssignees[task.id], ', ')})}">Assignees</p>
                         <p class="meta" th:text="${task.recurrenceType.displayName()}">Every day</p>
                         <p class="meta" th:if="${task.estimateMinutes != null}" th:text="'Estimate: ' + ${task.estimateMinutes} + ' min'">Estimate</p>

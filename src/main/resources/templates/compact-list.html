@@ -1,0 +1,93 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<section th:fragment="list" id="active-tasks" class="compact-list" data-compact-list th:attr="data-failure=#{compact.failure}">
+    <header class="compact-list-heading">
+        <h2 th:text="#{compact.active(${compactRows.size()})}">Current tasks</h2>
+        <button class="cl-icon compact-filter-toggle" type="button" data-filter-toggle aria-controls="compact-filters" aria-expanded="false"
+                th:classappend="${selectedPlanningType != null or !selectedTagIds.isEmpty()} ? 'has-filters'" th:title="#{compact.filters}" th:aria-label="#{compact.filters}"><i data-lucide="sliders-horizontal" aria-hidden="true"></i></button>
+    </header>
+    <form id="compact-filters" class="compact-filters view-filters" method="get">
+        <input type="hidden" name="date" th:if="${filterDate != null}" th:value="${filterDate}">
+        <input type="hidden" name="projectId" th:if="${selectedProjectId != null}" th:value="${selectedProjectId}">
+        <fieldset class="compact-categories"><legend class="cl-sr" th:text="#{planning.title}">Planning</legend>
+            <label><input type="radio" name="planningType" value="" th:checked="${selectedPlanningType == null}"><span><span th:text="#{compact.all}">All</span> <small th:text="${compactCounts['ALL']}">0</small></span></label>
+            <label th:each="type : ${planningTypes}"><input type="radio" name="planningType" th:value="${type}" th:checked="${type == selectedPlanningType}"><span><span th:text="${@labels.planning(type)}">Required</span> <small th:text="${compactCounts[type.name()]}">0</small></span></label>
+        </fieldset>
+        <details class="compact-tag-filter">
+            <summary><i data-lucide="tags" aria-hidden="true"></i><span th:text="${selectedTagIds.isEmpty() ? #messages.msg('compact.allTags') : #messages.msg('compact.selectedTags', selectedTagIds.size())}">All tags</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+            <div class="compact-tag-options">
+                <p th:if="${listTagOptions.isEmpty()}" th:text="#{tag.empty}">No tags</p>
+                <label th:each="tag : ${listTagOptions}"><input type="checkbox" name="tagId" th:value="${tag.id}" th:checked="${selectedTagIds.contains(tag.id)}"><span th:text="${'#' + tag.name}">#Prime</span></label>
+            </div>
+        </details>
+        <button class="cl-icon" type="submit" th:title="#{compact.apply}" th:aria-label="#{compact.apply}"><i data-lucide="check" aria-hidden="true"></i></button>
+        <a class="cl-icon" data-reset-list th:href="${compactResetTo}" th:title="#{compact.reset}" th:aria-label="#{compact.reset}" th:if="${selectedPlanningType != null or !selectedTagIds.isEmpty()}"><i data-lucide="filter-x" aria-hidden="true"></i></a>
+    </form>
+    <div class="compact-rows">
+        <article class="task compact-row" th:each="row : ${compactRows}" th:classappend="${' planning-' + row.planningType.name().toLowerCase() + (row.overdue ? ' overdue' : '')}"
+                 th:attr="data-task-id=${row.id},data-recurring=${row.recurring}">
+            <form class="compact-complete done-with-time" th:attr="data-time-prompt=#{compact.doneTime},data-invalid-time=#{compact.invalidTime}" method="post" th:action="${row.base() + (row.recurring ? '/done-today' : '/done')}">
+                <input type="hidden" name="redirectTo" th:value="${compactReturnTo}">
+                <input type="hidden" name="date" th:if="${row.recurring}" th:value="${daily.selectedDate}">
+                <input type="hidden" name="spentMinutes">
+                <button class="cl-complete" type="submit" role="checkbox" aria-checked="false"
+                        th:title="${row.recurring ? #messages.msg('task.doneToday') : #messages.msg('common.done')}"
+                        th:aria-label="${(row.recurring ? #messages.msg('task.doneToday') : #messages.msg('common.done')) + ': ' + row.title}"><span class="cl-checkbox" aria-hidden="true"></span></button>
+            </form>
+            <a class="compact-main" th:href="${row.href()}">
+                <div class="compact-text"><h3 class="task-title" th:text="${row.title}">Task</h3>
+                    <div class="compact-meta">
+                        <span class="cl-project"><i data-lucide="folder" aria-hidden="true"></i><span th:text="${row.projectName}">Project</span></span>
+                        <span class="cl-tag" th:each="tag,stat : ${row.tags}" th:if="${stat.index < 2}" th:text="${'#' + tag.name}">#Prime</span>
+                        <span class="cl-tag" th:if="${row.tags.size() > 2}" th:text="${'+' + (row.tags.size() - 2)}" th:title="#{compact.moreTags}">+2</span>
+                        <span class="cl-priority" th:if="${row.priority.name() != 'NONE'}" th:classappend="${'priority-' + row.priority.name().toLowerCase()}" th:text="${@labels.priority(row.priority)}">Priority</span>
+                        <span class="cl-recurring" th:if="${row.recurring}" th:title="#{task.recurring}" th:aria-label="#{task.recurring}"><i data-lucide="repeat" aria-hidden="true"></i></span>
+                        <span class="cl-overdue" th:if="${row.overdue}" th:text="#{task.overdue}">Overdue</span>
+                        <span th:replace="~{task-people :: assignees(${row.assignees})}"></span>
+                    </div>
+                </div>
+                <div class="compact-time" th:if="${row.estimateMinutes != null or row.start != null or row.plannedDate != null}">
+                    <strong th:if="${row.estimateMinutes != null}" th:text="${@labels.compactDuration(row.estimateMinutes)}" th:title="#{tag.estimate}">30 min</strong>
+                    <span th:if="${row.start != null}"><span th:text="${row.interval}">09:00–09:30</span><small th:if="${row.nextDays > 0}" th:text="#{compact.nextDays(${row.nextDays})}">+1 day</small></span>
+                    <span th:if="${row.plannedDate != null and (row.start == null or row.plannedDate != daily.selectedDate)}" th:text="${#temporals.format(row.plannedDate, 'dd.MM.yyyy')}">24.10.2026</span>
+                </div>
+            </a>
+            <button class="cl-icon compact-menu-toggle" type="button" data-row-menu aria-haspopup="true" aria-expanded="false" th:title="#{compact.actions}" th:aria-label="#{compact.actions}"><i data-lucide="ellipsis" aria-hidden="true"></i></button>
+            <div class="compact-menu" hidden>
+                <form class="track-time" th:attr="data-time-prompt=#{compact.trackTime},data-invalid-time=#{compact.invalidTime}" method="post" th:action="${row.base() + '/track-time'}">
+                    <input type="hidden" name="redirectTo" th:value="${compactReturnTo}"><input type="hidden" name="date" th:if="${row.recurring}" th:value="${daily.selectedDate}"><input type="hidden" name="minutes">
+                    <button class="track-time-button" type="button"><i data-lucide="clock" aria-hidden="true"></i><span th:text="#{task.trackTime}">Track time</span></button>
+                </form>
+                <button type="button" th:unless="${row.recurring}" data-reschedule th:attr="data-action=${row.base() + '/reschedule'},data-day=${row.plannedDate == null ? daily.selectedDate : row.plannedDate},data-start=${row.start == null ? '' : row.start},data-title=${row.title}"><i data-lucide="calendar-days" aria-hidden="true"></i><span th:text="#{task.move}">Move</span></button>
+                <a th:href="${row.href()}"><i data-lucide="pencil" aria-hidden="true"></i><span th:text="#{common.edit}">Edit</span></a>
+                <button type="button" data-complete-row><i data-lucide="check" aria-hidden="true"></i><span th:text="${row.recurring ? #messages.msg('task.doneToday') : #messages.msg('common.done')}">Done</span></button>
+                <form th:unless="${row.recurring}" method="post" th:action="${row.base() + '/closed'}" data-refresh-csrf>
+                    <input type="hidden" name="redirectTo" th:value="${compactReturnTo}">
+                    <button type="submit"><i data-lucide="x" aria-hidden="true"></i><span th:text="#{common.close}">Close</span></button>
+                </form>
+                <form th:if="${row.recurring}" method="post" th:action="${row.base() + '/skip-today'}" data-refresh-csrf>
+                    <input type="hidden" name="redirectTo" th:value="${compactReturnTo}">
+                    <button type="submit" th:disabled="${daily.selectedDate != regularToday}"><i data-lucide="skip-forward" aria-hidden="true"></i><span th:text="#{task.skipToday}">Skip today</span></button>
+                </form>
+            </div>
+        </article>
+    </div>
+    <div class="compact-empty" th:if="${compactRows.isEmpty()}">
+        <i data-lucide="list-checks" aria-hidden="true"></i>
+        <p th:text="${compactTotal == 0 ? #messages.msg('task.noActive') : #messages.msg('compact.noMatches')}">No tasks</p>
+        <a th:if="${compactTotal > 0}" data-reset-list th:href="${compactResetTo}" th:text="#{compact.reset}">Reset filters</a>
+    </div>
+</section>
+<dialog th:fragment="move-dialog" class="compact-dialog" id="compact-move-dialog" aria-labelledby="compact-move-title">
+    <form method="post" class="compact-move-form" data-refresh-csrf>
+        <header><h2 id="compact-move-title" th:text="#{compact.moveTitle}">Move task</h2><button class="cl-icon" type="button" data-close-dialog th:title="#{common.cancel}" th:aria-label="#{common.cancel}"><i data-lucide="x" aria-hidden="true"></i></button></header>
+        <p data-move-task></p><p class="compact-current-date"><span th:text="#{compact.currentDate}">Current date</span>: <span data-current-date></span></p>
+        <input type="hidden" name="redirectTo" th:value="${compactReturnTo}">
+        <label><span th:text="#{task.plannedDay}">Day</span><input type="date" name="plannedDate" required></label>
+        <label class="compact-time-choice"><input type="checkbox" name="plannedWithTime" value="true" data-move-with-time><span th:text="#{task.plannedWithTime}">Exact time</span></label>
+        <label data-move-time-label hidden><span th:text="#{form.timeOptional}">Time</span><input type="time" data-move-time></label>
+        <input type="hidden" name="plannedForAt" disabled>
+        <footer><button type="button" data-close-dialog th:text="#{common.cancel}">Cancel</button><button type="submit" th:text="#{task.move}">Move</button></footer>
+    </form>
+</dialog>
+</body></html>

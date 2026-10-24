@@ -15,7 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class AppNavigationWebConfiguration implements WebMvcConfigurer {
     private static final List<String> VIEWS = List.of("tasks", "kanban", "calendar", "schedule", "backlog", "status-list",
-            "task-form", "recurring-form", "projects", "project-detail", "settings", "devices", "analytics", "workload-analytics", "reports", "learn");
+            "task-form", "recurring-form", "projects", "project-detail", "settings", "devices", "analytics", "workload-analytics", "reports", "learn", "tags", "tag-detail");
     private final AppNavigationService navigation;
     private final ProjectService projects;
 

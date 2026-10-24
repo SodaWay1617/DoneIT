@@ -42,6 +42,7 @@ public class HomeController {
     private final TaskAssignmentService taskAssignments;
     private final SubtaskService subtasks;
     private final PlanFactService planFact;
+    private final com.doneit.tag.application.TaggedTaskService taggedTasks;
 
     public HomeController(TaskApplicationService taskApplicationService) {
         this(taskApplicationService, null, null, null);
@@ -61,14 +62,21 @@ public class HomeController {
         this(taskApplicationService,projectService,taskAssignments,subtasks,null);
     }
 
-    @Autowired
     public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService,
                           TaskAssignmentService taskAssignments, SubtaskService subtasks, PlanFactService planFact) {
+        this(taskApplicationService,projectService,taskAssignments,subtasks,planFact,null);
+    }
+
+    @Autowired
+    public HomeController(TaskApplicationService taskApplicationService, ProjectService projectService,
+                          TaskAssignmentService taskAssignments, SubtaskService subtasks, PlanFactService planFact,
+                          com.doneit.tag.application.TaggedTaskService taggedTasks) {
         this.taskApplicationService = taskApplicationService;
         this.projectService = projectService;
         this.taskAssignments = taskAssignments;
         this.subtasks = subtasks;
         this.planFact = planFact;
+        this.taggedTasks = taggedTasks;
     }
 
     @ModelAttribute
@@ -211,13 +219,15 @@ public class HomeController {
         );
 
         if (backlog) {
-            var created = taskApplicationService.createBacklogTask(command);
+            var created = taggedTasks == null ? taskApplicationService.createBacklogTask(command)
+                    : taggedTasks.create(command,true,form.getTagNames());
             if (parentTaskId != null && subtasks != null) subtasks.attach(created.id(), parentTaskId);
             redirectAttributes.addFlashAttribute("flashMessage", "Task added to backlog.");
             return parentTaskId == null ? "redirect:/backlog" : "redirect:/tasks/" + parentTaskId + "/edit";
         }
 
-        var created = taskApplicationService.createTask(command);
+        var created = taggedTasks == null ? taskApplicationService.createTask(command)
+                : taggedTasks.create(command,false,form.getTagNames());
         if (parentTaskId != null && subtasks != null) subtasks.attach(created.id(), parentTaskId);
         redirectAttributes.addFlashAttribute("flashMessage", "Task created.");
         if (parentTaskId != null) return "redirect:/tasks/" + parentTaskId + "/edit";
@@ -272,7 +282,8 @@ public class HomeController {
                 plannedDate, backlog, form.getPriority(), form.getStatus(),
                 form.getEstimateMinutes(), form.getSpentMinutes(), form.getPlanningType(), plannedForAt != null && form.isExplicitEndTime() ? form.getEndTime() : null
         );
-        taskApplicationService.editTask(command);
+        if (taggedTasks == null) taskApplicationService.editTask(command);
+        else taggedTasks.edit(command,form.getTagNames(),form.isTagsPresent());
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
         String statusRedirect = statusListRedirect(form.getStatus());
         if (statusRedirect != null) return "redirect:" + statusRedirect;

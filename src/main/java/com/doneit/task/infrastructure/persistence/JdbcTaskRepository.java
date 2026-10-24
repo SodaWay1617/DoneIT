@@ -190,27 +190,26 @@ public class JdbcTaskRepository implements TaskRepository {
             WHERE id = ?
             """;
 
-    private static final String BULK_MOVE_SQL = """
-            UPDATE tasks
-            SET planned_for_at = planned_for_at + INTERVAL '1 day',
-                planned_date = planned_date + 1,
-                updated_at = ?
+    private static final String BULK_MOVE_SCOPE = """
             WHERE %s
               AND planning_type <> 'OPTIONAL'
               AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
               AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
             """.formatted(TaskVisibility.memberTasks("tasks", false, true));
 
+    private static final String BULK_MOVE_SQL = """
+            UPDATE tasks
+            SET planned_for_at = planned_for_at + INTERVAL '1 day',
+                planned_date = planned_date + 1,
+                updated_at = ?
+            """ + BULK_MOVE_SCOPE;
+
     private static final String BULK_MOVE_OVERDUE_TO_DATE_SQL = """
             UPDATE tasks
             SET planned_for_at = CAST(? AS date) + CAST(planned_for_at AS time),
                 planned_date = CASE WHEN planned_date IS NULL THEN NULL ELSE CAST(? AS date) END,
                 updated_at = ?
-            WHERE %s
-              AND planning_type <> 'OPTIONAL'
-              AND status IN ('SPECIFICATION', 'TODO', 'IN_PROGRESS', 'DOCUMENTATION')
-              AND ((planned_for_at IS NOT NULL AND planned_for_at < ?) OR planned_date < CAST(? AS date))
-            """.formatted(TaskVisibility.memberTasks("tasks", false, true));
+            """ + BULK_MOVE_SCOPE;
 
     private final JdbcTemplate jdbcTemplate;
     private final TaskRowMapper taskRowMapper;
@@ -438,6 +437,12 @@ public class JdbcTaskRepository implements TaskRepository {
     public int bulkMoveOpenDatedTasksToNextDay(Long userId, LocalDate date, LocalDateTime updatedAt) {
         LocalDateTime end = date.plusDays(1).atStartOfDay();
         return jdbcTemplate.update(BULK_MOVE_SQL, updatedAt, userId, end, end.toLocalDate());
+    }
+
+    @Override
+    public long countMoveCandidates(Long userId, LocalDate beforeDay) {
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM tasks " + BULK_MOVE_SCOPE,
+                Long.class, userId, beforeDay.atStartOfDay(), beforeDay);
     }
 
     @Override

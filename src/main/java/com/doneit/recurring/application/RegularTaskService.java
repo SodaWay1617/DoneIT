@@ -18,13 +18,13 @@ public class RegularTaskService {
  private static final List<TaskStatus> ACTIVE=List.of(TaskStatus.SPECIFICATION,TaskStatus.IN_PROGRESS,TaskStatus.DOCUMENTATION);
  private final JdbcTemplate db; private final ProjectService projects; private final Clock clock;
  public RegularTaskService(JdbcTemplate db,ProjectService projects,Clock clock){this.db=db;this.projects=projects;this.clock=clock;}
- @Transactional public void create(RegularTaskForm f){
+ @Transactional public Long create(RegularTaskForm f){
   validate(f,true); User u=projects.user(); Project p=projects.get(f.getProjectId()); LocalDateTime now=LocalDateTime.now(clock);
   Long n=db.queryForObject("UPDATE projects SET next_task_number=next_task_number+1 WHERE id=? RETURNING next_task_number-1",Long.class,p.id());
   String key=(p.defaultProject()?"MAIN-"+u.login():p.code())+"-"+n+"___"+u.login();
   RegularStatus rs=active(f.getStatus())?RegularStatus.ACTIVE:RegularStatus.INACTIVE;
   Long pos=db.queryForObject("SELECT COALESCE(MAX(status_position),0)+1 FROM regular_tasks WHERE status=?",Long.class,f.getStatus().name());
-  db.update("INSERT INTO regular_tasks(user_id,project_id,task_number,task_key,title,description,status,priority,recurrence_type,repeat_interval,occurrence_time,anchor_date,regular_status,activated_at,finished_at,created_at,updated_at,status_position,estimate_minutes,planning_type,end_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+  return db.queryForObject("INSERT INTO regular_tasks(user_id,project_id,task_number,task_key,title,description,status,priority,recurrence_type,repeat_interval,occurrence_time,anchor_date,regular_status,activated_at,finished_at,created_at,updated_at,status_position,estimate_minutes,planning_type,end_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",Long.class,
    u.id(),p.id(),n,key,f.getTitle().trim(),blank(f.getDescription()),f.getStatus().name(),f.getPriority().name(),f.getRecurrenceType().name(),interval(f),f.getOccurrenceTime(),anchor(f),rs.name(),rs==RegularStatus.ACTIVE?now:null,null,now,now,pos,f.getEstimateMinutes(),f.getPlanningType().name(),f.isExplicitEndTime()?f.getEndTime():null);
  }
  public RegularTaskForm form(Long id){RegularTask t=get(id);RegularTaskForm f=new RegularTaskForm();f.setId(t.id());f.setTitle(t.title());f.setDescription(t.description());f.setProjectId(t.projectId());f.setStatus(t.status());f.setPriority(t.priority());f.setPlanningType(t.planningType());f.setRecurrenceType(t.recurrenceType());f.setRepeatInterval(t.repeatInterval());f.setOccurrenceTime(t.occurrenceTime());f.setAnchorDate(t.anchorDate());f.setEstimateMinutes(t.estimateMinutes());f.setSpentMinutes(t.spentMinutes());f.setEndTime(t.endTime());f.setExplicitEndTime(t.endTime()!=null);return f;}

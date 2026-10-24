@@ -191,8 +191,8 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Today task")))
                 .andExpect(content().string(containsString("Overdue planned task")))
-                .andExpect(content().string(containsString("Backlog reminder")))
-                .andExpect(content().string(containsString("Already done")))
+                .andExpect(content().string(not(containsString("Backlog reminder"))))
+                .andExpect(content().string(not(containsString("Already done"))))
                 .andExpect(content().string(containsString("name=\"date\"")))
                 .andExpect(content().string(containsString("action=\"/tasks/bulk-move-overdue-to-today\"")))
                 .andExpect(content().string(containsString("action=\"/tasks/random-today\"")));
@@ -358,9 +358,9 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(result -> {
                     String html = result.getResponse().getContentAsString();
-                    Assertions.assertThat(html).containsPattern("class=\"badge\\s+priority-critical\"");
-                    Assertions.assertThat(html).containsPattern("class=\"badge\\s+priority-low\"");
-                    Assertions.assertThat(html).doesNotContainPattern("class=\"badge\\s+priority-none\"");
+                    Assertions.assertThat(html).containsPattern("class=\"cl-priority\\s+priority-critical\"");
+                    Assertions.assertThat(html).containsPattern("class=\"cl-priority\\s+priority-low\"");
+                    Assertions.assertThat(html).doesNotContainPattern("class=\"cl-priority\\s+priority-none\"");
                     Assertions.assertThat(html.indexOf(">Critical early<")).isLessThan(html.indexOf(">Critical late<"));
                     Assertions.assertThat(html).contains(">Today task<");
                     Assertions.assertThat(html.indexOf(">Critical early<")).isLessThan(html.indexOf(">Today task<"));
@@ -482,6 +482,8 @@ class HomeControllerTest extends IntegrationTestSupport {
 
         mockMvc.perform(get("/").param("lang", "en"))
                 .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Today task"))));
+        mockMvc.perform(get("/finished")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Today task")));
 
         mockMvc.perform(post("/tasks/{taskId}/done", taskId)
@@ -511,6 +513,8 @@ class HomeControllerTest extends IntegrationTestSupport {
 
         mockMvc.perform(get("/").param("lang", "en"))
                 .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Backlog reminder"))));
+        mockMvc.perform(get("/finished")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Backlog reminder")));
     }
 
@@ -715,6 +719,6 @@ class HomeControllerTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Today task")))
                 .andExpect(content().string(containsString("Overdue planned task")))
-                .andExpect(content().string(containsString("Already done")));
+                .andExpect(content().string(not(containsString("Already done"))));
     }
 }

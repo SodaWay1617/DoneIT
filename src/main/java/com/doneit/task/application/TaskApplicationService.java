@@ -391,10 +391,17 @@ public class TaskApplicationService {
     public int bulkMoveOverdueTasksToToday() {
         User activeUser = requireActiveUser();
         return taskRepository.bulkMoveOverdueOpenDatedTasksToDate(
-                activeUser.id(),
-                LocalDate.now(clock),
-                LocalDateTime.now(clock)
-        );
+                activeUser.id(), LocalDate.now(clock), LocalDateTime.now(clock));
+    }
+
+    public record BulkPreview(String username, LocalDate selectedDate, LocalDate today, long shiftCount, long overdueCount) {}
+
+    public BulkPreview previewBulkMoves(@NotNull LocalDate date) {
+        User activeUser = requireActiveUser();
+        LocalDate selected = requireDate(date), today = LocalDate.now(clock);
+        return new BulkPreview(activeUser.login(), selected, today,
+                taskRepository.countMoveCandidates(activeUser.id(), selected.plusDays(1)),
+                taskRepository.countMoveCandidates(activeUser.id(), today));
     }
 
     private List<Task> findActiveTasksForScreen(Long userId, LocalDate targetDate) {

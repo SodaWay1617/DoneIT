@@ -13,6 +13,14 @@ import java.time.LocalTime;
 import org.springframework.format.annotation.DateTimeFormat;
 
 public class RegularTaskForm {
+    private java.util.List<String> tagNames = new java.util.ArrayList<>();
+    private boolean tagsPresent;
+    public java.util.List<String> getTagNames() { return tagNames; }
+    public void setTagNames(java.util.List<String> names) { tagNames = names == null ? new java.util.ArrayList<>() : names; }
+    public boolean isTagsPresent() { return tagsPresent; }
+    public void setTagsPresent(boolean value) { tagsPresent = value; }
+    @jakarta.validation.constraints.AssertTrue(message = "Invalid tags")
+    public boolean isValidTags() { return com.doneit.tag.application.TagNames.valid(tagNames); }
     private Long id;
     @NotBlank private String title;
     private String description;

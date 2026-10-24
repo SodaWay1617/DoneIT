@@ -93,6 +93,7 @@ public class AppNavigationService {
         if (path.startsWith("/projects")) return "projects";
         if (path.startsWith("/learn")) return "settings";
         if (path.startsWith("/analytics") || path.equals("/reports")) return "analytics";
+        if (path.equals("/tags") || path.startsWith("/tags/")) return "tags";
         for (String section : List.of("inbox", "backlog", "calendar", "schedule", "kanban", "finished"))
             if (path.equals("/" + section)) return section;
         return "today";

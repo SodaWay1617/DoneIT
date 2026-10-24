@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0030-personal-tags
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE tags (
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                name VARCHAR(40) NOT NULL,
+                name_key VARCHAR(160) NOT NULL,
+                CONSTRAINT uq_personal_tag UNIQUE (user_id, name_key)
+              );
+              CREATE TABLE task_tags (
+                tag_id BIGINT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+                task_id BIGINT REFERENCES tasks(id) ON DELETE CASCADE,
+                regular_task_id BIGINT REFERENCES regular_tasks(id) ON DELETE CASCADE,
+                CONSTRAINT chk_tag_target CHECK (num_nonnulls(task_id, regular_task_id) = 1),
+                UNIQUE (tag_id, task_id),
+                UNIQUE (tag_id, regular_task_id)
+              );
+              CREATE INDEX idx_task_tags_task ON task_tags(task_id) WHERE task_id IS NOT NULL;
+              CREATE INDEX idx_task_tags_regular ON task_tags(regular_task_id) WHERE regular_task_id IS NOT NULL;

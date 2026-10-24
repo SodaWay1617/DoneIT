@@ -1,0 +1,24 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title th:text="#{tag.title}">Tags</title><th:block th:replace="~{app-shell :: assets}"></th:block></head>
+<body class="app-page"><div th:replace="~{app-shell :: navigation}"></div>
+<main class="app-content" id="app-main" tabindex="-1"><div class="tags-page">
+    <header class="tags-heading"><h1 th:text="#{tag.mine}">My tags</h1></header>
+    <p class="tag-error" role="alert" th:if="${tagError != null}" th:text="${#messages.msg(tagError)}">Error</p>
+    <form class="tag-create-form" method="post" th:action="@{/tags}" data-refresh-csrf>
+        <label><span th:text="#{tag.name}">Tag name</span><input name="name" maxlength="41" required autocomplete="off" placeholder="Prime"></label>
+        <button class="tag-icon-button tag-primary" type="submit" th:title="#{tag.add}" th:aria-label="#{tag.add}"><i data-lucide="plus" aria-hidden="true"></i></button>
+    </form>
+    <p class="tag-empty" th:if="${#lists.isEmpty(tags)}" th:text="#{tag.empty}">No tags</p>
+    <div class="tag-management-row" th:each="tag : ${tags}">
+        <div class="tag-name-cell"><a th:href="@{/tags/{id}(id=${tag.id})}" th:text="${'#' + tag.name}">#Prime</a><span th:text="#{tag.count(${tag.taskCount})}">0 tasks</span></div>
+        <form class="tag-rename-form" method="post" th:action="@{/tags/{id}(id=${tag.id})}" data-refresh-csrf>
+            <input name="name" th:value="${tag.name}" maxlength="41" required th:aria-label="#{tag.rename}">
+            <button class="tag-icon-button" type="submit" th:title="#{common.save}" th:aria-label="#{common.save}"><i data-lucide="check" aria-hidden="true"></i></button>
+        </form>
+        <form method="post" th:action="@{/tags/{id}/delete(id=${tag.id})}" data-refresh-csrf data-delete-tag th:attr="data-confirm=#{tag.deleteConfirm}">
+            <button class="tag-icon-button tag-delete" type="submit" th:title="#{tag.delete}" th:aria-label="#{tag.delete}"><i data-lucide="trash-2" aria-hidden="true"></i></button>
+        </form>
+    </div>
+</div></main></body></html>
