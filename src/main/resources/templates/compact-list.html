@@ -43,13 +43,15 @@
                         <span class="cl-priority" th:if="${row.priority.name() != 'NONE'}" th:classappend="${'priority-' + row.priority.name().toLowerCase()}" th:text="${@labels.priority(row.priority)}">Priority</span>
                         <span class="cl-recurring" th:if="${row.recurring}" th:title="#{task.recurring}" th:aria-label="#{task.recurring}"><i data-lucide="repeat" aria-hidden="true"></i></span>
                         <span class="cl-overdue" th:if="${row.overdue}" th:text="#{task.overdue}">Overdue</span>
+                        <span class="cl-planning" th:if="${row.planningType.name() != 'REQUIRED'}" th:classappend="${'cl-planning-' + row.planningType.name().toLowerCase()}" th:text="${@labels.planning(row.planningType)}">Wanted</span>
                         <span th:replace="~{task-people :: assignees(${row.assignees})}"></span>
                     </div>
                 </div>
-                <div class="compact-time" th:if="${row.estimateMinutes != null or row.start != null or row.plannedDate != null}">
+                <div class="compact-time" th:if="${row.estimateMinutes != null or row.start != null or row.plannedDate != null or row.planningType.name() != 'REQUIRED'}">
                     <strong th:if="${row.estimateMinutes != null}" th:text="${@labels.compactDuration(row.estimateMinutes)}" th:title="#{tag.estimate}">30 min</strong>
                     <span th:if="${row.start != null}"><span th:text="${row.interval}">09:00–09:30</span><small th:if="${row.nextDays > 0}" th:text="#{compact.nextDays(${row.nextDays})}">+1 day</small></span>
                     <span th:if="${row.plannedDate != null and (row.start == null or row.plannedDate != daily.selectedDate)}" th:text="${#temporals.format(row.plannedDate, 'dd.MM.yyyy')}">24.10.2026</span>
+                    <span class="cl-planning cl-planning-mobile" th:if="${row.planningType.name() != 'REQUIRED'}" th:classappend="${'cl-planning-' + row.planningType.name().toLowerCase()}" th:text="${@labels.planning(row.planningType)}">Wanted</span>
                 </div>
             </a>
             <button class="cl-icon compact-menu-toggle" type="button" data-row-menu aria-haspopup="true" aria-expanded="false" th:title="#{compact.actions}" th:aria-label="#{compact.actions}"><i data-lucide="ellipsis" aria-hidden="true"></i></button>

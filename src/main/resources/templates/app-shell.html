@@ -29,9 +29,9 @@
         <a href="/projects" th:classappend="${appNav.projectSectionActive} ? 'is-active'" th:text="#{project.title}">Projects</a>
         <a class="app-icon-button" href="/projects#new-project" th:title="#{project.new}" th:aria-label="#{project.new}"><th:block th:replace="~{app-shell :: icon('plus')}"></th:block></a>
     </div>
-    <details class="app-project-disclosure" open>
+    <details class="app-project-disclosure">
         <summary th:text="#{shell.projectList}">Project list</summary>
-        <div class="app-project-scroll">
+        <div class="app-project-scroll" tabindex="0" role="region" th:aria-label="#{shell.projectList}">
             <a class="app-link" th:href="${appNav.allProjectsHref}" th:classappend="${appNav.allProjectsActive} ? 'is-active'" data-project="all">
                 <th:block th:replace="~{app-shell :: icon('folders')}"></th:block><span class="app-link-label" th:text="#{project.all}">All projects</span>
             </a>

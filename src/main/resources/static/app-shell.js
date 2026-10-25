@@ -5,6 +5,20 @@
     syncDisplayMode();
     standalone.addEventListener('change', syncDisplayMode);
     window.lucide?.createIcons();
+    document.querySelectorAll('.app-sidebar-desktop .app-project-scroll').forEach(region => {
+        // Some WebKit builds still chain wheel input past overscroll-behavior boundaries.
+        region.addEventListener('wheel', event => {
+            if (!event.deltaY || event.ctrlKey) return;
+            const unit = event.deltaMode === 1 ? (parseFloat(getComputedStyle(region).lineHeight) || 20)
+                : event.deltaMode === 2 ? region.clientHeight : 1;
+            const maximum = Math.max(0, region.scrollHeight - region.clientHeight);
+            const next = region.scrollTop + event.deltaY * unit;
+            if (next < 0 || next > maximum) {
+                event.preventDefault();
+                region.scrollTop = Math.max(0, Math.min(maximum, next));
+            }
+        }, {passive: false});
+    });
     const menus = [...document.querySelectorAll('.app-menu')];
     const openers = new Map();
     const close = menu => { if (menu.open) menu.close(); };
