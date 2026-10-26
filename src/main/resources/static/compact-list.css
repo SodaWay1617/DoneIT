@@ -17,14 +17,14 @@
 .compact-categories input:checked + span { background:#1e6d73; color:white; }
 .compact-categories input:focus-visible + span { outline:2px solid #1e6d73; outline-offset:2px; }
 .compact-categories small { font:inherit; opacity:.8; }
-.compact-extra-filters { display:flex; flex-wrap:wrap; align-items:center; gap:4px; min-width:0; max-width:100%; padding-left:12px; position:relative; }
+.compact-extra-filters { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:2px; min-width:0; max-width:100%; margin-left:auto; padding-left:12px; position:relative; }
 .compact-extra-filters::before { content:""; position:absolute; left:0; top:calc((var(--filter-height) - 20px)/2); height:20px; border-left:1px solid var(--border); }
 .compact-project-filter { display:block; position:relative; min-width:0; max-width:100%; }
-.compact-project-filter select { display:block; appearance:none; width:160px; max-width:100%; height:var(--filter-height); margin:0; padding:0 28px 0 8px; border:0; border-radius:6px; box-shadow:none; background:transparent; color:inherit; font:inherit; text-overflow:ellipsis; cursor:pointer; }
+.compact-project-filter select { display:block; appearance:none; width:160px; max-width:100%; height:var(--filter-height); margin:0; padding:0 28px 0 8px; border:0; border-radius:6px; box-shadow:none; background:transparent; color:var(--muted,#63736b); font:inherit; text-overflow:ellipsis; cursor:pointer; }
 .compact-project-filter > .lucide { position:absolute; right:8px; top:calc((var(--filter-height) - 16px)/2); width:16px; height:16px; pointer-events:none; }
 .compact-project-filter select:focus-visible { outline:2px solid #1e6d73; outline-offset:2px; }
 .compact-tag-filter { position:relative; min-width:0; max-width:100%; }
-.compact-tag-filter summary { display:flex; gap:6px; align-items:center; justify-content:space-between; height:var(--filter-height); padding:0 8px; list-style:none; cursor:pointer; border:0; border-radius:6px; }
+.compact-tag-filter summary { display:flex; gap:6px; align-items:center; justify-content:space-between; height:var(--filter-height); padding:0 8px; list-style:none; cursor:pointer; border:0; border-radius:6px; color:var(--muted,#63736b); }
 .compact-tag-filter summary > span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .compact-project-filter select:hover,.compact-tag-filter summary:hover,.compact-tag-filter[open] summary { background:#edf2ed; }
 .compact-extra-filters > .cl-icon { width:var(--filter-height); height:var(--filter-height); }

@@ -1,4 +1,4 @@
-:root { --bg:#f0f1ec; --panel:#fffdf8; --ink:#25372f; --muted:#63736b; --border:#e1e4da; --shadow:rgba(31,54,41,.05); }
+.app-tasks { --bg:#f4efe6; --panel:#fffdf8; --ink:#25372f; --muted:#63736b; --border:#e1e4da; --shadow:rgba(31,54,41,.05); }
 .app-tasks .shell { width:auto; margin:24px 24px 40px; }
 .app-tasks .today-header,.today-summary,.today-onboarding,.today-tools { letter-spacing:0; }
 .app-tasks .today-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px 24px; padding:0 4px 16px; }

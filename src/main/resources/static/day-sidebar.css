@@ -65,6 +65,7 @@
 @media(max-width:767px) {
     .app-tasks .day-sidebar { display:flex; flex-direction:column; }
     .app-tasks .day-sidebar .day-tools { order:-1; }
+    .app-tasks .day-sidebar .day-mini-calendar { order:1; }
     .app-tasks .day-mini-calendar,.app-tasks .day-schedule { display:block; }
     .app-tasks .day-calendar-heading { gap:8px; }
     .app-tasks .day-calendar-heading h3 { font-size:14px; }

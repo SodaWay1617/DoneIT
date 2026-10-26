@@ -28,8 +28,8 @@
                 <label th:each="tag : ${listTagOptions}"><input type="checkbox" name="tagId" th:value="${tag.id}" th:checked="${selectedTagIds.contains(tag.id)}"><span th:text="${'#' + tag.name}">#Prime</span></label>
             </div>
         </details>
-        <button class="cl-icon" type="submit" th:title="#{compact.apply}" th:aria-label="#{compact.apply}"><i data-lucide="check" aria-hidden="true"></i></button>
         <a class="cl-icon" data-reset-list th:href="${compactResetTo}" th:title="#{compact.reset}" th:aria-label="#{compact.reset}" th:if="${selectedPlanningType != null or !selectedTagIds.isEmpty()}"><i data-lucide="filter-x" aria-hidden="true"></i></a>
+        <button class="cl-icon" type="submit" th:title="#{compact.apply}" th:aria-label="#{compact.apply}"><i data-lucide="check" aria-hidden="true"></i></button>
         </div>
     </form>
     <div class="compact-rows">
