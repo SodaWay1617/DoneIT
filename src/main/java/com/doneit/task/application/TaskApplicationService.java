@@ -363,6 +363,17 @@ public class TaskApplicationService {
     }
 
     @Transactional
+    public TaskListItemView startTaskToday(@NotNull Long taskId) {
+        Task task = getTaskOrThrow(taskId);
+        if (task.status() != TaskStatus.NEW) throw new IllegalArgumentException("Only new tasks can be taken from inbox");
+        LocalDate today = LocalDate.now(clock);
+        // Keep an explicitly chosen time and interval; never invent a start time.
+        return moveTask(task.plannedForAt() == null
+                ? new RescheduleTaskCommand(taskId, null, today)
+                : new RescheduleTaskCommand(taskId, today.atTime(task.plannedForAt().toLocalTime()), null));
+    }
+
+    @Transactional
     public TaskListItemView moveTaskToBacklog(@Valid @NotNull MoveTaskToBacklogCommand command) {
         if (projectService != null) getTaskOrThrow(command.taskId());
         Task task = taskRepository.moveToBacklog(command.taskId(), LocalDateTime.now(clock))

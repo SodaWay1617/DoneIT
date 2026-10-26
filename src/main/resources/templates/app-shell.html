@@ -57,6 +57,7 @@
     <header class="app-topbar">
         <button class="app-icon-button app-drawer-toggle" type="button" data-open-menu="app-drawer" aria-controls="app-drawer" aria-expanded="false" th:title="#{shell.openMenu}" th:aria-label="#{shell.openMenu}"><th:block th:replace="~{app-shell :: icon('menu')}"></th:block></button>
         <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
+        <a th:if="${appNav.section == 'inbox'}" class="app-icon-button inbox-create" href="/tasks/new" th:title="#{task.create}" th:aria-label="#{task.create}"><th:block th:replace="~{app-shell :: icon('plus')}"></th:block></a>
     </header>
     <nav class="app-bottom-nav" th:attr="aria-label=#{shell.navigation}">
         <a class="app-bottom-item" th:each="item : ${appNav.mobile}" th:href="${item.href}" th:classappend="${item.active} ? 'is-active'" th:attr="aria-current=${item.active ? 'page' : null},data-nav-key=${item.key}">
@@ -73,6 +74,7 @@
     <dialog id="app-more" class="app-menu app-more" aria-labelledby="app-more-title">
         <header class="app-menu-header"><strong id="app-more-title" th:text="#{shell.more}">More</strong><button class="app-icon-button" type="button" data-close-menu th:title="#{shell.closeMenu}" th:aria-label="#{shell.closeMenu}"><th:block th:replace="~{app-shell :: icon('x')}"></th:block></button></header>
         <div class="app-more-body">
+            <div th:if="${appNav.section == 'inbox'}"><div th:replace="~{app-shell :: project-list}"></div></div>
             <h2 th:text="#{shell.sections}">Sections</h2><nav><th:block th:each="item : ${appNav.more.subList(0,4)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
             <h2 th:text="#{shell.views}">Views</h2><nav><th:block th:each="item : ${appNav.more.subList(4,5)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
             <h2 th:text="#{nav.analytics}">Analytics</h2><nav><th:block th:each="item : ${appNav.more.subList(5,7)}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>

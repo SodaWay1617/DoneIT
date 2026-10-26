@@ -1,0 +1,30 @@
+.app-inbox { --bg:#f4efe6; --panel:#fffdf8; --ink:#25372f; --muted:#63736b; --border:#e1e4da; background:var(--bg); color:var(--ink); font-family:Georgia,"Times New Roman",serif; }
+.app-inbox * { box-sizing:border-box; }
+.app-inbox .inbox-shell { max-width:1200px; margin:24px 24px 40px; }
+.app-inbox h1 { margin:0 0 24px; font:700 32px/1.2 Georgia,serif; }
+.app-inbox .inbox-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:center; min-width:0; padding:12px 14px; }
+.app-inbox .inbox-row + .inbox-row { border-top:1px solid var(--border); }
+.app-inbox .inbox-row:first-child { border-radius:7px 7px 0 0; }
+.app-inbox .inbox-row:last-child { border-radius:0 0 7px 7px; }
+.app-inbox .inbox-row:only-child { border-radius:7px; }
+.app-inbox .inbox-row:is(:hover,:focus-within,:has([data-row-menu][aria-expanded=true])) { background:#eaf2eb; }
+.app-inbox .inbox-main { display:grid; grid-template-columns:minmax(0,1fr) max-content; align-items:center; gap:16px; min-width:0; min-height:44px; padding:0 8px 0 0; color:inherit; text-decoration:none; -webkit-touch-callout:none; }
+.app-inbox .inbox-text { min-width:0; }
+.app-inbox .inbox-main:focus-visible { outline:2px solid var(--app-accent); outline-offset:2px; }
+.app-inbox .inbox-created { color:var(--muted); font:12px/1.4 system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+.app-inbox .inbox-row[data-pending=true] { opacity:.6; }
+.app-inbox .inbox-menu { grid-auto-flow:row; grid-auto-columns:auto; width:210px; overflow-y:auto; overscroll-behavior:contain; }
+.app-inbox .inbox-menu :is(button,a) { flex-direction:row; justify-content:flex-start; gap:12px; min-height:44px; max-width:none; width:100%; padding:10px; font:14px/1.4 system-ui,sans-serif; }
+.app-inbox .inbox-menu :is(button,a) span { position:static; width:auto; height:auto; margin:0; overflow:visible; clip-path:none; white-space:normal; }
+.app-inbox .inbox-empty { padding:16px 0; }
+.app-inbox .inbox-empty h2 { margin:0 0 8px; font:700 18px/1.4 Georgia,serif; }
+.app-inbox .inbox-empty p,.app-inbox .inbox-feedback { color:var(--muted); font:14px/1.5 system-ui,sans-serif; }
+.app-inbox .inbox-retry { min-height:44px; padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:var(--panel); color:var(--ink); font:inherit; cursor:pointer; }
+.app-inbox .app-navigation .inbox-create { margin-left:auto; background:var(--app-accent); color:white; border-radius:50%; }
+@media(max-width:767px) {
+    .app-inbox .inbox-shell { margin:16px 8px 24px; }
+    .app-inbox h1 { margin-bottom:16px; font-size:28px; }
+    .app-inbox .inbox-main { grid-template-columns:minmax(0,1fr); gap:8px; -webkit-user-select:none; user-select:none; touch-action:pan-y pinch-zoom; }
+    .app-inbox .inbox-row > [data-row-menu] { align-self:start; }
+    .app-inbox .inbox-menu { width:min(240px,calc(100vw - 20px)); }
+}

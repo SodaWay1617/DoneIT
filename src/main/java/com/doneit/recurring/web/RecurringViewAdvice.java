@@ -12,7 +12,7 @@ public class RecurringViewAdvice {
  private final RegularTaskService service;
  public RecurringViewAdvice(RegularTaskService service){this.service=service;}
  @ModelAttribute public void projections(HttpServletRequest request,Model model){
-  String path=request.getRequestURI(); if(!(path.equals("/")||path.equals("/tasks")||path.equals("/backlog")||path.equals("/inbox")||path.equals("/finished")||path.equals("/kanban")||path.equals("/calendar")))return;
+  String path=request.getRequestURI(); if(!(path.equals("/")||path.equals("/tasks")||path.equals("/backlog")||path.equals("/finished")||path.equals("/kanban")||path.equals("/calendar")))return;
   Long project=parseLong(request.getParameter("projectId"));
   LocalDate date=parseDate(request.getParameter("date"),service.today());
   var regularActive=service.activeFor(date,project);

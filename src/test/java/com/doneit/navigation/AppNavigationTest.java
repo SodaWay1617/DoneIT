@@ -69,11 +69,11 @@ class AppNavigationTest extends IntegrationTestSupport {
         create("owner", "BACKLOG", main, true);
         Long delegated = create("owner", "NEW", shared, false);
         create("katya", "NEW", shared, false);
-        assertThat(nav("owner", "/").main().get(1).count()).isEqualTo(4);
+        assertThat(nav("owner", "/").main().get(1).count()).isEqualTo(3);
         assertThat(nav("owner", "/").main().get(2).count()).isEqualTo(3);
         assertThat(nav("katya", "/").main().get(1).count()).isEqualTo(2);
         db.update("UPDATE projects SET task_visibility='AUTHOR_AND_ASSIGNEES' WHERE id=?", shared);
-        assertThat(nav("owner", "/").main().get(1).count()).isEqualTo(3);
+        assertThat(nav("owner", "/").main().get(1).count()).isEqualTo(2);
         assertThat(nav("katya", "/").main().get(1).count()).isEqualTo(1);
         db.update("INSERT INTO task_assignees(task_id,user_id,assigned_at) VALUES(?,(SELECT id FROM users WHERE login='katya'),NOW())", delegated);
         assertThat(nav("katya", "/").main().get(1).count()).isEqualTo(2);
@@ -91,7 +91,7 @@ class AppNavigationTest extends IntegrationTestSupport {
         assertThat(nav.projects().stream().filter(AppNavigationService.ProjectItem::active).map(AppNavigationService.ProjectItem::id)).containsExactly(shared);
         assertThat(nav.allProjectsHref()).doesNotContain("projectId").contains("planningType=OPTIONAL");
         assertThat(nav.russianHref()).contains("/kanban?", "projectId=" + shared, "date=2026-11-04", "planningType=OPTIONAL", "lang=ru");
-        assertThat(nav("owner", "/inbox?projectId=" + shared + "&planningType=REQUIRED").main().get(1).count()).isZero();
+        assertThat(nav("owner", "/inbox?projectId=" + shared + "&planningType=REQUIRED").main().get(1).count()).isEqualTo(1);
     }
 
     @Test void activeSectionsAreServerRenderedIncludingMoreAndAnalyticsChildren() throws Exception {

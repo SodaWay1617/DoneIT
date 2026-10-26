@@ -113,16 +113,6 @@ public class HomeController {
         return "backlog";
     }
 
-    @GetMapping("/inbox")
-    public String inbox(@RequestParam(required=false) Long projectId, Model model, Principal principal) {
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("taskCollection", taskApplicationService.getInboxTasks(projectId));
-        model.addAttribute("pageTitle", "Inbox");
-        model.addAttribute("pageNote", "New tasks waiting for triage.");
-        model.addAttribute("listKind", "inbox");
-        return "status-list";
-    }
-
     @GetMapping("/finished")
     public String finished(@RequestParam(required=false) Long projectId, Model model, Principal principal) {
         model.addAttribute("username", principal.getName());

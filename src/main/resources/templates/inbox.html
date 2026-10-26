@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title th:text="#{nav.inbox}">Inbox</title>
+    <th:block th:replace="~{app-shell :: assets}"></th:block>
+    <link rel="stylesheet" href="/today.css">
+    <link rel="stylesheet" href="/compact-list.css">
+    <link rel="stylesheet" href="/inbox.css">
+    <script src="/task-context-menu.js" defer></script>
+    <script src="/inbox.js" defer></script>
+</head>
+<body class="app-page app-inbox">
+<div th:replace="~{app-shell :: navigation}"></div>
+<main class="app-content" id="app-main" tabindex="-1">
+    <div class="inbox-shell">
+        <h1 th:text="#{nav.inbox}">Inbox</h1>
+        <p class="inbox-feedback" role="alert" hidden data-inbox-feedback>
+            <span th:text="#{inbox.actionFailed}">Could not update the task.</span>
+            <button class="inbox-retry" type="button" data-inbox-retry th:text="#{inbox.retry}">Retry</button>
+        </p>
+        <section class="compact-list inbox-list" th:if="${!inboxRows.isEmpty()}" data-inbox-list th:aria-label="#{nav.inbox}">
+            <article class="inbox-row" th:each="row : ${inboxRows}" th:attr="data-task-id=${row.id}">
+                <a class="inbox-main" th:href="${row.href()}">
+                    <div class="inbox-text">
+                        <h2 class="task-title" th:text="${row.title}">Task</h2>
+                        <div class="compact-meta" th:if="${row.project != null or !row.tags.isEmpty()}">
+                            <span class="cl-project" th:if="${row.project != null}"><i data-lucide="folder" aria-hidden="true"></i><span th:text="${row.project}">MAIN</span></span>
+                            <span class="cl-tag" th:each="tag : ${row.tags}" th:text="${'#' + tag.name}">#Prime</span>
+                        </div>
+                    </div>
+                    <time class="inbox-created" th:datetime="${row.createdAt}"
+                          th:text="${row.createdAt.toLocalDate() == inboxToday ? #messages.msg('inbox.createdToday', #temporals.format(row.createdAt, 'HH:mm')) : #temporals.format(row.createdAt, 'dd.MM.yyyy, HH:mm')}">Today, 12:28</time>
+                </a>
+                <button class="cl-icon" type="button" data-row-menu aria-haspopup="menu" aria-expanded="false" th:title="#{compact.actions}" th:aria-label="#{compact.actions}"><i data-lucide="ellipsis" aria-hidden="true"></i></button>
+                <div class="compact-menu inbox-menu" hidden>
+                    <form method="post" th:action="${row.base() + '/backlog'}" data-refresh-csrf>
+                        <input type="hidden" name="redirectTo" th:value="${inboxReturnTo}">
+                        <button type="submit"><i data-lucide="archive" aria-hidden="true"></i><span th:text="#{inbox.toBacklog}">To backlog</span></button>
+                    </form>
+                    <form method="post" th:action="${row.base() + '/start-today'}" data-refresh-csrf>
+                        <input type="hidden" name="redirectTo" th:value="${inboxReturnTo}">
+                        <button type="submit"><i data-lucide="play" aria-hidden="true"></i><span th:text="#{inbox.start}">Take on</span></button>
+                    </form>
+                    <a th:href="${row.href()}"><i data-lucide="pencil" aria-hidden="true"></i><span th:text="#{inbox.edit}">Edit</span></a>
+                    <form method="post" th:action="${row.base() + '/closed'}" data-refresh-csrf>
+                        <input type="hidden" name="redirectTo" th:value="${inboxReturnTo}">
+                        <button type="submit"><i data-lucide="x" aria-hidden="true"></i><span th:text="#{inbox.dismiss}">Dismiss</span></button>
+                    </form>
+                </div>
+            </article>
+        </section>
+        <div class="inbox-empty" th:if="${inboxRows.isEmpty()}">
+            <h2 th:text="#{inbox.empty}">No incoming tasks</h2>
+            <p th:text="#{inbox.emptyNote}">All new tasks have been sorted.</p>
+        </div>
+    </div>
+</main>
+<script src="/reminders.js" defer></script>
+</body>
+</html>

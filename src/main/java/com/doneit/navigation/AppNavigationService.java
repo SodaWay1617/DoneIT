@@ -43,11 +43,12 @@ public class AppNavigationService {
         String section = section(path);
         LocalDate date = date(request);
         String planning = request.getParameter("planningType");
+        if (path.equals("/inbox")) planning = null;
         if (planning != null && !List.of("REQUIRED", "WANTED", "OPTIONAL").contains(planning)) planning = null;
         long[] counts = counts(user.id(), selected, planning);
         List<Item> main = List.of(
                 item("today", link("/", selected, planning, null), "sun", "nav.today", 0, section),
-                item("inbox", link("/inbox", selected, planning, null), "inbox", "nav.inbox", counts[0], section),
+                item("inbox", link("/inbox", selected, null, null), "inbox", "nav.inbox", counts[0], section),
                 item("backlog", link("/backlog", selected, planning, null), "archive", "nav.backlog", counts[1], section),
                 item("calendar", link("/calendar", selected, planning, date), "calendar-days", "nav.calendar", 0, section),
                 item("schedule", link("/schedule", selected, planning, date), "calendar-clock", "schedule.title", 0, section),
@@ -65,23 +66,26 @@ public class AppNavigationService {
         more.addAll(analytics.subList(1, 3));
         more.add(item("settings", "/settings", "settings", "nav.settings", 0, section));
         final String selectedPlanning = planning;
+        final String projectPath = path.equals("/inbox") ? "/inbox" : "/";
         List<ProjectItem> projectItems = available.stream().map(p -> new ProjectItem(p.id(),
                 p.defaultProject() ? "MAIN" : p.name().split("___", 2)[0],
-                link("/", p.id(), selectedPlanning, null), p.id().equals(selected))).toList();
+                link(projectPath, p.id(), selectedPlanning, null), p.id().equals(selected))).toList();
         String name = user.displayName() == null || user.displayName().isBlank() ? user.login() : user.displayName();
         boolean moreActive = mobile.stream().noneMatch(Item::active);
         return new Navigation(main, views, analytics, mobile, List.copyOf(more), projectItems,
-                link("/", null, planning, null), selected == null, section.equals("projects"), moreActive, name,
+                link(projectPath, null, planning, null), selected == null, section.equals("projects"), moreActive, name,
                 language(request, "en"), language(request, "ru"), section, link("/tasks", selected, planning, date));
     }
 
     private long[] counts(Long user, Long project, String planning) {
-        String sql = "SELECT COUNT(*) FILTER (WHERE status='NEW'),COUNT(*) FILTER (WHERE status IN ('BACKLOG','PAUSED')) FROM ("
-                + "SELECT t.status FROM tasks t WHERE t.status IN ('NEW','BACKLOG','PAUSED') AND "
-                + TaskVisibility.memberTasks("t", false) + " AND (?::bigint IS NULL OR t.project_id=?) AND (?::text IS NULL OR t.planning_type=?) UNION ALL "
-                + "SELECT r.status FROM regular_tasks r WHERE r.status IN ('NEW','BACKLOG','PAUSED') AND "
-                + TaskVisibility.memberTasks("r", true) + " AND (?::bigint IS NULL OR r.project_id=?) AND (?::text IS NULL OR r.planning_type=?)) visible_tasks";
-        return db.queryForObject(sql, (rs, row) -> new long[]{rs.getLong(1), rs.getLong(2)}, user, project, project, planning, planning, user, project, project, planning, planning);
+        String sql = "SELECT COUNT(*) FILTER (WHERE status='NEW' AND NOT recurring),"
+                + "COUNT(*) FILTER (WHERE status IN ('BACKLOG','PAUSED') AND (?::text IS NULL OR planning_type=?)) FROM ("
+                + "SELECT t.status,t.planning_type,false recurring FROM tasks t WHERE t.status IN ('NEW','BACKLOG','PAUSED') AND "
+                + TaskVisibility.memberTasks("t", false) + " AND (?::bigint IS NULL OR t.project_id=?) UNION ALL "
+                + "SELECT r.status,r.planning_type,true recurring FROM regular_tasks r WHERE r.status IN ('BACKLOG','PAUSED') AND "
+                + TaskVisibility.memberTasks("r", true) + " AND (?::bigint IS NULL OR r.project_id=?)) visible_tasks";
+        return db.queryForObject(sql, (rs, row) -> new long[]{rs.getLong(1), rs.getLong(2)},
+                planning, planning, user, project, project, user, project, project);
     }
 
     private static Item item(String key, String href, String icon, String label, long count, String section) {

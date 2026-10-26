@@ -93,7 +93,9 @@ class PlanningTypeTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertThat(html).contains("class=\"app-navigation\"", "class=\"app-project-heading\"",
-                "href=\"/projects\"", "href=\"/settings\"", "name=\"projectId\"", "name=\"planningType\"");
+                "href=\"/projects\"", "href=\"/settings\"");
+        if (path.equals("/inbox")) assertThat(html).doesNotContain("name=\"planningType\"", "class=\"view-filters\"");
+        else assertThat(html).contains("name=\"projectId\"", "name=\"planningType\"");
     }
 
     @Test
@@ -112,7 +114,7 @@ class PlanningTypeTest extends IntegrationTestSupport {
         assertThat(html.indexOf("id=\"active-tasks\"")).isLessThan(html.indexOf("class=\"today-tools day-tools\""));
         String header = html.substring(html.indexOf("<header class=\"today-header\""), html.indexOf("<section class=\"today-summary\""));
         assertThat(header).contains("Wednesday", "href=\"/tasks/new\"").doesNotContain("view-tabs", "Signed in");
-        assertThat(html).doesNotContain("<select name=\"projectId\"");
+        assertThat(header).doesNotContain("<select name=\"projectId\"");
     }
 
     @Test
