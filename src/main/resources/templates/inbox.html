@@ -15,7 +15,10 @@
 <div th:replace="~{app-shell :: navigation}"></div>
 <main class="app-content" id="app-main" tabindex="-1">
     <div class="inbox-shell">
-        <h1 th:text="#{nav.inbox}">Inbox</h1>
+        <header class="inbox-header">
+            <h1 th:text="#{nav.inbox}">Inbox</h1>
+            <a class="today-button today-primary inbox-desktop-create" href="/tasks/new"><i data-lucide="plus" aria-hidden="true"></i><span th:text="#{task.create}">Create task</span></a>
+        </header>
         <p class="inbox-feedback" role="alert" hidden data-inbox-feedback>
             <span th:text="#{inbox.actionFailed}">Could not update the task.</span>
             <button class="inbox-retry" type="button" data-inbox-retry th:text="#{inbox.retry}">Retry</button>
