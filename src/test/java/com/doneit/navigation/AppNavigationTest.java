@@ -131,12 +131,11 @@ class AppNavigationTest extends IntegrationTestSupport {
                 .andExpect(content().string(containsString("href=\"/settings?lang=ru\"")));
     }
 
-    @Test void projectListStartsCollapsedAndSupportsKeyboardScrolling() throws Exception {
+    @Test void projectListStartsExpandedAndSupportsKeyboardScrolling() throws Exception {
         String html=mvc.perform(get("/").with(user("owner"))).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        assertThat(html).contains("<details class=\"app-project-disclosure\">",
-                "class=\"app-project-scroll\" tabindex=\"0\" role=\"region\"")
-                .doesNotContain("class=\"app-project-disclosure\" open");
+        assertThat(html).contains("<details class=\"app-project-disclosure\" open>",
+                "class=\"app-project-scroll\" tabindex=\"0\" role=\"region\"");
     }
 
     private Navigation nav(String login, String path) throws Exception {

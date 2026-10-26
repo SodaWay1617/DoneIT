@@ -4,17 +4,25 @@
     <header class="compact-list-heading">
         <h2 th:text="#{compact.active(${compactRows.size()})}">Current tasks</h2>
         <button class="cl-icon compact-filter-toggle" type="button" data-filter-toggle aria-controls="compact-filters" aria-expanded="false"
-                th:classappend="${selectedPlanningType != null or !selectedTagIds.isEmpty()} ? 'has-filters'" th:title="#{compact.filters}" th:aria-label="#{compact.filters}"><i data-lucide="sliders-horizontal" aria-hidden="true"></i></button>
+                th:classappend="${selectedProjectId != null or selectedPlanningType != null or !selectedTagIds.isEmpty()} ? 'has-filters'" th:title="#{compact.filters}" th:aria-label="#{compact.filters}"><i data-lucide="sliders-horizontal" aria-hidden="true"></i></button>
     </header>
     <form id="compact-filters" class="compact-filters view-filters" method="get">
         <input type="hidden" name="date" th:if="${filterDate != null}" th:value="${filterDate}">
-        <input type="hidden" name="projectId" th:if="${selectedProjectId != null}" th:value="${selectedProjectId}">
         <fieldset class="compact-categories"><legend class="cl-sr" th:text="#{planning.title}">Planning</legend>
             <label><input type="radio" name="planningType" value="" th:checked="${selectedPlanningType == null}"><span><span th:text="#{compact.all}">All</span> <small th:text="${compactCounts['ALL']}">0</small></span></label>
             <label th:each="type : ${planningTypes}"><input type="radio" name="planningType" th:value="${type}" th:checked="${type == selectedPlanningType}"><span><span th:text="${@labels.planning(type)}">Required</span> <small th:text="${compactCounts[type.name()]}">0</small></span></label>
         </fieldset>
+        <div class="compact-extra-filters">
+        <label class="compact-project-filter">
+            <span class="cl-sr" th:text="#{project.title}">Projects</span>
+            <select name="projectId" th:aria-label="#{project.title}">
+                <option value="" th:selected="${selectedProjectId == null}" th:text="#{project.all}">All projects</option>
+                <option th:each="project : ${appNav.projects}" th:value="${project.id}" th:selected="${project.active}" th:text="${project.name}">MAIN</option>
+            </select>
+            <i data-lucide="chevron-down" aria-hidden="true"></i>
+        </label>
         <details class="compact-tag-filter">
-            <summary><i data-lucide="tags" aria-hidden="true"></i><span th:text="${selectedTagIds.isEmpty() ? #messages.msg('compact.allTags') : #messages.msg('compact.selectedTags', selectedTagIds.size())}">All tags</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+            <summary><span th:text="${selectedTagIds.isEmpty() ? #messages.msg('compact.allTags') : #messages.msg('compact.selectedTags', selectedTagIds.size())}">All tags</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary>
             <div class="compact-tag-options">
                 <p th:if="${listTagOptions.isEmpty()}" th:text="#{tag.empty}">No tags</p>
                 <label th:each="tag : ${listTagOptions}"><input type="checkbox" name="tagId" th:value="${tag.id}" th:checked="${selectedTagIds.contains(tag.id)}"><span th:text="${'#' + tag.name}">#Prime</span></label>
@@ -22,6 +30,7 @@
         </details>
         <button class="cl-icon" type="submit" th:title="#{compact.apply}" th:aria-label="#{compact.apply}"><i data-lucide="check" aria-hidden="true"></i></button>
         <a class="cl-icon" data-reset-list th:href="${compactResetTo}" th:title="#{compact.reset}" th:aria-label="#{compact.reset}" th:if="${selectedPlanningType != null or !selectedTagIds.isEmpty()}"><i data-lucide="filter-x" aria-hidden="true"></i></a>
+        </div>
     </form>
     <div class="compact-rows">
         <article class="task compact-row" th:each="row : ${compactRows}" th:classappend="${' planning-' + row.planningType.name().toLowerCase() + (row.overdue ? ' overdue' : '')}"

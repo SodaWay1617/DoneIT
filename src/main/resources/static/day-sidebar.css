@@ -1,7 +1,7 @@
 .app-tasks .grid { grid-template-columns:minmax(0,1fr) 280px; gap:20px; }
-.day-sidebar { display:grid; align-content:start; gap:0; min-width:0; border:1px solid var(--border); border-radius:8px; background:var(--panel); }
+.day-sidebar { display:grid; align-content:start; gap:14px; min-width:0; }
+.day-sidebar > section { min-width:0; padding:16px; border:1px solid var(--border); border-radius:16px; background:var(--panel); }
 .day-sidebar h2 { margin:0 0 12px; font:700 16px/1.35 Georgia,serif; letter-spacing:0; }
-.day-mini-calendar { padding:14px; border:0; border-radius:0; background:transparent; }
 .day-calendar-heading { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:10px; }
 .day-calendar-heading h3 { margin:0; color:#40554a; font:600 13px/1.4 system-ui,sans-serif; overflow-wrap:anywhere; min-width:0; }
 .day-calendar-heading nav { display:flex; gap:2px; flex-shrink:0; }
@@ -18,7 +18,6 @@
 .day-calendar-grid a.is-selected.is-today::after { background:white; }
 .day-calendar-grid a:hover:not(.is-selected),.day-month-button:hover:not(:disabled) { background:#e3eee7; border-color:#b8cfc2; }
 .day-calendar-grid a:focus-visible,.day-month-button:focus-visible,.day-schedule-entry:focus-visible,.day-create-options a:focus-visible,.day-create-choice summary:focus-visible,.day-schedule-list:focus-visible { outline:2px solid #1e6d73; outline-offset:2px; }
-.day-schedule { min-width:0; padding:14px; border-top:1px solid var(--border); border-bottom:0; }
 .day-schedule-list { display:grid; max-height:320px; overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain; padding:2px; }
 .day-schedule-entry { display:grid; grid-template-columns:40px 10px minmax(0,1fr); gap:8px; padding:7px 0; color:var(--ink); text-decoration:none; font:13px/1.4 system-ui,sans-serif; }
 .day-schedule-entry:hover strong { color:#1e6d73; text-decoration:underline; }
@@ -33,7 +32,7 @@
 .day-schedule-task small { color:var(--muted); font-size:12px; }
 .day-schedule-task small + small::before { content:" · "; }
 .day-schedule-empty { margin:0; color:var(--muted); font:13px/1.5 system-ui,sans-serif; }
-.day-sidebar .day-tools { padding:14px; border-top:1px solid var(--border); border-bottom:0; }
+.day-sidebar .day-tools { margin:0; padding:16px; border:1px solid var(--border); border-radius:16px; background:var(--panel); }
 .day-sidebar .day-tools h2 { margin-top:0; }
 .day-tools .today-quick-actions-body { gap:6px; }
 .day-tools .secondary { display:grid; grid-template-columns:18px minmax(0,1fr) auto; width:100%; gap:8px; align-items:center; min-height:56px; padding:8px; background:#f0f2eb; border:1px solid transparent; border-radius:6px; color:var(--ink); font:13px/1.4 system-ui,sans-serif; text-align:left; cursor:pointer; }
@@ -60,11 +59,19 @@
     .app-tasks .grid { grid-template-columns:minmax(0,1fr); }
     .day-mini-calendar,.day-schedule { display:none; }
     .day-sidebar { display:block; }
-    .day-sidebar .day-tools { margin-top:0; border-top:0; }
     .day-tools .today-quick-actions-body { grid-template-columns:repeat(3,minmax(0,1fr)); }
     .day-tools .secondary { height:100%; }
 }
 @media(max-width:767px) {
+    .app-tasks .day-sidebar { display:flex; flex-direction:column; }
+    .app-tasks .day-sidebar .day-tools { order:-1; }
+    .app-tasks .day-mini-calendar,.app-tasks .day-schedule { display:block; }
+    .app-tasks .day-calendar-heading { gap:8px; }
+    .app-tasks .day-calendar-heading h3 { font-size:14px; }
+    .app-tasks .day-month-button { width:44px; height:44px; }
+    .app-tasks .day-calendar-grid a { min-height:44px; aspect-ratio:auto; border-radius:8px; font-size:14px; }
+    .app-tasks .day-schedule-list { max-height:none; overflow:visible; }
+    .app-tasks .day-schedule-entry { min-height:48px; padding:10px 0; }
     .day-create-split .day-create-main { display:none; }
     .day-create-choice summary { border-radius:6px; border-left-color:#1e6d73; }
     .day-create-choice .day-create-arrow { display:none; }

@@ -70,6 +70,19 @@ class CompactListTest extends IntegrationTestSupport {
         assertThat(row.projectName()).isEqualTo("Health");
     }
 
+    @Test void projectDropdownUsesExistingCombinedFilterAndAllowsAllProjects() throws Exception {
+        String html=mvc.perform(get("/tasks").param("date","2026-04-08")
+                .param("projectId",project.toString()).param("planningType","REQUIRED").param("tagId",prime.toString()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String filters=html.substring(html.indexOf("id=\"compact-filters\""));
+        filters=filters.substring(0,filters.indexOf("</form>"));
+        assertThat(filters).contains("<select name=\"projectId\"", "value=\""+project+"\" selected=\"selected\"",
+                "value=\""+otherProject+"\"", "value=\"2026-04-08\"", "name=\"tagId\"")
+                .doesNotContain("type=\"hidden\" name=\"projectId\"");
+        assertThat(rows(model("/tasks?date=2026-04-08&projectId=&planningType=OPTIONAL")))
+                .extracting(CompactTaskRow::title).containsExactly("Optional");
+    }
+
     @Test void closedAndBacklogStayOutOfMainListAndPastSkipIsUnavailable() throws Exception {
         db.update("UPDATE tasks SET status='BACKLOG',planned_date=NULL WHERE id=?",ordinary);
         assertThat(rows(model("/"))).noneMatch(row->!row.recurring()&&row.id().equals(ordinary));
