@@ -10,12 +10,19 @@ $ErrorActionPreference = 'Stop'
 $destination = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../.mcp-local'))
 New-Item -ItemType Directory -Force -Path $destination | Out-Null
 if ($env:OS -eq 'Windows_NT') {
-    $acl = Get-Acl -LiteralPath $destination
+    # Build only a DACL; copying Get-Acl can also try to write the SACL/owner,
+    # which requires SeSecurityPrivilege on ordinary Windows accounts.
+    $acl = New-Object Security.AccessControl.DirectorySecurity
     $acl.SetAccessRuleProtection($true,$false)
     $account = [Security.Principal.WindowsIdentity]::GetCurrent().Name
     $rule = New-Object Security.AccessControl.FileSystemAccessRule($account,'FullControl','ContainerInherit,ObjectInherit','None','Allow')
     $acl.SetAccessRule($rule)
-    Set-Acl -LiteralPath $destination -AclObject $acl
+    $directory = New-Object IO.DirectoryInfo($destination)
+    if ($PSVersionTable.PSEdition -eq 'Core') {
+        [IO.FileSystemAclExtensions]::SetAccessControl($directory,$acl)
+    } else {
+        $directory.SetAccessControl($acl)
+    }
 }
 $tokenFile = Join-Path $destination ($ClientId + '.token')
 $serverFile = Join-Path $destination ($ClientId + '.yml')
