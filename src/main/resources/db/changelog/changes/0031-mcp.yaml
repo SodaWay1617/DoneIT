@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0031-mcp
+      author: codex
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              ALTER TABLE tasks ADD COLUMN revision BIGINT NOT NULL DEFAULT 0;
+              -- Exclude the technical revision from planning history snapshots.
+              CREATE OR REPLACE FUNCTION capture_planning_state(target BIGINT, recurring BOOLEAN) RETURNS void AS $$
+              DECLARE snapshot JSONB; people BIGINT[];
+              BEGIN
+                  IF recurring THEN
+                      SELECT to_jsonb(r) - ARRAY['title','description','task_key','spent_minutes','status_position','updated_at']
+                        INTO snapshot FROM regular_tasks r WHERE id=target;
+                  ELSE
+                      SELECT to_jsonb(t) - ARRAY['title','description','task_key','spent_minutes','status_position','updated_at','revision']
+                        INTO snapshot FROM tasks t WHERE id=target;
+                  END IF;
+                  IF snapshot IS NULL OR NOT EXISTS (SELECT 1 FROM projects WHERE id=(snapshot->>'project_id')::bigint) THEN RETURN; END IF;
+                  SELECT array_agg(a.user_id ORDER BY a.user_id) INTO people
+                    FROM task_assignees a JOIN project_members m ON m.user_id=a.user_id
+                      AND m.project_id=(snapshot->>'project_id')::bigint
+                    WHERE (recurring AND a.regular_task_id=target) OR (NOT recurring AND a.task_id=target);
+                  people := COALESCE(people,ARRAY[(snapshot->>'user_id')::bigint]);
+                  IF EXISTS (SELECT 1 FROM (
+                      SELECT state,responsible_users FROM task_planning_history
+                        WHERE (recurring AND regular_task_id=target) OR (NOT recurring AND task_id=target)
+                        ORDER BY id DESC LIMIT 1
+                    ) latest WHERE latest.state=snapshot AND latest.responsible_users=people) THEN RETURN; END IF;
+                  INSERT INTO task_planning_history(task_id,regular_task_id,project_id,responsible_users,state)
+                    VALUES(CASE WHEN NOT recurring THEN target END,CASE WHEN recurring THEN target END,
+                      (snapshot->>'project_id')::bigint,people,snapshot);
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE FUNCTION advance_task_revision() RETURNS trigger AS $$
+              BEGIN
+                  NEW.revision := OLD.revision + 1;
+                  RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+              CREATE TRIGGER trg_task_revision BEFORE UPDATE ON tasks
+                  FOR EACH ROW EXECUTE FUNCTION advance_task_revision();
+
+              CREATE TABLE mcp_requests (
+                  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                  client_id VARCHAR(64) NOT NULL,
+                  request_id VARCHAR(100) NOT NULL,
+                  input_hash CHAR(64) NOT NULL,
+                  result JSONB,
+                  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                  PRIMARY KEY (user_id,client_id,request_id)
+              );
+              CREATE TABLE mcp_audit (
+                  id BIGSERIAL PRIMARY KEY,
+                  occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                  client_id VARCHAR(64) NOT NULL,
+                  tool VARCHAR(32) NOT NULL,
+                  request_id VARCHAR(100),
+                  task_id BIGINT,
+                  outcome VARCHAR(32) NOT NULL,
+                  changes JSONB NOT NULL DEFAULT '{}'
+              );
+              CREATE INDEX idx_mcp_audit_user ON mcp_audit(user_id,id DESC);

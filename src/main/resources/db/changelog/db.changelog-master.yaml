@@ -59,3 +59,5 @@ databaseChangeLog:
       file: db/changelog/changes/0029-schedule-only-visibility.yaml
   - include:
       file: db/changelog/changes/0030-personal-tags.yaml
+  - include:
+      file: db/changelog/changes/0031-mcp.yaml

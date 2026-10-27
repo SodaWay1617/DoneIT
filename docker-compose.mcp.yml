@@ -1,0 +1,14 @@
+services:
+  app:
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/run/doneit/mcp.yml
+    volumes:
+      - type: bind
+        source: ${DONEIT_MCP_CONFIG_FILE:?Set the absolute path to the server MCP YAML file}
+        target: /run/doneit/mcp.yml
+        read_only: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

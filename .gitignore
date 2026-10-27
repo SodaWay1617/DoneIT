@@ -25,6 +25,7 @@ replay_pid*
 
 target
 .m2
+.mcp-local/
 
 Замечания.md
 spec/my_memo.md
