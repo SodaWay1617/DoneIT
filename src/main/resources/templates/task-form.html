@@ -126,6 +126,7 @@
     <form data-refresh-csrf method="post" th:action="${formAction}" th:object="${form}">
         <input th:if="${backlogReturnTo != null}" type="hidden" name="redirectTo" th:value="${backlogReturnTo}">
         <input th:if="${finishedReturnTo != null}" type="hidden" name="redirectTo" th:value="${finishedReturnTo}">
+        <input th:if="${inboxReturnTo != null}" type="hidden" name="redirectTo" th:value="${inboxReturnTo}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <input type="hidden" name="parentTaskId" th:if="${parentTaskId != null}" th:value="${parentTaskId}" />
         <p th:if="${parentTaskId != null}" th:text="#{subtask.creatingFor(${parentTaskTitle})}">Creating for parent</p>

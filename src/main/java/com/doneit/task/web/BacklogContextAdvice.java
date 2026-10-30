@@ -12,7 +12,9 @@ public class BacklogContextAdvice {
         String target = request.getParameter("redirectTo");
         if (target != null && target.length() <= 4000 && target.matches("/finished(?:\\?[A-Za-z0-9%=&+._-]*)?"))
             model.addAttribute("finishedReturnTo", target);
-        if (target != null && target.matches("/backlog(?:\\?projectId=[1-9][0-9]*)?(?:[?&]planningType=(?:REQUIRED|WANTED|OPTIONAL))?"))
+        if (target != null && target.length() <= 4000 && target.matches("/inbox(?:\\?[A-Za-z0-9%=&+._-]*)?"))
+            model.addAttribute("inboxReturnTo", target);
+        if (target != null && target.length() <= 4000 && target.matches("/backlog(?:\\?[A-Za-z0-9%=&+._-]*)?"))
             model.addAttribute("backlogReturnTo", target);
     }
 }

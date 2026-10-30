@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="/compact-list.css">
     <link rel="stylesheet" href="/inbox.css">
     <link rel="stylesheet" href="/backlog.css">
+    <link rel="stylesheet" href="/task-pagination.css">
+    <script src="/task-pagination.js" defer></script>
     <script src="/task-context-menu.js" defer></script>
     <script src="/inbox.js" defer></script>
     <script src="/backlog.js" defer></script>
@@ -39,16 +41,17 @@
         <div class="inbox-empty" th:if="${backlogRows.isEmpty()}">
             <h2 th:text="${selectedProjectId != null ? #messages.msg('backlog.noMatches') : #messages.msg('backlog.empty')}">Backlog is empty</h2>
             <p th:if="${selectedProjectId == null}" th:text="#{backlog.emptyNote}">Unscheduled tasks will appear here.</p>
-            <a th:if="${selectedProjectId != null}" class="today-button" href="/backlog" th:text="#{compact.reset}">Reset filters</a>
+            <a th:if="${selectedProjectId != null}" class="today-button" th:href="${pagination.resetHref()}" th:text="#{compact.reset}">Reset filters</a>
         </div>
+        <footer th:replace="~{task-pagination :: controls(${pagination}, ${pagination}, ${pagination.size}, #{list.pagination})}"></footer>
     </div>
     <dialog class="compact-dialog" id="backlog-filter-dialog" aria-labelledby="backlog-filter-title">
         <header><h2 id="backlog-filter-title" th:text="#{compact.filters}">Filters</h2><button class="cl-icon" type="button" data-close-dialog th:aria-label="#{common.cancel}"><i data-lucide="x" aria-hidden="true"></i></button></header>
         <nav class="backlog-project-options" th:aria-label="#{project.title}">
-            <a href="/backlog" th:classappend="${selectedProjectId == null} ? 'is-active'" th:attr="aria-current=${selectedProjectId == null ? 'true' : null}" th:text="#{project.all}">All projects</a>
-            <a th:each="p : ${projects}" th:href="@{/backlog(projectId=${p.id})}" th:classappend="${p.id == selectedProjectId} ? 'is-active'" th:attr="aria-current=${p.id == selectedProjectId ? 'true' : null}" th:text="${p.defaultProject ? 'MAIN' : #strings.arraySplit(p.name, '___')[0]}">Project</a>
+            <a th:href="${pagination.projectHref(null)}" th:classappend="${selectedProjectId == null} ? 'is-active'" th:attr="aria-current=${selectedProjectId == null ? 'true' : null}" th:text="#{project.all}">All projects</a>
+            <a th:each="p : ${projects}" th:href="${pagination.projectHref(p.id)}" th:classappend="${p.id == selectedProjectId} ? 'is-active'" th:attr="aria-current=${p.id == selectedProjectId ? 'true' : null}" th:text="${p.defaultProject ? 'MAIN' : #strings.arraySplit(p.name, '___')[0]}">Project</a>
         </nav>
-        <a class="today-button" href="/backlog" th:text="#{compact.reset}">Reset filters</a>
+        <a class="today-button" th:href="${pagination.resetHref()}" th:text="#{compact.reset}">Reset filters</a>
     </dialog>
     <dialog class="compact-dialog" id="backlog-move-dialog" aria-labelledby="backlog-move-title">
         <form method="post" data-refresh-csrf th:attr="data-today=${inboxToday}">

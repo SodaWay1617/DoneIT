@@ -101,16 +101,25 @@ public class TagService {
     }
 
     public Map<Long,List<Tag>> visible(boolean regular) {
+        return visible(regular, null);
+    }
+
+    public Map<Long,List<Tag>> visible(boolean regular, List<Long> ids) {
+        if (ids != null && ids.isEmpty()) return Map.of();
         String table = regular ? "regular_tasks" : "tasks";
         String column = regular ? "regular_task_id" : "task_id";
         Long user = projects.user().id();
         Map<Long,List<Tag>> result = new LinkedHashMap<>();
+        List<Object> args = new ArrayList<>(List.of(user, user));
+        if (ids != null) args.addAll(ids);
         db.query("SELECT t.id task_id,tag.id,tag.name FROM tags tag JOIN task_tags tt ON tt.tag_id=tag.id "
                 + "JOIN " + table + " t ON t.id=tt." + column + " WHERE tag.user_id=? AND "
-                + TaskVisibility.memberTasks("t",regular) + " ORDER BY LOWER(tag.name),tag.id",r -> {
+                + TaskVisibility.memberTasks("t",regular)
+                + (ids == null ? "" : " AND t.id IN (" + String.join(",", Collections.nCopies(ids.size(), "?")) + ")")
+                + " ORDER BY LOWER(tag.name),tag.id",r -> {
                     result.computeIfAbsent(r.getLong("task_id"),ignored->new ArrayList<>())
                             .add(new Tag(r.getLong("id"),r.getString("name"),0));
-                },user,user);
+                },args.toArray());
         return result;
     }
 

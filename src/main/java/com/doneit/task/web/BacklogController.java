@@ -24,10 +24,12 @@ public class BacklogController {
 
     @GetMapping("/backlog")
     public String backlog(@RequestParam(required = false) Long projectId,
-                          @RequestParam(required = false) PlanningType planningType, Model model) {
-        String returnTo = "/backlog" + (projectId == null ? "" : "?projectId=" + projectId);
-        if (planningType != null) returnTo += (projectId == null ? "?" : "&") + "planningType=" + planningType;
-        model.addAttribute("backlogRows", backlog.list(projectId, planningType, returnTo));
+                          @RequestParam(required = false) PlanningType planningType,
+                          @RequestParam(defaultValue = "25") int size, @RequestParam(defaultValue = "1") long page, Model model) {
+        var result = backlog.page(projectId, planningType, size, page);
+        String returnTo = result.paging().href(result.paging().number());
+        model.addAttribute("backlogRows", result.rows());
+        model.addAttribute("pagination", result.paging());
         model.addAttribute("inboxToday", LocalDate.now(clock));
         model.addAttribute("projects", projects.list());
         model.addAttribute("selectedProjectId", projectId);

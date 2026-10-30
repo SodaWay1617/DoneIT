@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<footer th:fragment="controls(paging, links, size, label)" class="finished-pagination task-pagination" th:aria-label="${label}">
+    <p class="finished-range" th:text="#{finished.range(${paging.from()},${paging.to()},${paging.total})}">Showing 0–0 of 0 tasks</p>
+    <nav class="finished-page-links" th:aria-label="${label}">
+        <a class="finished-page" th:if="${paging.previous()}" th:href="${links.href(paging.number - 1)}" th:aria-label="#{finished.previous}"><i data-lucide="chevron-left" aria-hidden="true"></i></a>
+        <span class="finished-page is-disabled" th:unless="${paging.previous()}" aria-disabled="true" th:aria-label="#{finished.previous}"><i data-lucide="chevron-left" aria-hidden="true"></i></span>
+        <span class="finished-mobile-page" th:text="#{finished.pageOf(${paging.number},${paging.pages()})}">1 of 1</span>
+        <th:block th:each="item : ${paging.numbers()}">
+            <a class="finished-page finished-page-number" th:if="${item.number != null}" th:classappend="${item.number == paging.number} ? 'is-active'" th:href="${links.href(item.number)}" th:attr="aria-current=${item.number == paging.number ? 'page' : null}" th:text="${item.number}">1</a>
+            <span class="finished-page-gap" th:if="${item.number == null}" aria-hidden="true">…</span>
+        </th:block>
+        <a class="finished-page" th:if="${paging.next()}" th:href="${links.href(paging.number + 1)}" th:aria-label="#{finished.next}"><i data-lucide="chevron-right" aria-hidden="true"></i></a>
+        <span class="finished-page is-disabled" th:unless="${paging.next()}" aria-disabled="true" th:aria-label="#{finished.next}"><i data-lucide="chevron-right" aria-hidden="true"></i></span>
+    </nav>
+    <label class="finished-size"><span th:text="#{finished.pageSize}">Per page</span><select data-finished-size data-page-size th:aria-label="#{finished.pageSize}"><option th:each="limit : ${ {25,50,100} }" th:value="${links.sizeHref(limit)}" th:selected="${limit == size}" th:text="${limit}">25</option></select></label>
+    <span class="finished-desktop-page" th:text="#{finished.pageOf(${paging.number},${paging.pages()})}">1 of 1</span>
+</footer>
+</body></html>

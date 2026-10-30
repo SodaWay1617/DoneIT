@@ -106,13 +106,21 @@ public record TaskListItemView(
     }
 
     private static String displayTitle(Task task, boolean showProjectInTitle) {
-        String taskCode = displayTaskCode(task);
-        return showProjectInTitle && taskCode != null ? taskCode + "  " + task.title() : task.title();
+        return displayTitle(task.taskKey(), task.title(), showProjectInTitle);
+    }
+
+    public static String displayTitle(String taskKey, String title, boolean showProjectInTitle) {
+        String taskCode = displayTaskCode(taskKey);
+        return showProjectInTitle && taskCode != null ? taskCode + "  " + title : title;
     }
 
     private static String displayTaskCode(Task task) {
-        if (task.taskKey() == null) return null;
-        String[] keyParts = task.taskKey().split("___", 2);
+        return displayTaskCode(task.taskKey());
+    }
+
+    private static String displayTaskCode(String taskKey) {
+        if (taskKey == null) return null;
+        String[] keyParts = taskKey.split("___", 2);
         String code = keyParts[0];
         if (keyParts.length == 2 && code.startsWith("MAIN-" + keyParts[1] + "-")) {
             return "MAIN-" + code.substring(("MAIN-" + keyParts[1] + "-").length());

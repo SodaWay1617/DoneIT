@@ -38,6 +38,7 @@ public class PlanningViewInterceptor implements HandlerInterceptor {
     public void postHandle(HttpServletRequest request, HttpServletResponse response,
                            Object handler, ModelAndView view) {
         if (view == null || !VIEWS.contains(view.getViewName())) return;
+        if ("backlog".equals(view.getViewName())) return; // The paged backlog applies its filters in SQL.
         String value = request.getParameter("planningType");
         PlanningType selected;
         try {

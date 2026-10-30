@@ -44,22 +44,7 @@
             <h2 th:text="${finished.filter.active() ? #messages.msg('finished.noMatches') : #messages.msg('finished.empty')}">No completed tasks yet.</h2>
             <a class="today-button" th:if="${finished.filter.active()}" href="/finished" th:text="#{compact.reset}">Reset filters</a>
         </div>
-        <footer class="finished-pagination" th:aria-label="#{finished.pagination}">
-            <p class="finished-range" th:text="#{finished.range(${finished.from()},${finished.to()},${finished.total})}">Showing 0–0 of 0 tasks</p>
-            <nav class="finished-page-links" th:aria-label="#{finished.pagination}">
-                <a class="finished-page" th:if="${finished.previous()}" th:href="${finished.filter.href(finished.number - 1)}" th:aria-label="#{finished.previous}"><i data-lucide="chevron-left" aria-hidden="true"></i></a>
-                <span class="finished-page is-disabled" th:unless="${finished.previous()}" aria-disabled="true" th:aria-label="#{finished.previous}"><i data-lucide="chevron-left" aria-hidden="true"></i></span>
-                <span class="finished-mobile-page" th:text="#{finished.pageOf(${finished.number},${finished.pages})}">1 of 1</span>
-                <th:block th:each="item : ${finished.numbers}">
-                    <a class="finished-page finished-page-number" th:if="${item.number != null}" th:classappend="${item.number == finished.number} ? 'is-active'" th:href="${finished.filter.href(item.number)}" th:attr="aria-current=${item.number == finished.number ? 'page' : null}" th:text="${item.number}">1</a>
-                    <span class="finished-page-gap" th:if="${item.number == null}" aria-hidden="true">…</span>
-                </th:block>
-                <a class="finished-page" th:if="${finished.next()}" th:href="${finished.filter.href(finished.number + 1)}" th:aria-label="#{finished.next}"><i data-lucide="chevron-right" aria-hidden="true"></i></a>
-                <span class="finished-page is-disabled" th:unless="${finished.next()}" aria-disabled="true" th:aria-label="#{finished.next}"><i data-lucide="chevron-right" aria-hidden="true"></i></span>
-            </nav>
-            <label class="finished-size"><span th:text="#{finished.pageSize}">Per page</span><select data-finished-size th:aria-label="#{finished.pageSize}"><option th:each="size : ${ {25,50,100} }" th:value="${finished.filter.sizeHref(size)}" th:selected="${size == finished.filter.size}" th:text="${size}">25</option></select></label>
-            <span class="finished-desktop-page" th:text="#{finished.pageOf(${finished.number},${finished.pages})}">1 of 1</span>
-        </footer>
+        <footer th:replace="~{task-pagination :: controls(${finished}, ${finished.filter}, ${finished.filter.size}, #{finished.pagination})}"></footer>
     </div>
     <dialog class="compact-dialog" id="finished-filter-dialog" aria-labelledby="finished-filter-title">
         <form method="get" action="/finished">

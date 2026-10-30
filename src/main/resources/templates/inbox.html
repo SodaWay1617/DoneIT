@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="/today.css">
     <link rel="stylesheet" href="/compact-list.css">
     <link rel="stylesheet" href="/inbox.css">
+    <link rel="stylesheet" href="/task-pagination.css">
+    <script src="/task-pagination.js" defer></script>
     <script src="/task-context-menu.js" defer></script>
     <script src="/inbox.js" defer></script>
 </head>
@@ -48,6 +50,7 @@
             <h2 th:text="#{inbox.empty}">No incoming tasks</h2>
             <p th:text="#{inbox.emptyNote}">All new tasks have been sorted.</p>
         </div>
+        <footer th:replace="~{task-pagination :: controls(${pagination}, ${pagination}, ${pagination.size}, #{list.pagination})}"></footer>
     </div>
 </main>
 <script src="/reminders.js" defer></script>

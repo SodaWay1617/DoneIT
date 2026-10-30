@@ -262,6 +262,7 @@ public class HomeController {
         if (taggedTasks == null) taskApplicationService.editTask(command);
         else taggedTasks.edit(command,form.getTagNames(),form.isTagsPresent());
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
+        if (model.getAttribute("inboxReturnTo") instanceof String inboxTarget) return "redirect:" + inboxTarget;
         if (model.getAttribute("finishedReturnTo") instanceof String historyTarget) return "redirect:" + historyTarget;
         if (model.getAttribute("backlogReturnTo") instanceof String target) return "redirect:" + target;
         String statusRedirect = statusListRedirect(form.getStatus());

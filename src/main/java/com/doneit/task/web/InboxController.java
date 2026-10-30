@@ -24,12 +24,15 @@ public class InboxController {
     }
 
     @GetMapping("/inbox")
-    public String inbox(@RequestParam(required = false) Long projectId, Model model) {
-        model.addAttribute("inboxRows", inbox.list(projectId));
+    public String inbox(@RequestParam(required = false) Long projectId,
+                        @RequestParam(defaultValue = "25") int size, @RequestParam(defaultValue = "1") long page, Model model) {
+        var result = inbox.page(projectId, size, page);
+        model.addAttribute("inboxRows", result.rows());
+        model.addAttribute("pagination", result.paging());
         model.addAttribute("inboxToday", LocalDate.now(clock));
         model.addAttribute("projects", projects.list());
         model.addAttribute("selectedProjectId", projectId);
-        model.addAttribute("inboxReturnTo", "/inbox" + (projectId == null ? "" : "?projectId=" + projectId));
+        model.addAttribute("inboxReturnTo", result.paging().href(result.paging().number()));
         return "inbox";
     }
 

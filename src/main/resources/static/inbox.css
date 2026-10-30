@@ -1,11 +1,11 @@
 .app-inbox { --bg:#f4efe6; --panel:#fffdf8; --ink:#25372f; --muted:#63736b; --border:#e1e4da; --accent:var(--app-accent); --accent-soft:var(--app-active); background:var(--bg); color:var(--ink); font-family:Georgia,"Times New Roman",serif; }
 .app-inbox * { box-sizing:border-box; }
-.app-inbox .inbox-shell { width:calc(100% - 48px); max-width:1080px; margin:24px auto 40px; }
+.app-inbox .inbox-shell { width:calc(100% - 48px); max-width:none; margin:24px auto 40px; }
 .app-inbox .inbox-header { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:24px; }
 .app-inbox h1 { margin:0; min-width:0; overflow-wrap:anywhere; font:700 32px/1.2 Georgia,serif; }
 .app-inbox .inbox-desktop-create { display:none; flex-shrink:0; }
 .app-inbox .inbox-list { border-radius:16px; }
-.app-inbox .inbox-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:center; min-width:0; padding:20px 26px; }
+.app-inbox .inbox-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:center; min-width:0; padding:18px 24px; }
 .app-inbox .inbox-row .task-title { margin-bottom:8px; }
 .app-inbox .inbox-row .compact-meta { gap:6px 8px; }
 .app-inbox .inbox-row + .inbox-row { border-top:1px solid var(--border); }
