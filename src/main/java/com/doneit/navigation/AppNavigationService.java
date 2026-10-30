@@ -66,14 +66,14 @@ public class AppNavigationService {
         more.addAll(analytics.subList(1, 3));
         more.add(item("settings", "/settings", "settings", "nav.settings", 0, section));
         final String selectedPlanning = planning;
-        final String projectPath = path.equals("/inbox") ? "/inbox" : "/";
+        final String projectPath = path.equals("/inbox") || path.equals("/backlog") || path.equals("/finished") ? path : "/";
         List<ProjectItem> projectItems = available.stream().map(p -> new ProjectItem(p.id(),
                 p.defaultProject() ? "MAIN" : p.name().split("___", 2)[0],
-                link(projectPath, p.id(), selectedPlanning, null), p.id().equals(selected))).toList();
+                path.equals("/finished") ? finishedProjectLink(request, p.id()) : link(projectPath, p.id(), selectedPlanning, null), p.id().equals(selected))).toList();
         String name = user.displayName() == null || user.displayName().isBlank() ? user.login() : user.displayName();
         boolean moreActive = mobile.stream().noneMatch(Item::active);
         return new Navigation(main, views, analytics, mobile, List.copyOf(more), projectItems,
-                link(projectPath, null, planning, null), selected == null, section.equals("projects"), moreActive, name,
+                path.equals("/finished") ? finishedProjectLink(request, null) : link(projectPath, null, planning, null), selected == null, section.equals("projects"), moreActive, name,
                 language(request, "en"), language(request, "ru"), section, link("/tasks", selected, planning, date));
     }
 
@@ -90,6 +90,16 @@ public class AppNavigationService {
 
     private static Item item(String key, String href, String icon, String label, long count, String section) {
         return new Item(key, href, icon, label, count, key.equals(section));
+    }
+
+    private static String finishedProjectLink(HttpServletRequest request, Long projectId) {
+        var uri = UriComponentsBuilder.fromPath("/finished");
+        if (projectId != null) uri.queryParam("projectId", projectId);
+        for (String key : List.of("status", "size", "planningType", "tagId")) {
+            String[] values = request.getParameterValues(key);
+            if (values != null) for (String value : values) uri.queryParam(key, value);
+        }
+        return uri.build().encode().toUriString();
     }
 
     private static String section(String path) {

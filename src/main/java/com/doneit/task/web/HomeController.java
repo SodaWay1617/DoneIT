@@ -106,23 +106,6 @@ public class HomeController {
         return "tasks";
     }
 
-    @GetMapping("/backlog")
-    public String backlog(@RequestParam(required=false) Long projectId,Model model, Principal principal) {
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("backlog", taskApplicationService.getBacklogTasks(projectId));
-        return "backlog";
-    }
-
-    @GetMapping("/finished")
-    public String finished(@RequestParam(required=false) Long projectId, Model model, Principal principal) {
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("taskCollection", taskApplicationService.getFinishedTasks(projectId));
-        model.addAttribute("pageTitle", "Done and closed");
-        model.addAttribute("pageNote", "Completed and cancelled tasks.");
-        model.addAttribute("listKind", "finished");
-        return "status-list";
-    }
-
     @GetMapping("/kanban")
     public String kanban(@RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                          Model model,
@@ -152,8 +135,12 @@ public class HomeController {
     }
 
     @GetMapping("/tasks/new")
-    public String createTaskPage(Model model, Principal principal) {
-        populateTaskFormModel(model, principal, TaskUpsertForm.from(taskApplicationService.getCreateTaskForm()));
+    public String createTaskPage(Model model, Principal principal, @RequestParam(defaultValue = "false") boolean backlog,
+                                 @RequestParam(required = false) Long projectId) {
+        var form = TaskUpsertForm.from(taskApplicationService.getCreateTaskForm());
+        if (backlog) form.setStatus(TaskStatus.BACKLOG);
+        if (projectId != null) { projectService.get(projectId); form.setProjectId(projectId); }
+        populateTaskFormModel(model, principal, form);
         model.addAttribute("pageTitle", "Create Task");
         model.addAttribute("submitLabel", "Create task");
         model.addAttribute("formAction", "/tasks");
@@ -213,7 +200,7 @@ public class HomeController {
                     : taggedTasks.create(command,true,form.getTagNames());
             if (parentTaskId != null && subtasks != null) subtasks.attach(created.id(), parentTaskId);
             redirectAttributes.addFlashAttribute("flashMessage", "Task added to backlog.");
-            return parentTaskId == null ? "redirect:/backlog" : "redirect:/tasks/" + parentTaskId + "/edit";
+            return parentTaskId == null ? "redirect:" + (model.getAttribute("backlogReturnTo") instanceof String target ? target : "/backlog") : "redirect:/tasks/" + parentTaskId + "/edit";
         }
 
         var created = taggedTasks == null ? taskApplicationService.createTask(command)
@@ -275,6 +262,8 @@ public class HomeController {
         if (taggedTasks == null) taskApplicationService.editTask(command);
         else taggedTasks.edit(command,form.getTagNames(),form.isTagsPresent());
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
+        if (model.getAttribute("finishedReturnTo") instanceof String historyTarget) return "redirect:" + historyTarget;
+        if (model.getAttribute("backlogReturnTo") instanceof String target) return "redirect:" + target;
         String statusRedirect = statusListRedirect(form.getStatus());
         if (statusRedirect != null) return "redirect:" + statusRedirect;
         LocalDate redirectDate = plannedDate != null ? plannedDate : plannedForAt == null ? null : plannedForAt.toLocalDate();

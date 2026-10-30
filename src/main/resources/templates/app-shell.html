@@ -48,6 +48,10 @@
         <nav th:attr="aria-label=#{shell.sections}"><th:block th:each="item : ${appNav.main}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
         <nav class="app-secondary-nav" th:attr="aria-label=#{shell.views}"><th:block th:each="item : ${appNav.views}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block><a th:replace="~{app-shell :: tags-link}"></a></nav>
         <div th:replace="~{app-shell :: project-list}"></div>
+        <details class="finished-sidebar-tags" th:if="${finished != null}" open>
+            <summary th:text="#{tag.title}">Tags</summary>
+            <a class="app-link" th:each="tag : ${finishedTags}" th:href="${finished.filter.tagHref(tag.id)}" th:classappend="${finished.filter.tagged(tag.id)} ? 'is-active'" th:attr="aria-current=${finished.filter.tagged(tag.id) ? 'true' : null}" th:text="${'#' + tag.name}">#Prime</a>
+        </details>
     </div>
     <div th:replace="~{app-shell :: account}"></div>
 </aside>
@@ -57,7 +61,7 @@
     <header class="app-topbar">
         <button class="app-icon-button app-drawer-toggle" type="button" data-open-menu="app-drawer" aria-controls="app-drawer" aria-expanded="false" th:title="#{shell.openMenu}" th:aria-label="#{shell.openMenu}"><th:block th:replace="~{app-shell :: icon('menu')}"></th:block></button>
         <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
-        <a th:if="${appNav.section == 'inbox'}" class="app-icon-button inbox-create" href="/tasks/new" th:title="#{task.create}" th:aria-label="#{task.create}"><th:block th:replace="~{app-shell :: icon('plus')}"></th:block></a>
+        <a th:if="${appNav.section == 'inbox' or appNav.section == 'backlog'}" class="app-icon-button inbox-create" th:href="${backlogCreateHref != null ? backlogCreateHref : '/tasks/new'}" th:title="#{task.create}" th:aria-label="#{task.create}"><th:block th:replace="~{app-shell :: icon('plus')}"></th:block></a>
     </header>
     <nav class="app-bottom-nav" th:attr="aria-label=#{shell.navigation}">
         <a class="app-bottom-item" th:each="item : ${appNav.mobile}" th:href="${item.href}" th:classappend="${item.active} ? 'is-active'" th:attr="aria-current=${item.active ? 'page' : null},data-nav-key=${item.key}">

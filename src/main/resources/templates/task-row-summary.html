@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<a th:fragment="summary(row, estimate, recurring)" class="inbox-main" th:href="${row.href()}">
+    <div class="inbox-text">
+        <h2 class="task-title" th:text="${row.title}">Task</h2>
+        <div th:replace="~{task-row-summary :: metadata(${row.project}, ${row.tags}, ${recurring})}"></div>
+    </div>
+    <div class="inbox-details">
+        <span class="backlog-estimate" th:if="${estimate != null}"><i data-lucide="clock" aria-hidden="true"></i><span th:text="${@labels.compactDuration(estimate)}">45 min</span></span>
+        <time class="inbox-created" th:datetime="${row.createdAt}"
+              th:text="${row.createdAt.toLocalDate() == inboxToday ? #messages.msg('inbox.createdToday', #temporals.format(row.createdAt, 'HH:mm')) : #temporals.format(row.createdAt, 'dd.MM.yyyy, HH:mm')}">Today, 12:28</time>
+    </div>
+</a>
+<div th:fragment="metadata(project, tags, recurring)" class="compact-meta" th:if="${project != null or !tags.isEmpty() or recurring}">
+    <span class="cl-project" th:if="${project != null}"><i data-lucide="folder" aria-hidden="true"></i><span th:text="${project}">MAIN</span></span>
+    <span class="cl-tag" th:each="tag : ${tags}" th:text="${'#' + tag.name}">#Prime</span>
+    <span class="cl-recurring" th:if="${recurring}" th:title="#{task.recurring}" th:aria-label="#{task.recurring}"><i data-lucide="repeat" aria-hidden="true"></i></span>
+</div>
+</body></html>

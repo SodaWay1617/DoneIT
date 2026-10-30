@@ -124,6 +124,8 @@
     </div>
 
     <form data-refresh-csrf method="post" th:action="${formAction}" th:object="${form}">
+        <input th:if="${backlogReturnTo != null}" type="hidden" name="redirectTo" th:value="${backlogReturnTo}">
+        <input th:if="${finishedReturnTo != null}" type="hidden" name="redirectTo" th:value="${finishedReturnTo}">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <input type="hidden" name="parentTaskId" th:if="${parentTaskId != null}" th:value="${parentTaskId}" />
         <p th:if="${parentTaskId != null}" th:text="#{subtask.creatingFor(${parentTaskTitle})}">Creating for parent</p>
@@ -196,8 +198,8 @@
         </label>
         <div class="actions">
             <button class="solid" type="submit" th:text="${form.editMode} ? #{common.save} : #{task.create}">Create task</button>
-            <a class="ghost" th:href="@{/}" th:text="#{form.backTasks}">Back to tasks</a>
-            <a class="ghost" th:href="@{/backlog}" th:text="#{form.openBacklog}">Open backlog</a>
+            <a class="ghost" th:href="${finishedReturnTo != null ? finishedReturnTo : '/'}" th:text="${finishedReturnTo != null ? #messages.msg('nav.finished') : #messages.msg('form.backTasks')}">Back to tasks</a>
+            <a class="ghost" th:href="${backlogReturnTo != null ? backlogReturnTo : '/backlog'}" th:text="#{form.openBacklog}">Open backlog</a>
         </div>
     </form>
 <section th:replace="~{analytics-comparison :: task(${taskComparison})}"></section>

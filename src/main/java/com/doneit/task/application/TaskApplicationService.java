@@ -365,9 +365,16 @@ public class TaskApplicationService {
     @Transactional
     public TaskListItemView startTaskToday(@NotNull Long taskId) {
         Task task = getTaskOrThrow(taskId);
-        if (task.status() != TaskStatus.NEW) throw new IllegalArgumentException("Only new tasks can be taken from inbox");
+        if (task.status() != TaskStatus.NEW && task.status() != TaskStatus.BACKLOG && task.status() != TaskStatus.PAUSED)
+            throw new IllegalArgumentException("Only incoming or backlog tasks can be taken on");
         LocalDate today = LocalDate.now(clock);
         // Keep an explicitly chosen time and interval; never invent a start time.
+        if (task.status() == TaskStatus.PAUSED) {
+            return editTask(new EditTaskCommand(task.id(), task.title(), task.description(),
+                    task.plannedForAt() == null ? null : today.atTime(task.plannedForAt().toLocalTime()),
+                    task.deadlineAt(), task.projectId(), task.plannedForAt() == null ? today : null, false,
+                    task.priority(), TaskStatus.TODO, task.estimateMinutes(), task.spentMinutes(), task.planningType(), task.endTime()));
+        }
         return moveTask(task.plannedForAt() == null
                 ? new RescheduleTaskCommand(taskId, null, today)
                 : new RescheduleTaskCommand(taskId, today.atTime(task.plannedForAt().toLocalTime()), null));

@@ -94,7 +94,7 @@ class PlanningTypeTest extends IntegrationTestSupport {
                 .andReturn().getResponse().getContentAsString();
         assertThat(html).contains("class=\"app-navigation\"", "class=\"app-project-heading\"",
                 "href=\"/projects\"", "href=\"/settings\"");
-        if (path.equals("/inbox")) assertThat(html).doesNotContain("name=\"planningType\"", "class=\"view-filters\"");
+        if (path.equals("/inbox") || path.equals("/backlog") || path.equals("/finished")) assertThat(html).doesNotContain("name=\"planningType\"", "class=\"view-filters\"");
         else assertThat(html).contains("name=\"projectId\"", "name=\"planningType\"");
     }
 

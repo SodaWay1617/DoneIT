@@ -38,7 +38,9 @@ public class RegularTaskController {
   f.setId(id);
   if(errors.hasErrors())return page(m,f,"Edit recurring task","/recurring/"+id);
   try{if(taggedTasks==null)service.update(id,f);else taggedTasks.editRegular(id,f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Edit recurring task","/recurring/"+id);}
-  flash.addFlashAttribute("flashMessage","Recurring task updated.");return "redirect:"+redirect(f.getStatus());
+  flash.addFlashAttribute("flashMessage","Recurring task updated.");
+  if(m.getAttribute("finishedReturnTo") instanceof String historyTarget)return "redirect:"+historyTarget;
+  return "redirect:"+(m.getAttribute("backlogReturnTo") instanceof String target?target:redirect(f.getStatus()));
  }
  @PostMapping("/recurring/{id}/done-today") public String done(@PathVariable Long id,@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date,@RequestParam(required=false) Integer spentMinutes,@RequestParam(defaultValue="/") String redirectTo,RedirectAttributes flash){
   service.complete(id,date,spentMinutes);flash.addFlashAttribute("flashMessage","Recurring task completed for this day.");

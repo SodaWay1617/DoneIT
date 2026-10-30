@@ -1,0 +1,17 @@
+.app-backlog .inbox-details { display:grid; gap:6px; justify-items:end; }
+.app-backlog .backlog-estimate { display:inline-flex; align-items:center; gap:6px; color:var(--ink); font:14px/1.4 system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+.app-backlog .backlog-estimate svg { width:16px; height:16px; color:var(--muted); }
+.app-backlog .backlog-filter-toggle { display:none; }
+.app-backlog .backlog-filter-toggle.is-active { background:var(--accent-soft); color:var(--accent); }
+.app-backlog .backlog-filter-mark { font:12px system-ui,sans-serif; }
+.app-backlog .backlog-project-options { display:grid; gap:4px; margin:16px 0; }
+.app-backlog .backlog-project-options a { display:block; padding:12px; min-height:44px; border-radius:6px; color:inherit; text-decoration:none; overflow-wrap:anywhere; }
+.app-backlog .backlog-project-options a:is(:hover,.is-active) { background:var(--accent-soft); color:var(--accent); }
+.app-backlog #backlog-filter-dialog > header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+@media(max-width:1023px) { .app-backlog .backlog-filter-toggle { display:inline-flex; min-height:44px; } }
+@media(max-width:767px) {
+    .app-backlog .inbox-header { flex-wrap:wrap; gap:12px; }
+    .app-backlog .inbox-details { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+    .app-backlog .backlog-estimate { order:2; }
+    .app-backlog .inbox-row { position:relative; }
+}
