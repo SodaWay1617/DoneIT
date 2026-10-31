@@ -61,3 +61,5 @@ databaseChangeLog:
       file: db/changelog/changes/0030-personal-tags.yaml
   - include:
       file: db/changelog/changes/0031-mcp.yaml
+  - include:
+      file: db/changelog/changes/0032-mcp-tokens.yaml

@@ -1,0 +1,57 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="referrer" content="no-referrer">
+    <title th:text="#{mcpTokens.title}">MCP tokens</title>
+    <th:block th:replace="~{app-shell :: assets}"></th:block>
+    <link rel="stylesheet" href="/mcp-tokens.css">
+</head>
+<body class="app-page mcp-token-body">
+<div th:replace="~{app-shell :: navigation}"></div>
+<div class="app-content" id="app-main" tabindex="-1">
+<main class="mcp-token-page">
+    <header class="mcp-token-header"><h1 th:text="#{mcpTokens.title}">MCP tokens</h1><a href="/settings" th:text="#{settings.title}">Settings</a></header>
+    <p th:text="#{mcpTokens.intro}">Create a personal token for your agent.</p>
+    <p th:unless="${canManageTokens}" th:text="#{mcpTokens.unavailable}">HTTPS and enabled MCP are required.</p>
+    <section class="mcp-token-panel" th:if="${canManageTokens}">
+        <h2 th:text="#{mcpTokens.issue}">Issue token</h2>
+        <form id="mcp-token-issue" method="post" th:action="@{/settings/mcp-tokens}">
+            <label><span th:text="#{mcpTokens.name}">Name</span><input name="name" maxlength="80" required autocomplete="off" th:placeholder="#{mcpTokens.nameExample}"></label>
+            <label><span th:text="#{mcpTokens.days}">Days</span><input name="days" type="number" min="1" max="21" value="21" required></label>
+            <label><span th:text="#{mcpTokens.permissions}">Permissions</span><select name="allowWrite"><option value="false" th:text="#{mcpTokens.readOnly}">Read only</option><option value="true" th:text="#{mcpTokens.readWrite}">Read and write</option></select></label>
+            <button type="submit" th:text="#{mcpTokens.issue}">Issue token</button>
+        </form>
+        <p id="mcp-token-error" role="alert" hidden th:text="#{mcpTokens.error}">Could not issue token.</p>
+        <section id="mcp-token-secret" hidden aria-labelledby="mcp-secret-title">
+            <h3 id="mcp-secret-title" th:text="#{mcpTokens.once}">Copy now</h3>
+            <p th:text="#{mcpTokens.onceHint}">The secret cannot be shown again.</p>
+            <input id="mcp-secret-value" type="text" readonly autocomplete="off" spellcheck="false" th:aria-label="#{mcpTokens.secret}">
+            <div class="mcp-token-actions"><button id="mcp-token-copy" type="button" th:text="#{mcpTokens.copy}">Copy</button><button id="mcp-token-hide" type="button" th:text="#{mcpTokens.hide}">Hide</button></div>
+            <p id="mcp-copy-status" role="status" aria-live="polite"></p>
+        </section>
+        <noscript><p th:text="#{mcpTokens.jsRequired}">JavaScript is required to display a token once.</p></noscript>
+    </section>
+    <section class="mcp-token-panel" id="mcp-token-list-panel">
+        <h2 th:text="#{mcpTokens.yours}">Your tokens</h2>
+        <p id="mcp-token-list-stale" hidden><a href="/settings/mcp-tokens" th:text="#{mcpTokens.refresh}">Refresh token list</a></p>
+        <p th:if="${#lists.isEmpty(mcpTokens)}" th:text="#{mcpTokens.empty}">No tokens yet.</p>
+        <ul class="mcp-token-list">
+            <li th:each="token : ${mcpTokens}">
+                <div class="mcp-token-details"><strong th:text="${token.name}">Name</strong>
+                    <span th:text="${token.allowWrite ? #messages.msg('mcpTokens.readWrite') : #messages.msg('mcpTokens.readOnly')}">Permissions</span>
+                    <span><span th:text="#{mcpTokens.created}">Created:</span> <time th:datetime="${token.createdAt}" th:text="${token.createdAt}"></time></span>
+                    <span><span th:text="#{mcpTokens.expires}">Expires:</span> <time th:datetime="${token.expiresAt}" th:text="${token.expiresAt}"></time></span>
+                    <span th:text="${token.revokedAt != null ? #messages.msg('mcpTokens.revoked') : (token.active ? #messages.msg('mcpTokens.active') : #messages.msg('mcpTokens.expired'))}">State</span>
+                    <small th:if="${token.legacy}" th:text="#{mcpTokens.legacy}">Imported from server configuration</small>
+                </div>
+                <form th:if="${canManageTokens and token.revokedAt == null}" method="post" th:action="@{/settings/mcp-tokens/{id}/revoke(id=${token.id})}"><button type="submit" class="mcp-token-revoke" th:text="#{mcpTokens.revoke}">Revoke</button></form>
+            </li>
+        </ul>
+    </section>
+</main>
+<script src="/mcp-tokens.js" defer th:attr="data-copied=#{mcpTokens.copied},data-copy-failed=#{mcpTokens.copyFailed}"></script>
+</div>
+</body>
+</html>

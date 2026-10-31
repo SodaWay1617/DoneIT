@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0032-mcp-tokens
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE mcp_tokens (
+                  id VARCHAR(64) PRIMARY KEY,
+                  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                  name VARCHAR(80) NOT NULL,
+                  token_hash CHAR(64) NOT NULL UNIQUE,
+                  allow_write BOOLEAN NOT NULL,
+                  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                  expires_at TIMESTAMPTZ NOT NULL,
+                  revoked_at TIMESTAMPTZ,
+                  legacy BOOLEAN NOT NULL DEFAULT FALSE
+              );
+              CREATE INDEX idx_mcp_tokens_owner ON mcp_tokens(user_id, created_at DESC);

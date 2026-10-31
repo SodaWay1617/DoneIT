@@ -45,6 +45,7 @@
         <div class="profile-info"><th:block th:replace="~{app-shell :: icon('circle-user-round')}"></th:block><strong th:text="${profileName}">User</strong></div>
         <p class="profile-login" th:if="${profileName != profileLogin}" th:text="#{common.signedInAs(${profileLogin})}">Signed in as user</p>
         <div class="profile-actions">
+            <a class="button" href="/settings/mcp-tokens"><th:block th:replace="~{app-shell :: icon('key-round')}"></th:block><span th:text="#{mcpTokens.title}">MCP tokens</span></a>
             <a class="button" href="/settings/devices"><th:block th:replace="~{app-shell :: icon('monitor-smartphone')}"></th:block><span th:text="#{devices.title}">Remembered devices</span></a>
             <form method="post" th:action="@{/logout}"><button class="sign-out" type="submit"><th:block th:replace="~{app-shell :: icon('log-out')}"></th:block><span th:text="#{common.signOut}">Sign out</span></button></form>
         </div>

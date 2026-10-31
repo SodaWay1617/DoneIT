@@ -28,6 +28,9 @@ class McpIntegrationTest extends IntegrationTestSupport {
     @LocalServerPort int port;
     @Autowired JdbcTemplate db;
     @Autowired ObjectMapper json;
+    @Autowired com.doneit.mcp.infrastructure.McpTokenStore tokenStore;
+    @Autowired com.doneit.mcp.security.McpProperties tokenProperties;
+    @Autowired com.doneit.mcp.application.McpTokenService tokenService;
 
     @DynamicPropertySource static void tokens(DynamicPropertyRegistry registry) {
         String[] secrets={OWNER,OTHER,READ};
@@ -43,12 +46,25 @@ class McpIntegrationTest extends IntegrationTestSupport {
     @BeforeEach void setup() {
         db.execute("TRUNCATE users CASCADE");
         db.update("INSERT INTO users(login,password_hash,created_at,updated_at) VALUES('owner','unused',NOW(),NOW()),('other','unused',NOW(),NOW())");
+        tokenProperties.tokens().forEach(tokenStore::importLegacy);
     }
     McpSyncClient client(String token) {
         var transport=HttpClientStreamableHttpTransport.builder("http://localhost:"+port)
                 .customizeRequest(b->b.header("Authorization","Bearer "+token)).openConnectionOnStartup(false).build();
         var client=McpClient.sync(transport).requestTimeout(Duration.ofSeconds(10)).initializationTimeout(Duration.ofSeconds(10)).build();
         client.initialize();return client;
+    }
+
+    @Test void issuedTokensRespectPermissionsAndRevocationBlocksExistingTransportSession() throws Exception {
+        var issued = tokenService.issue("owner", "Laptop", 21, false);
+        try (var client = client(issued.secret)) {
+            assertThat(call(client,"list_projects",Map.of()).path("projects").size()).isEqualTo(1);
+            assertThat(call(client,"create_task",creation("ui-denied","Must not exist")).path("code").asText()).isEqualTo("FORBIDDEN");
+            var token = tokenService.list("owner").stream().filter(t -> t.name().equals("Laptop")).findFirst().orElseThrow();
+            tokenService.revoke("owner", token.id());
+            assertThatThrownBy(() -> client.listTools()).isInstanceOf(Exception.class);
+            assertThat(db.queryForObject("SELECT COUNT(*) FROM tasks",Integer.class)).isZero();
+        }
     }
     JsonNode call(McpSyncClient client,String tool,Map<String,Object> args) throws Exception {
         var response=client.callTool(new McpSchema.CallToolRequest(tool,args));

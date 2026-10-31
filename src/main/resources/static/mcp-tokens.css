@@ -1,0 +1,20 @@
+.mcp-token-body { --bg:var(--app-bg); --panel:var(--app-surface); --ink:var(--app-ink); --muted:var(--app-muted); --accent:var(--app-accent); --border:var(--app-border); background:var(--bg); color:var(--ink); font:17px Georgia,serif; }
+.mcp-token-page { width:min(760px,calc(100% - 24px)); margin:24px auto; padding-bottom:90px; overflow-wrap:anywhere; }
+.mcp-token-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.mcp-token-header h1 { margin:0; }
+.mcp-token-panel { background:var(--panel,#fffaf1); border:1px solid var(--border,#d8cfbf); border-radius:16px; padding:20px; margin:16px 0; min-width:0; }
+.mcp-token-panel h2 { font-size:20px; margin:0 0 16px; }
+.mcp-token-panel label { display:grid; gap:6px; margin:12px 0; }
+.mcp-token-panel input,.mcp-token-panel select { box-sizing:border-box; width:100%; min-width:0; min-height:44px; border:1px solid var(--border,#d8cfbf); border-radius:8px; padding:10px; background:var(--panel,#fffaf1); color:inherit; font:inherit; }
+.mcp-token-panel button { min-height:44px; border:0; border-radius:8px; padding:10px 14px; background:var(--accent,#1e6d73); color:#fff; font:inherit; cursor:pointer; }
+.mcp-token-panel button:disabled { opacity:.6; cursor:wait; }
+.mcp-token-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.mcp-token-list { list-style:none; padding:0; margin:0; }
+.mcp-token-list li { display:flex; align-items:start; justify-content:space-between; gap:12px; padding:16px 0; }
+.mcp-token-list li + li { border-top:1px solid var(--border,#d8cfbf); }
+.mcp-token-details { display:grid; gap:6px; min-width:0; }
+.mcp-token-details span,.mcp-token-details small { color:var(--muted,#607074); font-size:14px; }
+.mcp-token-panel .mcp-token-revoke { background:transparent; color:var(--ink,#1f2b2d); border:1px solid var(--border,#d8cfbf); }
+.mcp-token-panel [hidden] { display:none; }
+#mcp-secret-value { font-family:monospace; }
+@media(max-width:480px) { .mcp-token-panel { padding:16px; } .mcp-token-list li { flex-wrap:wrap; } }

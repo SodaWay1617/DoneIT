@@ -14,7 +14,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableConfigurationProperties(McpProperties.class)
 public class McpSecurityConfiguration {
-    @Bean McpTokenVerifier mcpTokens(McpProperties properties, Clock clock) { return new McpTokenVerifier(properties, clock); }
+    @Bean McpTokenVerifier mcpTokens(McpProperties properties, Clock clock, com.doneit.mcp.infrastructure.McpTokenStore store) {
+        return new McpTokenVerifier(properties, clock, store);
+    }
 
     @Bean @Order(0)
     SecurityFilterChain mcpSecurity(HttpSecurity http, McpProperties properties, McpTokenVerifier tokens,
