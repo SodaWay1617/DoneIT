@@ -1,0 +1,55 @@
+services:
+  app:
+    ports: !reset []
+    environment:
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+      SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY: "true"
+      SERVER_SERVLET_SESSION_COOKIE_SAME_SITE: lax
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: doneit-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: bind
+        source: ${DONEIT_NGINX_CONFIG_DIR:?Set an absolute path to the VPS nginx config directory}
+        target: /etc/nginx/conf.d
+        read_only: true
+        bind:
+          create_host_path: false
+      - ./deploy/nginx/proxy.inc:/etc/nginx/doneit-proxy.inc:ro
+      - type: bind
+        source: ${DONEIT_ACME_WEBROOT:?Set an absolute path to the ACME webroot}
+        target: /var/www/acme
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${DONEIT_LETSENCRYPT_DIR:-/etc/letsencrypt}
+        target: /etc/letsencrypt
+        read_only: true
+        bind:
+          create_host_path: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

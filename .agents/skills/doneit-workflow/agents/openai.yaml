@@ -1,0 +1,4 @@
+interface:
+  display_name: "DoneIt"
+  short_description: "Задачи, спецификации и планирование через DoneIt MCP"
+  default_prompt: "Используй $doneit-workflow для работы с задачами DoneIt: проверь нужный проект и выполни моё поручение через MCP."
