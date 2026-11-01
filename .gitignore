@@ -26,6 +26,10 @@ replay_pid*
 target
 .m2
 .mcp-local/
+*.dump
+*.dump.sha256
+__pycache__/
+__pycache__/
 
 Замечания.md
 spec/my_memo.md

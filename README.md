@@ -1,5 +1,12 @@
 # DoneIt
 
+## PostgreSQL backups on VPS
+
+Daily private backups, cron setup, weekly manual download and isolated restore
+checks are described in [the PostgreSQL backup runbook](spec/postgres_backup_runbook.md).
+Run `python3 scripts/backup-postgres.py` on the Linux VPS for a manual backup;
+no application rebuild, additional containers or cloud credentials are needed.
+
 DoneIt is a personal family task tracker designed to replace an existing Telegram-based solution with a simple web application.
 
 ## Project goal

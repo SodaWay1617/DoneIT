@@ -1,0 +1,5 @@
+# Add this one job with `crontab -e` as deploy; preserve existing jobs.
+# Uses cron's standard PATH plus docker in /usr/bin. Run Python 3.10+ on the host.
+# The script checks Europe/Moscow itself and dumps only at 03:00 Moscow.
+# Do not replace this with `0 3 * * * TZ=Europe/Moscow ...`: that may schedule in host time.
+* * * * * /usr/bin/python3 /home/deploy/DoneIT/scripts/backup-postgres.py --scheduled >/dev/null 2>&1
