@@ -18,6 +18,24 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
 
     @Bean
+    @org.springframework.core.annotation.Order(1)
+    public SecurityFilterChain staticResourcesSecurity(HttpSecurity http) throws Exception {
+        return http.securityMatcher(request -> {
+                    if (!java.util.Set.of("GET", "HEAD").contains(request.getMethod())) return false;
+                    String path = request.getRequestURI().substring(request.getContextPath().length());
+                    // Only packaged presentation files; never application routes or arbitrary paths.
+                    if (!path.matches("/(?:[A-Za-z0-9_-]+\\.(?:css|js|ico|svg|png|jpg|jpeg|webp|gif|woff|woff2)|vendor/[A-Za-z0-9_.-]+\\.(?:js|txt))")) return false;
+                    return new org.springframework.core.io.ClassPathResource("static" + path).isReadable();
+                })
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .sessionManagement(session -> session.sessionCreationPolicy(
+                        org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+                .requestCache(cache -> cache.disable())
+                // Keep security headers, but do not rotate remember-me cookies for CSS/JS.
+                .build();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,DeviceRememberMeServices remember,
             com.doneit.user.application.RememberedDevicesService devices,org.springframework.security.core.session.SessionRegistry sessions) throws Exception {
         http

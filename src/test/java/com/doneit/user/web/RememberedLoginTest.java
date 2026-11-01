@@ -70,6 +70,33 @@ class RememberedLoginTest extends IntegrationTestSupport {
         assertThat(authentication).isNotNull();
         assertThat(authentication.getName()).isEqualTo("owner");
     }
+    @Test void staticAssetsLoadWithoutLoginAndKeepSecurityHeaders() throws Exception {
+        mvc.perform(get("/app-shell.css")).andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/css"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+        mvc.perform(get("/app-shell.js")).andExpect(status().isOk());
+        mvc.perform(get("/vendor/lucide-0.468.0.min.js")).andExpect(status().isOk());
+        mvc.perform(get("/settings/devices")).andExpect(status().is3xxRedirection());
+    }
+    @Test void coldPwaAssetRequestsNeitherRotateRememberCookieNorCreateSessions() throws Exception {
+        Cookie cookie = login("owner",true,true,null).getResponse().getCookie("remember-me");
+        String stored = db.queryForObject("SELECT token FROM persistent_logins WHERE username='owner'",String.class);
+        // A restored browser can send the same old cookie to several resources without a session.
+        for (String path : new String[]{"/app-shell.css", "/today.css", "/app-shell.js", "/vendor/lucide-0.468.0.min.js"}) {
+            var result = mvc.perform(get(path).secure(true).cookie(cookie)).andExpect(status().isOk()).andReturn();
+            assertThat(result.getResponse().getCookie("remember-me")).isNull();
+            assertThat(result.getRequest().getSession(false)).isNull();
+        }
+        assertThat(db.queryForObject("SELECT token FROM persistent_logins WHERE username='owner'",String.class)).isEqualTo(stored);
+        var restored = mvc.perform(get("/settings/devices").secure(true).cookie(cookie))
+                .andExpect(status().isOk()).andExpect(authenticated().withUsername("owner")).andReturn();
+        // Preloads already in flight may still carry the pre-rotation cookie.
+        mvc.perform(get("/app-shell.css").secure(true).cookie(cookie)).andExpect(status().isOk());
+        mvc.perform(get("/app-shell.js").secure(true).cookie(cookie)).andExpect(status().isOk());
+        mvc.perform(get("/settings/devices").secure(true).session(session(restored)))
+                .andExpect(status().isOk()).andExpect(authenticated().withUsername("owner"));
+        assertThat(count("owner")).isEqualTo(1);
+    }
     @Test void expiredMalformedAndMissingTokensCannotRestoreLogin() throws Exception {
         Cookie cookie=login("owner",true,false,null).getResponse().getCookie("remember-me");
         db.update("UPDATE persistent_logins SET last_used=NOW()-INTERVAL '91 days'");
