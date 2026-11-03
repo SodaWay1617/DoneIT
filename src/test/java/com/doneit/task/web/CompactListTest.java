@@ -113,6 +113,61 @@ class CompactListTest extends IntegrationTestSupport {
         assertThat(tags.names(ordinary,false)).containsExactly("Health","Prime");
     }
 
+    @Test void editorLinksCarryTheDayAndAllFiltersIncludingWhenOpenedFromToday() throws Exception {
+        for(String source:List.of("/", "/tasks?date=2026-04-08")) {
+            String query=(source.contains("?")?"&":"?")+"projectId="+project+"&planningType=REQUIRED&tagId="+prime+"&tagId="+health;
+            var result=mvc.perform(get(source+query)).andExpect(status().isOk()).andReturn();
+            String target=(String)result.getModelAndView().getModel().get("compactEditReturnTo");
+            assertThat(target).startsWith("/tasks?").contains("date=2026-04-08","projectId="+project,"planningType=REQUIRED","tagId="+prime,"tagId="+health);
+            assertThat(result.getResponse().getContentAsString()).contains("/tasks/"+ordinary+"/edit?redirectTo=");
+            String editor=mvc.perform(get("/tasks/{id}/edit",ordinary).param("redirectTo",target)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(editor).contains("name=\"redirectTo\" value=\""+target.replace("&","&amp;")+"\"", "href=\""+target.replace("&","&amp;")+"\"");
+        }
+    }
+
+    @Test void savingAnotherDayOrTimeReturnsToTheOriginalFilteredDay() throws Exception {
+        String target="/tasks?date=2026-04-08&projectId="+project+"&planningType=REQUIRED&tagId="+prime+"&tagId="+health;
+        for(boolean timed:List.of(false,true)) {
+            mvc.perform(post("/tasks/{id}",ordinary).with(csrf()).param("title","Ordinary").param("projectId",project.toString())
+                    .param("status","IN_PROGRESS").param("planningType","REQUIRED").param("plannedDate","2026-04-09")
+                    .param("plannedWithTime",Boolean.toString(timed)).param("plannedForAt","2026-04-09T09:15").param("redirectTo",target))
+                    .andExpect(redirectedUrl(target));
+            var model=model(target);
+            assertThat(((com.doneit.task.application.view.DailyTasksView)model.get("daily")).selectedDate()).isEqualTo(java.time.LocalDate.of(2026,4,8));
+            assertThat(rows(model)).noneMatch(row->row.id().equals(ordinary)&&!row.recurring());
+        }
+    }
+
+    @Test void validationErrorKeepsTheReturnTargetAndCancelDoesNotMoveTheTask() throws Exception {
+        String target="/tasks?date=2026-04-08&projectId="+project+"&tagId="+health;
+        String editor=mvc.perform(post("/tasks/{id}",ordinary).with(csrf()).param("title","").param("projectId",project.toString())
+                .param("status","IN_PROGRESS").param("plannedDate","2026-04-09").param("redirectTo",target))
+                .andExpect(status().isOk()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attributeHasFieldErrors("form","title"))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(editor).contains("name=\"redirectTo\" value=\""+target.replace("&","&amp;")+"\"", "href=\""+target.replace("&","&amp;")+"\"");
+        assertThat(rows(model(target))).anyMatch(row->row.id().equals(ordinary)&&!row.recurring());
+    }
+
+    @Test void recurringEditorPreservesContextWithoutChangingSeriesRules() throws Exception {
+        String target="/tasks?date=2026-04-08&projectId="+project+"&planningType=REQUIRED&tagId="+prime;
+        String html=mvc.perform(get("/recurring/{id}/edit",regular).param("redirectTo",target)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(html).contains("name=\"redirectTo\" value=\""+target.replace("&","&amp;")+"\"", "href=\""+target.replace("&","&amp;")+"\"");
+        mvc.perform(post("/recurring/{id}",regular).with(csrf()).param("title","Regular edited").param("projectId",project.toString())
+                .param("status","IN_PROGRESS").param("recurrenceType","DAILY").param("occurrenceTime","10:00").param("redirectTo",target))
+                .andExpect(redirectedUrl(target));
+        assertThat(db.queryForObject("SELECT status FROM regular_tasks WHERE id=?",String.class,regular)).isEqualTo("IN_PROGRESS");
+    }
+
+    @Test void invalidReturnTargetsAreIgnoredAndDirectEditorKeepsItsFallback() throws Exception {
+        for(String target:List.of("//example.com", "https://example.com", "/\\example.com", "/tasks/1/edit")) {
+            mvc.perform(get("/tasks/{id}/edit",ordinary).param("redirectTo",target))
+                    .andExpect(status().isOk()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attributeDoesNotExist("dailyReturnTo"));
+        }
+        mvc.perform(post("/tasks/{id}",ordinary).with(csrf()).param("title","Ordinary").param("projectId",project.toString())
+                .param("status","IN_PROGRESS").param("plannedDate","2026-04-09").param("redirectTo","//example.com"))
+                .andExpect(redirectedUrl("/tasks?date=2026-04-09"));
+    }
+
     private Long create(String title,String planning,Long project) throws Exception {
         asOwner();
         mvc.perform(post("/tasks").with(csrf()).param("title",title).param("projectId",project.toString())

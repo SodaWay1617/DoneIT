@@ -10,6 +10,8 @@ public class BacklogContextAdvice {
     @ModelAttribute
     public void context(HttpServletRequest request, Model model) {
         String target = request.getParameter("redirectTo");
+        if (target != null && target.length() <= 4000 && target.matches("/(?:tasks)?(?:\\?[A-Za-z0-9%=&+._-]*)?"))
+            model.addAttribute("dailyReturnTo", target);
         if (target != null && target.length() <= 4000 && target.matches("/finished(?:\\?[A-Za-z0-9%=&+._-]*)?"))
             model.addAttribute("finishedReturnTo", target);
         if (target != null && target.length() <= 4000 && target.matches("/inbox(?:\\?[A-Za-z0-9%=&+._-]*)?"))

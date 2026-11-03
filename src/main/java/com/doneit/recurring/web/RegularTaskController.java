@@ -39,6 +39,7 @@ public class RegularTaskController {
   if(errors.hasErrors())return page(m,f,"Edit recurring task","/recurring/"+id);
   try{if(taggedTasks==null)service.update(id,f);else taggedTasks.editRegular(id,f);}catch(IllegalArgumentException e){errors.reject("regular",e.getMessage());return page(m,f,"Edit recurring task","/recurring/"+id);}
   flash.addFlashAttribute("flashMessage","Recurring task updated.");
+  if(m.getAttribute("dailyReturnTo") instanceof String dailyTarget)return "redirect:"+dailyTarget;
   if(m.getAttribute("finishedReturnTo") instanceof String historyTarget)return "redirect:"+historyTarget;
   return "redirect:"+(m.getAttribute("backlogReturnTo") instanceof String target?target:redirect(f.getStatus()));
  }

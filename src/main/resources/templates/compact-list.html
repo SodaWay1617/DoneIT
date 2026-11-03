@@ -43,7 +43,7 @@
                         th:title="${row.recurring ? #messages.msg('task.doneToday') : #messages.msg('common.done')}"
                         th:aria-label="${(row.recurring ? #messages.msg('task.doneToday') : #messages.msg('common.done')) + ': ' + row.title}"><span class="cl-checkbox" aria-hidden="true"></span></button>
             </form>
-            <a class="compact-main" th:href="${row.href()}">
+            <a class="compact-main" th:href="@{${row.href()}(redirectTo=${compactEditReturnTo})}">
                 <div class="compact-text"><h3 class="task-title" th:text="${row.title}">Task</h3>
                     <div class="compact-meta">
                         <span class="cl-project"><i data-lucide="folder" aria-hidden="true"></i><span th:text="${row.projectName}">Project</span></span>
@@ -70,7 +70,7 @@
                     <button class="track-time-button" type="button"><i data-lucide="clock" aria-hidden="true"></i><span th:text="#{task.trackTime}">Track time</span></button>
                 </form>
                 <button type="button" th:unless="${row.recurring}" data-reschedule th:attr="data-action=${row.base() + '/reschedule'},data-day=${row.plannedDate == null ? daily.selectedDate : row.plannedDate},data-start=${row.start == null ? '' : row.start},data-title=${row.title}"><i data-lucide="calendar-days" aria-hidden="true"></i><span th:text="#{task.move}">Move</span></button>
-                <a th:href="${row.href()}"><i data-lucide="pencil" aria-hidden="true"></i><span th:text="#{common.edit}">Edit</span></a>
+                <a th:href="@{${row.href()}(redirectTo=${compactEditReturnTo})}"><i data-lucide="pencil" aria-hidden="true"></i><span th:text="#{common.edit}">Edit</span></a>
                 <button type="button" data-complete-row><i data-lucide="check" aria-hidden="true"></i><span th:text="${row.recurring ? #messages.msg('task.doneToday') : #messages.msg('common.done')}">Done</span></button>
                 <form th:unless="${row.recurring}" method="post" th:action="${row.base() + '/closed'}" data-refresh-csrf>
                     <input type="hidden" name="redirectTo" th:value="${compactReturnTo}">

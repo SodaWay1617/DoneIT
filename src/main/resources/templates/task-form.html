@@ -124,6 +124,7 @@
     </div>
 
     <form data-refresh-csrf method="post" th:action="${formAction}" th:object="${form}">
+        <input th:if="${dailyReturnTo != null}" type="hidden" name="redirectTo" th:value="${dailyReturnTo}">
         <input th:if="${backlogReturnTo != null}" type="hidden" name="redirectTo" th:value="${backlogReturnTo}">
         <input th:if="${finishedReturnTo != null}" type="hidden" name="redirectTo" th:value="${finishedReturnTo}">
         <input th:if="${inboxReturnTo != null}" type="hidden" name="redirectTo" th:value="${inboxReturnTo}">
@@ -199,7 +200,7 @@
         </label>
         <div class="actions">
             <button class="solid" type="submit" th:text="${form.editMode} ? #{common.save} : #{task.create}">Create task</button>
-            <a class="ghost" th:href="${finishedReturnTo != null ? finishedReturnTo : '/'}" th:text="${finishedReturnTo != null ? #messages.msg('nav.finished') : #messages.msg('form.backTasks')}">Back to tasks</a>
+            <a class="ghost" th:href="${dailyReturnTo != null ? dailyReturnTo : (finishedReturnTo != null ? finishedReturnTo : '/')}" th:text="${finishedReturnTo != null ? #messages.msg('nav.finished') : #messages.msg('form.backTasks')}">Back to tasks</a>
             <a class="ghost" th:href="${backlogReturnTo != null ? backlogReturnTo : '/backlog'}" th:text="#{form.openBacklog}">Open backlog</a>
         </div>
     </form>

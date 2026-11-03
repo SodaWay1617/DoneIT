@@ -93,6 +93,9 @@ public class CompactListWebConfiguration implements WebMvcConfigurer {
         if(planning!=null) uri.queryParam("planningType",planning.name());
         selected.forEach(id->uri.queryParam("tagId",id));
         model.put("compactReturnTo",uri.build().toUriString());
+        if (model.get("daily") instanceof DailyTasksView daily)
+            model.put("compactEditReturnTo",UriComponentsBuilder.fromUriString(uri.build().toUriString())
+                    .replacePath("/tasks").replaceQueryParam("date",daily.selectedDate()).build().toUriString());
         model.put("compactResetTo",uri.replaceQueryParam("planningType").replaceQueryParam("tagId").build().toUriString());
     }
 }
