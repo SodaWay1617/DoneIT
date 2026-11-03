@@ -1,4 +1,13 @@
 (() => {
+    const filter = document.getElementById('inbox-filter-dialog');
+    if (filter) {
+        document.querySelector('[data-inbox-filter]').addEventListener('click', () => filter.showModal());
+        filter.querySelector('[data-close-dialog]').addEventListener('click', () => filter.close());
+        filter.addEventListener('click', event => {
+            const rect = filter.getBoundingClientRect();
+            if (event.target === filter && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) filter.close();
+        });
+    }
     const root = document.querySelector('[data-inbox-list]');
     if (!root) return;
     const feedback = document.querySelector('[data-inbox-feedback]');

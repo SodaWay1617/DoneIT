@@ -19,6 +19,10 @@
     <div class="inbox-shell">
         <header class="inbox-header">
             <h1 th:text="#{nav.inbox}">Inbox</h1>
+            <button class="today-button inbox-filter-toggle" th:classappend="${selectedProjectId != null} ? 'is-active'" type="button" data-inbox-filter aria-haspopup="dialog" aria-controls="inbox-filter-dialog">
+                <i data-lucide="sliders-horizontal" aria-hidden="true"></i><span th:text="#{compact.filters}">Filters</span>
+                <span th:if="${selectedProjectId != null}" th:aria-label="#{inbox.filterActive}">1</span>
+            </button>
             <a class="today-button today-primary inbox-desktop-create" href="/tasks/new"><i data-lucide="plus" aria-hidden="true"></i><span th:text="#{task.create}">Create task</span></a>
         </header>
         <p class="inbox-feedback" role="alert" hidden data-inbox-feedback>
@@ -47,11 +51,23 @@
             </article>
         </section>
         <div class="inbox-empty" th:if="${inboxRows.isEmpty()}">
-            <h2 th:text="#{inbox.empty}">No incoming tasks</h2>
-            <p th:text="#{inbox.emptyNote}">All new tasks have been sorted.</p>
+            <h2 th:text="${selectedProjectId != null ? #messages.msg('inbox.noMatches') : #messages.msg('inbox.empty')}">No incoming tasks</h2>
+            <p th:if="${selectedProjectId == null}" th:text="#{inbox.emptyNote}">All new tasks have been sorted.</p>
+            <a th:if="${selectedProjectId != null}" class="today-button" th:href="${pagination.resetHref()}" th:text="#{compact.reset}">Reset</a>
         </div>
         <footer th:replace="~{task-pagination :: controls(${pagination}, ${pagination}, ${pagination.size}, #{list.pagination})}"></footer>
     </div>
+    <dialog class="compact-dialog" id="inbox-filter-dialog" aria-labelledby="inbox-filter-title">
+        <header>
+            <h2 id="inbox-filter-title" th:text="#{compact.filters}">Filters</h2>
+            <button class="cl-icon" type="button" data-close-dialog th:aria-label="#{common.cancel}"><i data-lucide="x" aria-hidden="true"></i></button>
+        </header>
+        <nav class="inbox-project-options" th:aria-label="#{project.title}">
+            <a th:href="${pagination.projectHref(null)}" th:classappend="${selectedProjectId == null} ? 'is-active'" th:attr="aria-current=${selectedProjectId == null ? 'true' : null}" th:text="#{project.all}">All projects</a>
+            <a th:each="p : ${projects}" th:href="${pagination.projectHref(p.id)}" th:classappend="${p.id == selectedProjectId} ? 'is-active'" th:attr="aria-current=${p.id == selectedProjectId ? 'true' : null}" th:text="${p.defaultProject ? 'MAIN' : #strings.arraySplit(p.name, '___')[0]}">Project</a>
+        </nav>
+        <a class="today-button" th:href="${pagination.resetHref()}" th:text="#{compact.reset}">Reset</a>
+    </dialog>
 </main>
 <script src="/reminders.js" defer></script>
 </body>

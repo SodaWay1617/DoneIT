@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0033-project-owner-codes
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE projects ADD CONSTRAINT uq_projects_owner_code UNIQUE(owner_user_id, code);
+              ALTER TABLE projects DROP CONSTRAINT projects_code_key;

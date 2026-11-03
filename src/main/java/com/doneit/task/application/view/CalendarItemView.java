@@ -110,12 +110,6 @@ public record CalendarItemView(
     }
 
     private static String displayTitle(Task task, boolean showProjectInTitle) {
-        if (!showProjectInTitle || task.taskKey() == null) return task.title();
-        String[] keyParts = task.taskKey().split("___", 2);
-        String code = keyParts[0];
-        if (keyParts.length == 2 && code.startsWith("MAIN-" + keyParts[1] + "-")) {
-            code = "MAIN-" + code.substring(("MAIN-" + keyParts[1] + "-").length());
-        }
-        return code + "  " + task.title();
+        return TaskListItemView.displayTitle(task.taskKey(), task.title(), showProjectInTitle);
     }
 }

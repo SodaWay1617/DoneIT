@@ -21,7 +21,7 @@ public class RegularTaskService {
  @Transactional public Long create(RegularTaskForm f){
   validate(f,true); User u=projects.user(); Project p=projects.get(f.getProjectId()); LocalDateTime now=LocalDateTime.now(clock);
   Long n=db.queryForObject("UPDATE projects SET next_task_number=next_task_number+1 WHERE id=? RETURNING next_task_number-1",Long.class,p.id());
-  String key=(p.defaultProject()?"MAIN-"+u.login():p.code())+"-"+n+"___"+u.login();
+  String key=(p.defaultProject()?"MAIN-"+u.login():p.code())+"-"+n+"___"+u.login()+"___project-"+p.id();
   RegularStatus rs=active(f.getStatus())?RegularStatus.ACTIVE:RegularStatus.INACTIVE;
   Long pos=db.queryForObject("SELECT COALESCE(MAX(status_position),0)+1 FROM regular_tasks WHERE status=?",Long.class,f.getStatus().name());
   return db.queryForObject("INSERT INTO regular_tasks(user_id,project_id,task_number,task_key,title,description,status,priority,recurrence_type,repeat_interval,occurrence_time,anchor_date,regular_status,activated_at,finished_at,created_at,updated_at,status_position,estimate_minutes,planning_type,end_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id",Long.class,

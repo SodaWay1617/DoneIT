@@ -43,7 +43,7 @@ class InboxTest extends IntegrationTestSupport {
         regular=db.queryForObject("SELECT id FROM regular_tasks WHERE title='Recurring inbox excluded'",Long.class);
     }
 
-    @Test void rowsHaveTagsAndCreationDateButNoLocalFiltersCheckboxesOrRecurringTasks() throws Exception {
+    @Test void rowsHaveTagsAndCreationDateButNoPlanningCheckboxesOrRecurringTasks() throws Exception {
         db.update("UPDATE tasks SET created_at=TIMESTAMP '2026-04-08 12:28:00' WHERE id=?",task);
         var result=mvc.perform(get("/inbox?lang=en&planningType=REQUIRED")).andExpect(status().isOk()).andReturn();
         String html=result.getResponse().getContentAsString();
@@ -59,6 +59,25 @@ class InboxTest extends IntegrationTestSupport {
         assertThat(nav.allProjectsHref()).isEqualTo("/inbox");
         assertThat(html).contains("class=\"app-icon-button inbox-create\"");
         mvc.perform(get("/inbox?lang=ru")).andExpect(content().string(org.hamcrest.Matchers.containsString("В бэклог")));
+    }
+
+    @Test void mobileProjectFilterUsesVisibleProjectsAndResetsPagination() throws Exception {
+        Long foreign=db.queryForObject("SELECT id FROM projects WHERE owner_user_id=(SELECT id FROM users WHERE login='other')",Long.class);
+        var result=mvc.perform(get("/inbox").param("projectId",project.toString()).param("size","50").param("lang","en"))
+                .andExpect(status().isOk()).andReturn();
+        String html=result.getResponse().getContentAsString();
+        int start=html.lastIndexOf("<dialog",html.indexOf("id=\"inbox-filter-dialog\""));
+        String dialog=html.substring(start,html.indexOf("</dialog>",start));
+        assertThat(dialog).contains("Family", "All projects", "href=\"/inbox?size=50\"",
+                "href=\"/inbox?projectId="+project+"&amp;size=50\"", "aria-current=\"true\"")
+                .doesNotContain("projectId="+foreign+"&", "page=", "planningType", "tagId");
+        assertThat(html).contains("inbox-filter-toggle is-active", "Project filter active");
+        db.update("UPDATE tasks SET status='BACKLOG' WHERE id=?",task);
+        mvc.perform(get("/inbox").param("projectId",project.toString()).param("size","50").param("lang","en"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("No incoming tasks match this project.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/inbox?size=50\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("All new tasks have been sorted"))));
+        mvc.perform(get("/inbox?lang=en")).andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("inbox-filter-toggle is-active"))));
     }
 
     @Test void startingUsesApplicationTodayAndPreservesTimeAndOptionalFields() throws Exception {

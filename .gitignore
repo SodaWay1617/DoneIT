@@ -26,6 +26,7 @@ replay_pid*
 target
 .m2
 .mcp-local/
+.backup-local/
 *.dump
 *.dump.sha256
 __pycache__/

@@ -241,7 +241,7 @@ public class JdbcTaskRepository implements TaskRepository {
                 task.updatedAt(),
                 task.completedAt(),
                 task.closedAt(), projectId, number,
-                code + \u0022-\u0022 + number + \u0022___\u0022 + login,
+                code + "-" + number + "___" + login + "___project-" + projectId,
                 task.plannedDate(),
                 task.priority().name()
                 ,task.estimateMinutes()

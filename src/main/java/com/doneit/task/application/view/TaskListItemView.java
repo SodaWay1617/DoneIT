@@ -120,9 +120,9 @@ public record TaskListItemView(
 
     private static String displayTaskCode(String taskKey) {
         if (taskKey == null) return null;
-        String[] keyParts = taskKey.split("___", 2);
+        String[] keyParts = taskKey.split("___", 3);
         String code = keyParts[0];
-        if (keyParts.length == 2 && code.startsWith("MAIN-" + keyParts[1] + "-")) {
+        if (keyParts.length >= 2 && code.startsWith("MAIN-" + keyParts[1] + "-")) {
             return "MAIN-" + code.substring(("MAIN-" + keyParts[1] + "-").length());
         }
         return code;

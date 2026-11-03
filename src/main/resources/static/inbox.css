@@ -4,6 +4,16 @@
 .app-inbox .inbox-header { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:24px; }
 .app-inbox h1 { margin:0; min-width:0; overflow-wrap:anywhere; font:700 32px/1.2 Georgia,serif; }
 .app-inbox .inbox-desktop-create { display:none; flex-shrink:0; }
+.app-inbox .inbox-filter-toggle { display:none; }
+.app-inbox .inbox-filter-toggle.is-active { background:var(--accent-soft); color:var(--accent); }
+.app-inbox .inbox-project-options { display:grid; gap:4px; margin:16px 0; }
+.app-inbox .inbox-project-options a { display:block; padding:12px; min-height:44px; border-radius:6px; color:inherit; text-decoration:none; overflow-wrap:anywhere; }
+.app-inbox .inbox-project-options a:is(:hover,.is-active) { background:var(--accent-soft); color:var(--accent); }
+.app-inbox .inbox-project-options a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+@media(max-width:1023px) {
+    .app-inbox .inbox-filter-toggle { display:inline-flex; min-height:44px; flex-shrink:0; }
+    .app-inbox .inbox-header { flex-wrap:wrap; gap:12px; }
+}
 .app-inbox .inbox-list { border-radius:16px; }
 .app-inbox .inbox-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:center; min-width:0; padding:18px 24px; }
 .app-inbox .inbox-row .task-title { margin-bottom:8px; }
