@@ -121,7 +121,8 @@ public class HomeController {
                            Model model,
                            Principal principal,@RequestParam(required=false) Long projectId,
                            @RequestParam(defaultValue="month") String mode,
-                           @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate week) {
+                           @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate week,
+                           @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate date) {
         if (!java.util.Set.of("month","week").contains(mode))
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST);
         if (projectId != null && !projectService.canAccess(projectId))
@@ -136,8 +137,14 @@ public class HomeController {
         }
         model.addAttribute("username", principal.getName());
         model.addAttribute("calendarMode", mode);
-        model.addAttribute("calendarWeek", week);
-        model.addAttribute("calendar", taskApplicationService.getCalendarMonth(selectedMonth,projectId));
+        LocalDate anchor=date!=null?date:week!=null?week:
+                selectedMonth.equals(YearMonth.from(taskApplicationService.today()))?taskApplicationService.today():selectedMonth.atDay(1);
+        LocalDate start=(week!=null?week:anchor).with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        if(anchor.isBefore(start)||!anchor.isBefore(start.plusWeeks(1)))anchor=start;
+        model.addAttribute("calendarWeek",week!=null?week:date);
+        model.addAttribute("calendarAnchor",anchor);
+        model.addAttribute("calendarFocus",date!=null&&date.equals(anchor)?date:null);
+        model.addAttribute("calendar", "week".equals(mode)?taskApplicationService.getCalendarWeek(anchor,projectId):taskApplicationService.getCalendarMonth(selectedMonth,projectId));
         return "calendar";
     }
 

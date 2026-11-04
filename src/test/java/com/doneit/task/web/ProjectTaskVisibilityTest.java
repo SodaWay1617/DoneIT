@@ -192,7 +192,7 @@ class ProjectTaskVisibilityTest extends IntegrationTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/calendar?month=2026-04&mode=week"})
+    @ValueSource(strings = {"/", "/tasks?date=2026-04-08"})
     void assigneeLabelsUseLoginsAndHideOnlySelfAssignments(String path) throws Exception {
         assignments.assignTask(mine, List.of(owner));
         Long myRegular = regular(owner, "My recurring", 10);

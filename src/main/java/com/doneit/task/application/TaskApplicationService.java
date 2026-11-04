@@ -258,12 +258,21 @@ public class TaskApplicationService {
     public LocalDate today() { return LocalDate.now(clock); }
 
     public CalendarMonthView getCalendarMonth(@NotNull YearMonth month, Long projectId) {
-        User activeUser = requireActiveUser();
         YearMonth targetMonth = Objects.requireNonNull(month, "month is required");
         LocalDate monthStart = targetMonth.atDay(1);
         LocalDate monthEndExclusive = targetMonth.plusMonths(1).atDay(1);
         LocalDate gridStart = monthStart.minusDays(daysSinceMonday(monthStart));
         LocalDate gridEndExclusive = monthEndExclusive.plusDays(daysUntilSunday(monthEndExclusive.minusDays(1)));
+        return calendarRange(targetMonth,gridStart,gridEndExclusive,projectId);
+    }
+
+    public CalendarMonthView getCalendarWeek(@NotNull LocalDate date, Long projectId) {
+        LocalDate start=date.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        return calendarRange(YearMonth.from(date),start,start.plusWeeks(1),projectId);
+    }
+
+    private CalendarMonthView calendarRange(YearMonth targetMonth,LocalDate gridStart,LocalDate gridEndExclusive,Long projectId) {
+        User activeUser = requireActiveUser();
 
         Map<LocalDate, List<CalendarItemView>> itemsByDate = taskRepository
                 .findTasksForCalendarRange(activeUser.id(), gridStart, gridEndExclusive)

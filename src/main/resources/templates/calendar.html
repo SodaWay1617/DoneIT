@@ -7,10 +7,11 @@
     <th:block th:replace="~{app-shell :: assets}"></th:block>
     <link rel="stylesheet" href="/planning.css">
     <link rel="stylesheet" href="/calendar-month.css">
-    <link rel="stylesheet" href="/calendar-legacy.css">
+    <link th:if="${calendarMode == 'week'}" rel="stylesheet" href="/calendar-week.css">
     <script src="/calendar-month.js" defer></script>
+    <script th:if="${calendarMode == 'week'}" src="/calendar-week.js" defer></script>
 </head>
-<body class="app-page app-calendar">
+<body class="app-page app-calendar" th:classappend="${calendarMode == 'week'} ? 'cw-mode'">
 <div th:replace="~{app-shell :: navigation}"></div>
 <main class="app-content" id="app-main" tabindex="-1">
 <div class="mc-shell">
@@ -26,19 +27,20 @@
             <a th:href="${overview.weekHref}" th:classappend="${overview.mode == 'week'} ? 'is-active'" th:attr="aria-current=${overview.mode == 'week' ? 'page' : null}" th:text="#{calendar.weekMode}">Week</a>
         </nav>
         <nav class="mc-controls" th:aria-label="#{calendar.period}">
-            <a class="mc-control mc-arrow" th:href="${overview.previousHref}" th:aria-label="#{calendar.previousMonth}"><i data-lucide="chevron-left" aria-hidden="true"></i></a>
+            <a class="mc-control mc-arrow" th:href="${overview.previousHref}" th:aria-label="${#messages.msg(overview.mode == 'week' ? 'calendar.previousWeek' : 'calendar.previousMonth')}"><i data-lucide="chevron-left" aria-hidden="true"></i></a>
             <details class="mc-picker">
                 <summary><span th:text="${overview.monthTitle}">November 2026</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary>
                 <form method="get" action="/calendar" class="mc-picker-form">
-                    <label><span th:text="#{calendar.chooseMonth}">Month and year</span><input type="month" name="month" th:value="${overview.monthValue}" required min="0001-01" max="9998-12"></label>
+                    <label th:if="${overview.mode == 'month'}"><span th:text="#{calendar.chooseMonth}">Month and year</span><input type="month" name="month" th:value="${overview.monthValue}" required min="0001-01" max="9998-12"></label>
+                    <label th:if="${overview.mode == 'week'}"><span th:text="#{calendar.chooseDay}">Date in the week</span><input type="date" name="date" th:value="${weekView.anchor}" required min="0001-01-01" max="9998-12-31"></label>
                     <input type="hidden" name="mode" th:value="${overview.mode}">
                     <input th:if="${selectedProjectId != null}" type="hidden" name="projectId" th:value="${selectedProjectId}">
                     <input th:if="${selectedPlanningType != null}" type="hidden" name="planningType" th:value="${selectedPlanningType}">
                     <button type="submit" th:text="#{calendar.openPeriod}">Open</button>
                 </form>
             </details>
-            <a class="mc-control mc-arrow" th:href="${overview.nextHref}" th:aria-label="#{calendar.nextMonth}"><i data-lucide="chevron-right" aria-hidden="true"></i></a>
-            <a class="mc-control mc-today" th:href="${overview.todayHref}" th:text="#{calendar.today}">Today</a>
+            <a class="mc-control mc-arrow" th:href="${overview.nextHref}" th:aria-label="${#messages.msg(overview.mode == 'week' ? 'calendar.nextWeek' : 'calendar.nextMonth')}"><i data-lucide="chevron-right" aria-hidden="true"></i></a>
+            <a class="mc-control mc-today" data-calendar-today th:href="${overview.todayHref}" th:text="#{calendar.today}">Today</a>
         </nav>
     </header>
     <th:block th:if="${overview.mode == 'month'}">
@@ -76,9 +78,8 @@
             <a th:each="week : ${overview.weeks}" th:href="${week.href}" th:aria-label="#{calendar.openWeek(${week.number},${#temporals.format(week.start,'dd.MM.yyyy')})}" th:text="${'W' + week.number}">W44</a>
         </nav>
     </th:block>
-    <section th:if="${overview.mode == 'week'}" class="mc-legacy">
-        <p class="mc-legacy-note" th:text="#{calendar.legacyNote}">The existing detailed calendar is temporarily available in Week mode.</p>
-        <div th:replace="~{calendar-legacy :: grid}"></div>
+    <section th:if="${overview.mode == 'week'}" class="cw-container">
+        <div th:replace="~{calendar-week :: week}"></div>
     </section>
 </div>
 <dialog id="calendar-project-filter" class="app-menu mc-filter-dialog" aria-labelledby="calendar-project-title">

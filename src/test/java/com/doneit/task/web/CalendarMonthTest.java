@@ -66,7 +66,7 @@ class CalendarMonthTest extends IntegrationTestSupport {
         var nav=(AppNavigationService.Navigation)load("/calendar?month=2026-12&mode=week&week=2026-12-28").getModelAndView().getModel().get("appNav");
         assertThat(nav.projects()).allSatisfy(p->assertThat(p.href()).startsWith("/calendar?").contains("month=2026-12","mode=week","week=2026-12-28"));
         assertThat(overview(load("/calendar?mode=week&week=2026-12-28")).monthValue()).isEqualTo("2026-12");
-        assertThat(main(load("/calendar?mode=week"))).contains("calendar-legacy","Week mode temporarily");
+        assertThat(main(load("/calendar?mode=week"))).contains("cw-week").doesNotContain("calendar-legacy","Week mode temporarily");
     }
 
     @Test void totalsUseExistingEstimatesAndThresholdsAndEventsAreDeduplicated() throws Exception {

@@ -14,6 +14,6 @@ public class TaskAssignmentViewAdvice {
     @ModelAttribute("regularTaskAssignees") public Map<Long,List<String>> regular(Principal p, jakarta.servlet.http.HttpServletRequest request) { return skip(p,request) ? Map.of() : assignments.regularTaskAssigneeLabels(); }
     private boolean skip(Principal p,jakarta.servlet.http.HttpServletRequest request) {
         return p==null || List.of("/finished","/inbox","/backlog").contains(request.getRequestURI())
-                || request.getRequestURI().equals("/calendar") && !"week".equals(request.getParameter("mode"));
+                || request.getRequestURI().equals("/calendar");
     }
 }

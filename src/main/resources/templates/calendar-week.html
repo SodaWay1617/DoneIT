@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<section th:fragment="week" class="cw-week" data-calendar-week th:attr="data-start=${weekView.start},data-today=${weekView.today},data-focus=${weekView.focus},data-user=${appUserLogin}" th:aria-label="${overview.monthTitle}">
+    <section class="cw-day" th:each="day : ${weekView.days}" th:id="${'week-day-' + #temporals.format(day.summary.source.date,'yyyy-MM-dd')}" th:classappend="${day.summary.source.today} ? 'is-today'" th:attr="data-date=${day.summary.source.date}">
+        <header class="cw-day-header">
+            <a class="cw-day-link" th:href="${day.summary.href}">
+                <time th:datetime="${day.summary.source.date}" th:text="${#temporals.format(day.summary.source.date,'EEE, d MMMM')}">Mon, 16 November</time>
+                <span class="cw-stats"><span class="cw-duration" th:text="${@labels.compactDuration(day.summary.minutes)}" th:attr="data-workload-kind=${day.summary.source.actualWorkload ? 'actual' : 'planned'},data-minutes=${day.summary.minutes}" th:title="${#messages.msg(day.summary.source.actualWorkload ? 'planning.actual' : 'tag.estimate')}">0 min</span>
+                    <span class="cw-count" th:title="#{calendar.tasksCount(${day.summary.count})}"><i data-lucide="calendar-days" aria-hidden="true"></i><span th:text="${day.summary.count}">0</span></span></span>
+                <span class="mc-load" th:classappend="${'workload-' + day.summary.level}" aria-hidden="true"><span th:style="${'width:' + day.summary.fill + '%'}"></span></span>
+            </a>
+        </header>
+        <div class="cw-cards">
+            <p class="cw-empty" th:if="${day.cards.isEmpty()}" th:text="#{calendar.weekEmpty}">No tasks</p>
+            <a class="cw-card" th:each="card : ${day.cards}" data-week-task th:href="${card.href}" th:classappend="${'priority-' + card.priority.name().toLowerCase() + ' state-' + card.state + (card.planningType != null ? ' planning-' + card.planningType.name().toLowerCase() : '') + (card.deadline ? ' is-deadline' : '') + (card.critical ? ' is-critical' : '')}" th:attr="data-card-key=${card.key}" th:title="${card.title}">
+                <span class="cw-card-main">
+                    <i th:if="${card.deadline}" data-lucide="alarm-clock" class="cw-event-icon" th:title="${#messages.msg('calendar.deadline') + (card.deadlineTime != null ? ': ' + card.deadlineTime : '')}"></i>
+                    <i th:if="${card.critical}" data-lucide="circle-alert" class="cw-event-icon" th:title="#{calendar.critical}"></i>
+                    <time th:if="${card.time != null}" class="cw-time" th:text="${#temporals.format(card.time,'HH:mm')}">16:45</time>
+                    <span class="cw-card-name" th:text="${card.title}">Task</span>
+                </span>
+                <span class="cw-planning" th:if="${card.planningType != null}" th:classappend="${'category-' + card.planningType.name().toLowerCase()}" th:title="${@labels.planning(card.planningType)}" th:aria-label="${@labels.planning(card.planningType)}" th:text="${#messages.msg('calendar.short.' + card.planningType.name())}">N</span>
+                <span class="cw-card-meta">
+                    <i data-lucide="folder" aria-hidden="true"></i><span th:text="${card.project}">Project</span>
+                    <i th:if="${card.recurring}" data-lucide="repeat-2" th:title="#{task.recurring}" aria-hidden="true"></i>
+                    <span class="mc-sr" th:text="${@labels.priority(card.priority)}">Priority</span>
+                    <span class="cw-state" th:if="${card.state != 'open'}" th:title="${#messages.msg(card.state == 'done' ? 'status.DONE' : 'status.CLOSED')}"><i th:attr="data-lucide=${card.state == 'done' ? 'circle-check' : 'circle-x'}" aria-hidden="true"></i><span class="mc-sr" th:text="${#messages.msg(card.state == 'done' ? 'status.DONE' : 'status.CLOSED')}">Done</span></span>
+                </span>
+            </a>
+        </div>
+    </section>
+</section>
+</body></html>

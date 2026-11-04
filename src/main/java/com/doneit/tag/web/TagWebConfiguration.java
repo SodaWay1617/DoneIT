@@ -32,7 +32,7 @@ public class TagWebConfiguration implements WebMvcConfigurer {
                     }
                 }
                 if(List.of("tasks","kanban","calendar","status-list").contains(name==null?"":name)
-                        && !("calendar".equals(name) && !"week".equals(request.getParameter("mode")))) {
+                        && !"calendar".equals(name)) {
                     view.addObject("taskTags",tags.visible(false));
                     view.addObject("regularTaskTags",tags.visible(true));
                 }

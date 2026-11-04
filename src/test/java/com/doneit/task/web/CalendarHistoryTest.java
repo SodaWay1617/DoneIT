@@ -117,7 +117,7 @@ class CalendarHistoryTest extends IntegrationTestSupport {
                 .containsExactly(LocalDate.of(2026, 4, 6));
         assertThat(occurrences(result, newId)).allMatch(occ -> !occ.date().isBefore(LocalDate.of(2026, 4, 8)));
         assertThat(occurrences(result, newId)).extracting(Occurrence::date).contains(LocalDate.of(2026, 4, 9));
-        assertThat(result.getResponse().getContentAsString()).contains("Old work", "New work");
+        assertThat(mockMvc.perform(get("/calendar?mode=week&week=2026-04-06").session(session)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).contains("Old work", "New work");
         assertThat(occurrences(calendar(session, mainProjectId), oldId)).hasSize(3);
         assertThat(occurrences(calendar(session, mainProjectId), newId)).isEmpty();
         assertThat(occurrences(calendar(session, workId), oldId)).isEmpty();
@@ -149,7 +149,7 @@ class CalendarHistoryTest extends IntegrationTestSupport {
     }
 
     private MvcResult calendar(MockHttpSession session, Long projectId) throws Exception {
-        var request = get("/calendar").session(session).param("month", "2026-04").param("mode","week");
+        var request = get("/calendar").session(session).param("month", "2026-04");
         if (projectId != null) request.param("projectId", projectId.toString());
         return mockMvc.perform(request).andExpect(status().isOk()).andReturn();
     }

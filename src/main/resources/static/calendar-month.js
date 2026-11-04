@@ -6,13 +6,4 @@
         });
         document.addEventListener('click',event=>{ if(!picker.contains(event.target))picker.open=false; });
     }
-    document.querySelectorAll('.calendar-legacy .day .items').forEach(container=>{
-        const items=[...container.querySelectorAll(':scope > .item')];
-        items.sort((left,right)=>{
-            const exactLeft=left.dataset.exactTime==='true',exactRight=right.dataset.exactTime==='true';
-            if(exactLeft!==exactRight)return exactLeft?-1:1;
-            return exactLeft?left.dataset.time.localeCompare(right.dataset.time):0;
-        });
-        items.forEach(item=>container.appendChild(item));
-    });
 })();

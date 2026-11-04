@@ -107,7 +107,7 @@ public class AppNavigationService {
     private static String calendarProjectLink(HttpServletRequest request,Long projectId) {
         var uri=UriComponentsBuilder.fromPath("/calendar");
         if(projectId!=null)uri.queryParam("projectId",projectId);
-        for(String key:List.of("month","mode","week","planningType"))
+        for(String key:List.of("month","mode","week","date","planningType"))
             if(request.getParameter(key)!=null)uri.queryParam(key,request.getParameter(key));
         return uri.build().encode().toUriString();
     }
