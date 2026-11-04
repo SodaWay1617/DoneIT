@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class TaskAssignmentViewAdvice {
     private final TaskAssignmentService assignments;
     public TaskAssignmentViewAdvice(TaskAssignmentService assignments) { this.assignments = assignments; }
-    @ModelAttribute("taskAssignees") public Map<Long,List<String>> tasks(Principal p, jakarta.servlet.http.HttpServletRequest request) { return p == null || List.of("/finished", "/inbox", "/backlog").contains(request.getRequestURI()) ? Map.of() : assignments.taskAssigneeLabels(); }
-    @ModelAttribute("regularTaskAssignees") public Map<Long,List<String>> regular(Principal p, jakarta.servlet.http.HttpServletRequest request) { return p == null || List.of("/finished", "/inbox", "/backlog").contains(request.getRequestURI()) ? Map.of() : assignments.regularTaskAssigneeLabels(); }
+    @ModelAttribute("taskAssignees") public Map<Long,List<String>> tasks(Principal p, jakarta.servlet.http.HttpServletRequest request) { return skip(p,request) ? Map.of() : assignments.taskAssigneeLabels(); }
+    @ModelAttribute("regularTaskAssignees") public Map<Long,List<String>> regular(Principal p, jakarta.servlet.http.HttpServletRequest request) { return skip(p,request) ? Map.of() : assignments.regularTaskAssigneeLabels(); }
+    private boolean skip(Principal p,jakarta.servlet.http.HttpServletRequest request) {
+        return p==null || List.of("/finished","/inbox","/backlog").contains(request.getRequestURI())
+                || request.getRequestURI().equals("/calendar") && !"week".equals(request.getParameter("mode"));
+    }
 }

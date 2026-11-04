@@ -14,6 +14,15 @@ public class RecurringViewAdvice {
  @ModelAttribute public void projections(HttpServletRequest request,Model model){
   String path=request.getRequestURI(); if(!(path.equals("/")||path.equals("/tasks")||path.equals("/kanban")||path.equals("/calendar")))return;
   Long project=parseLong(request.getParameter("projectId"));
+  if(path.equals("/calendar")) {
+   LocalDate chosen=parseDate(request.getParameter("week"),service.today());
+   YearMonth month=parseMonth(request.getParameter("month"),YearMonth.from(chosen));
+   LocalDate first=month.atDay(1),start=first.minusDays(first.getDayOfWeek().getValue()-1);
+   LocalDate end=month.atEndOfMonth().with(java.time.temporal.TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).plusDays(1);
+   model.addAttribute("regularCalendar",service.occurrences(start,end,project));
+   model.addAttribute("regularToday",service.today());
+   return;
+  }
   LocalDate date=parseDate(request.getParameter("date"),service.today());
   var regularActive=service.activeFor(date,project);
   model.addAttribute("regularActive",regularActive);

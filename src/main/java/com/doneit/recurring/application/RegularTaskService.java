@@ -52,14 +52,27 @@ public class RegularTaskService {
  public List<RegularTask> backlog(Long projectId){return all().stream().filter(t->match(t,projectId)&&t.status()==TaskStatus.BACKLOG).toList();}
  public List<RegularTask> finished(Long projectId){return all().stream().filter(t->match(t,projectId)&&t.status().isFinished()).toList();}
  public List<RegularTask> kanbanFor(LocalDate date,Long projectId){return all().stream().filter(t->match(t,projectId)).filter(t->t.status().isFinished()?t.finishedAt()!=null&&t.finishedAt().toLocalDate().equals(date):t.regularStatus()==RegularStatus.INACTIVE||(t.occursOn(date)&&!completed(t.id(),date)&&!skipped(t.id(),date))).toList();}
- public List<Occurrence> occurrences(LocalDate start,LocalDate end,Long projectId){return occurrences(start,end,projectId,all());}
- public List<Occurrence> occurrencesForSchedule(LocalDate start,LocalDate end,Long projectId){return occurrences(start,end,projectId,allForSchedule());}
- private List<Occurrence> occurrences(LocalDate start,LocalDate end,Long projectId,List<RegularTask> tasks){
+ public List<Occurrence> occurrences(LocalDate start,LocalDate end,Long projectId){
+  var series=db.query("SELECT r.*,COALESCE((SELECT SUM(e.minutes) FROM regular_task_time_entries e WHERE e.regular_task_id=r.id),0) spent_minutes FROM regular_tasks r WHERE "+TaskVisibility.memberTasks("r",true)
+   +" AND r.activated_at<? AND (r.finished_at IS NULL OR r.finished_at>=?) AND (?::bigint IS NULL OR r.project_id=?) ORDER BY r.status_position,r.id",
+   RegularTaskService::map,projects.user().id(),end.atStartOfDay(),start.atStartOfDay(),projectId,projectId);
+  return occurrences(start,end,projectId,series,false);
+ }
+ public List<Occurrence> occurrencesForSchedule(LocalDate start,LocalDate end,Long projectId){return occurrences(start,end,projectId,allForSchedule(),true);}
+ private List<Occurrence> occurrences(LocalDate start,LocalDate end,Long projectId,List<RegularTask> tasks,boolean schedule){
   List<Occurrence> out=new ArrayList<>();
+  Map<Long,Set<LocalDate>> completed=marks("regular_task_completions",start,end,projectId,schedule);
+  Map<Long,Set<LocalDate>> skipped=marks("regular_task_skips",start,end,projectId,schedule);
   for(RegularTask t:tasks)if(match(t,projectId)&&(active(t.status())||t.status().isFinished())&&t.activatedAt()!=null)
-   for(LocalDate d=start;d.isBefore(end);d=d.plusDays(1))if(t.occursOn(d)&&!skipped(t.id(),d))
-    out.add(new Occurrence(t,d,completed(t.id(),d)));
+   for(LocalDate d=start;d.isBefore(end);d=d.plusDays(1))if(t.occursOn(d)&&!skipped.getOrDefault(t.id(),Set.of()).contains(d))
+    out.add(new Occurrence(t,d,completed.getOrDefault(t.id(),Set.of()).contains(d)));
   return out;
+ }
+ private Map<Long,Set<LocalDate>> marks(String table,LocalDate start,LocalDate end,Long projectId,boolean schedule){
+  Map<Long,Set<LocalDate>> result=new HashMap<>();
+  db.query("SELECT e.regular_task_id,e.occurrence_date FROM "+table+" e JOIN regular_tasks r ON r.id=e.regular_task_id WHERE e.occurrence_date>=? AND e.occurrence_date<? AND (?::bigint IS NULL OR r.project_id=?) AND "+(schedule?TaskVisibility.scheduleMemberTasks("r",true):TaskVisibility.memberTasks("r",true)),
+   rs->{result.computeIfAbsent(rs.getLong(1),id->new HashSet<>()).add(rs.getObject(2,LocalDate.class));},start,end,projectId,projectId,projects.user().id());
+  return result;
  }
  public record Occurrence(RegularTask task,LocalDate date,boolean completed){}
  public boolean completed(Long id,LocalDate d){Integer n=db.queryForObject("SELECT COUNT(*) FROM regular_task_completions WHERE regular_task_id=? AND occurrence_date=?",Integer.class,id,d);return n!=null&&n>0;}

@@ -53,9 +53,12 @@ public class PlanningViewInterceptor implements HandlerInterceptor {
             model.put("filterDate", model.get("selectedDate"));
             return;
         }
-        Set<Long> personalTasks = projects.personalTaskIds(false);
-        Set<Long> personalRegularTasks = projects.personalTaskIds(true);
         Map<String, Object> model = view.getModel();
+        boolean calendarView = model.get("calendar") instanceof CalendarMonthView;
+        Set<Long> personalTasks = calendarView ? projects.personalTaskIds(false,
+                ((CalendarMonthView)model.get("calendar")).days().stream().flatMap(d->d.items().stream()).map(CalendarItemView::taskId).distinct().toList()) : projects.personalTaskIds(false);
+        Set<Long> personalRegularTasks = calendarView ? projects.personalTaskIds(true,
+                list(model,"regularCalendar",Occurrence.class).stream().map(o->o.task().id()).distinct().toList()) : projects.personalTaskIds(true);
         if ("tasks".equals(view.getViewName())) model.put("compactCandidates", model.get("activeEntries"));
         model.put("selectedPlanningType", selected);
         model.put("planningTypes", PlanningType.values());

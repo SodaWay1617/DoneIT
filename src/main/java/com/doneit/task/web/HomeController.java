@@ -119,11 +119,24 @@ public class HomeController {
     @GetMapping("/calendar")
     public String calendar(@RequestParam(value = "month", required = false) String month,
                            Model model,
-                           Principal principal,@RequestParam(required=false) Long projectId) {
-        YearMonth selectedMonth = month == null || month.isBlank()
-                ? YearMonth.from(taskApplicationService.getTasksForToday().selectedDate())
-                : YearMonth.parse(month);
+                           Principal principal,@RequestParam(required=false) Long projectId,
+                           @RequestParam(defaultValue="month") String mode,
+                           @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate week) {
+        if (!java.util.Set.of("month","week").contains(mode))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST);
+        if (projectId != null && !projectService.canAccess(projectId))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
+        YearMonth selectedMonth;
+        try {
+            selectedMonth = month == null || month.isBlank()
+                    ? YearMonth.from(week == null ? taskApplicationService.today() : week) : YearMonth.parse(month);
+            selectedMonth.minusMonths(1); selectedMonth.plusMonths(1);
+        } catch (java.time.DateTimeException exception) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Invalid month");
+        }
         model.addAttribute("username", principal.getName());
+        model.addAttribute("calendarMode", mode);
+        model.addAttribute("calendarWeek", week);
         model.addAttribute("calendar", taskApplicationService.getCalendarMonth(selectedMonth,projectId));
         return "calendar";
     }
@@ -262,6 +275,7 @@ public class HomeController {
         if (taggedTasks == null) taskApplicationService.editTask(command);
         else taggedTasks.edit(command,form.getTagNames(),form.isTagsPresent());
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
+        if (model.getAttribute("calendarReturnTo") instanceof String calendarTarget) return "redirect:" + calendarTarget;
         if (model.getAttribute("dailyReturnTo") instanceof String dailyTarget) return "redirect:" + dailyTarget;
         if (model.getAttribute("inboxReturnTo") instanceof String inboxTarget) return "redirect:" + inboxTarget;
         if (model.getAttribute("finishedReturnTo") instanceof String historyTarget) return "redirect:" + historyTarget;

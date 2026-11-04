@@ -149,7 +149,7 @@ class CalendarHistoryTest extends IntegrationTestSupport {
     }
 
     private MvcResult calendar(MockHttpSession session, Long projectId) throws Exception {
-        var request = get("/calendar").session(session).param("month", "2026-04");
+        var request = get("/calendar").session(session).param("month", "2026-04").param("mode","week");
         if (projectId != null) request.param("projectId", projectId.toString());
         return mockMvc.perform(request).andExpect(status().isOk()).andReturn();
     }

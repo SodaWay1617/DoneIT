@@ -7,6 +7,7 @@
 <form method="post" th:action="${formAction}" th:object="${form}" data-refresh-csrf>
 <input th:if="${backlogReturnTo != null}" type="hidden" name="redirectTo" th:value="${backlogReturnTo}">
 <input th:if="${dailyReturnTo != null}" type="hidden" name="redirectTo" th:value="${dailyReturnTo}">
+<input th:if="${calendarReturnTo != null}" type="hidden" name="redirectTo" th:value="${calendarReturnTo}">
 <input th:if="${finishedReturnTo != null}" type="hidden" name="redirectTo" th:value="${finishedReturnTo}">
 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 <p class="error" th:if="${#fields.hasGlobalErrors()}" th:each="e:${#fields.globalErrors()}" th:text="${e}">Error</p>
@@ -24,7 +25,7 @@
 <div class="row"><label class="field"><span th:text="#{form.timeOptional}">Time (optional)</span><input type="time" th:field="*{occurrenceTime}"></label>
 <label class="field" id="anchorField"><span th:text="#{form.firstDate}">First date</span><input type="date" th:field="*{anchorDate}"><small th:text="#{form.scheduleHint}">Schedule hint.</small><small class="error" th:if="${#fields.hasErrors('anchorDate')}" th:errors="*{anchorDate}">Invalid start date</small></label></div>
 <div th:replace="~{duration-fields :: end}"></div>
-<div class="actions"><button type="submit" th:text="#{common.save}">Save</button><a th:href="${dailyReturnTo != null ? dailyReturnTo : (finishedReturnTo != null ? finishedReturnTo : (backlogReturnTo != null ? backlogReturnTo : '/'))}" th:text="#{common.cancel}">Cancel</a></div></form>
+<div class="actions"><button type="submit" th:text="#{common.save}">Save</button><a th:href="${calendarReturnTo != null ? calendarReturnTo : (dailyReturnTo != null ? dailyReturnTo : (finishedReturnTo != null ? finishedReturnTo : (backlogReturnTo != null ? backlogReturnTo : '/')))}" th:text="#{common.cancel}">Cancel</a></div></form>
 <section th:replace="~{analytics-comparison :: task(${taskComparison})}"></section>
 <section class="comments" th:if="${form.id != null and assignmentMembers != null}"><h2 th:text="#{assignment.title}">Assignees</h2><p th:text="#{assignment.hint}">Choose project members responsible for this task.</p>
 <form method="post" th:action="@{/recurring/{id}/assignees(id=${form.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

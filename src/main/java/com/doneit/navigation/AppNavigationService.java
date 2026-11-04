@@ -69,12 +69,12 @@ public class AppNavigationService {
         final String projectPath = path.equals("/inbox") || path.equals("/backlog") || path.equals("/finished") ? path : "/";
         List<ProjectItem> projectItems = available.stream().map(p -> new ProjectItem(p.id(),
                 p.defaultProject() ? "MAIN" : p.name().split("___", 2)[0],
-                path.equals("/finished") ? finishedProjectLink(request, p.id()) :
+                path.equals("/calendar") ? calendarProjectLink(request,p.id()) : path.equals("/finished") ? finishedProjectLink(request, p.id()) :
                     (path.equals("/inbox") || path.equals("/backlog") ? queueProjectLink(request, p.id(), selectedPlanning) : link(projectPath, p.id(), selectedPlanning, null)), p.id().equals(selected))).toList();
         String name = user.displayName() == null || user.displayName().isBlank() ? user.login() : user.displayName();
         boolean moreActive = mobile.stream().noneMatch(Item::active);
         return new Navigation(main, views, analytics, mobile, List.copyOf(more), projectItems,
-                path.equals("/finished") ? finishedProjectLink(request, null) :
+                path.equals("/calendar") ? calendarProjectLink(request,null) : path.equals("/finished") ? finishedProjectLink(request, null) :
                     (path.equals("/inbox") || path.equals("/backlog") ? queueProjectLink(request, null, planning) : link(projectPath, null, planning, null)), selected == null, section.equals("projects"), moreActive, name,
                 language(request, "en"), language(request, "ru"), section, link("/tasks", selected, planning, date));
     }
@@ -101,6 +101,14 @@ public class AppNavigationService {
             String[] values = request.getParameterValues(key);
             if (values != null) for (String value : values) uri.queryParam(key, value);
         }
+        return uri.build().encode().toUriString();
+    }
+
+    private static String calendarProjectLink(HttpServletRequest request,Long projectId) {
+        var uri=UriComponentsBuilder.fromPath("/calendar");
+        if(projectId!=null)uri.queryParam("projectId",projectId);
+        for(String key:List.of("month","mode","week","planningType"))
+            if(request.getParameter(key)!=null)uri.queryParam(key,request.getParameter(key));
         return uri.build().encode().toUriString();
     }
 

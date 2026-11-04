@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+    <section class="calendar calendar-legacy" th:fragment="grid">
+        <div class="weekday" th:text="#{calendar.mon}">Mon</div>
+        <div class="weekday" th:text="#{calendar.tue}">Tue</div>
+        <div class="weekday" th:text="#{calendar.wed}">Wed</div>
+        <div class="weekday" th:text="#{calendar.thu}">Thu</div>
+        <div class="weekday" th:text="#{calendar.fri}">Fri</div>
+        <div class="weekday" th:text="#{calendar.sat}">Sat</div>
+        <div class="weekday" th:text="#{calendar.sun}">Sun</div>
+
+        <article class="day" th:attr="id=${'legacy-day-' + day.date}" th:each="day : ${calendar.days}" th:classappend="${!day.currentMonth} ? ' outside' : (${day.today} ? ' today' : '')">
+            <div class="day-number" th:text="${day.date.dayOfMonth}">1</div>
+            <th:block th:if="${day.actualWorkload}">
+                <div th:replace="~{planning :: actual(${day.workload})}"></div>
+            </th:block>
+            <th:block th:unless="${day.actualWorkload}">
+                <div th:replace="~{planning :: load(${day.workload})}"></div>
+            </th:block>
+            <div class="items">
+                <a class="item"
+                   th:each="item : ${day.items}"
+                   th:classappend="${' planning-' + item.planningType.name().toLowerCase() + (item.deadlineHighlighted ? ' deadline' : (item.taskStatus.name() == 'DONE' ? ' done' : (item.taskStatus.name() == 'CLOSED' ? ' closed' : '')))}"
+                   th:href="@{/tasks/{id}/edit(id=${item.taskId},redirectTo=${overview.returnTo})}"
+                   th:attr="data-exact-time=${item.exactTime},data-time=${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') : ''}">
+                    <span th:text="${item.exactTime ? #temporals.format(item.dateTime, 'HH:mm') + ' ' + item.title : item.title}">09:00 Task</span>
+                    <span th:replace="~{task-people :: assignees(${taskAssignees[item.taskId]})}"></span><span th:replace="~{task-tags :: plain(${taskTags[item.taskId]})}"></span>
+                </a>
+                <th:block th:each="occ : ${regularCalendar}">
+                    <a class="item" th:if="${occ.date == day.date}" th:classappend="${' planning-' + occ.task.planningType.name().toLowerCase() + (occ.completed ? ' done' : '')}"
+                       th:href="@{/recurring/{id}/edit(id=${occ.task.id},redirectTo=${overview.returnTo})}"
+                       th:attr="data-exact-time=${occ.task.occurrenceTime != null},data-time=${occ.task.occurrenceTime != null ? occ.task.occurrenceTime : ''}">
+                        <span th:text="${occ.task.occurrenceTime != null ? occ.task.occurrenceTime + ' ' + occ.task.title : occ.task.title}">Recurring task</span>
+                        <span th:replace="~{task-people :: assignees(${regularTaskAssignees[occ.task.id]})}"></span><span th:replace="~{task-tags :: plain(${regularTaskTags[occ.task.id]})}"></span>
+                    </a>
+                </th:block>
+            </div>
+        </article>
+    </section>
+</body></html>

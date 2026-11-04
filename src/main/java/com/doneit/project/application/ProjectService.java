@@ -54,6 +54,13 @@ public class ProjectService {
  public Set<Long> personalTaskIds(boolean regular){
   return taskIds(regular,true);
  }
+ public Set<Long> personalTaskIds(boolean regular,java.util.Collection<Long> candidates){
+  if(candidates.isEmpty())return Set.of();
+  String table=regular?"regular_tasks":"tasks";
+  var args=new java.util.ArrayList<Object>();args.add(user().id());args.addAll(candidates);
+  return new HashSet<>(db.query("SELECT t.id FROM "+table+" t WHERE "+TaskVisibility.memberTasks("t",regular,true)
+   +" AND t.id IN ("+String.join(",",java.util.Collections.nCopies(candidates.size(),"?"))+")",(rs,row)->rs.getLong(1),args.toArray()));
+ }
  public Set<Long> accessibleTaskIds(boolean regular){
   return taskIds(regular,false);
  }

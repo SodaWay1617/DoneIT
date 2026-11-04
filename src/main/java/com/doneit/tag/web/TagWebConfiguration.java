@@ -31,7 +31,8 @@ public class TagWebConfiguration implements WebMvcConfigurer {
                             task.setTagNames(tags.names(task.getId(),true));
                     }
                 }
-                if(List.of("tasks","kanban","calendar","status-list").contains(name==null?"":name)) {
+                if(List.of("tasks","kanban","calendar","status-list").contains(name==null?"":name)
+                        && !("calendar".equals(name) && !"week".equals(request.getParameter("mode")))) {
                     view.addObject("taskTags",tags.visible(false));
                     view.addObject("regularTaskTags",tags.visible(true));
                 }

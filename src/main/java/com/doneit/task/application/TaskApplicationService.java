@@ -255,6 +255,8 @@ public class TaskApplicationService {
         return getCalendarMonth(month, null);
     }
 
+    public LocalDate today() { return LocalDate.now(clock); }
+
     public CalendarMonthView getCalendarMonth(@NotNull YearMonth month, Long projectId) {
         User activeUser = requireActiveUser();
         YearMonth targetMonth = Objects.requireNonNull(month, "month is required");

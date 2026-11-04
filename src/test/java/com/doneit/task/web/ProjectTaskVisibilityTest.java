@@ -68,7 +68,7 @@ class ProjectTaskVisibilityTest extends IntegrationTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/kanban?date=2026-04-08", "/calendar?month=2026-04"})
+    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/kanban?date=2026-04-08", "/calendar?month=2026-04&mode=week"})
     void allMembersSeeAllTasksButReceiveOnlyPersonalWorkload(String path) throws Exception {
         assertThat(html(path, "owner")).contains("Katya private", "Katya recurring", "Delegated");
         assertThat(html(path, "katya")).contains("Mine", "Joint", "Delegated recurring");
@@ -78,7 +78,7 @@ class ProjectTaskVisibilityTest extends IntegrationTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/kanban?date=2026-04-08", "/calendar?month=2026-04", "/inbox", "/backlog", "/finished"})
+    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/kanban?date=2026-04-08", "/calendar?month=2026-04&mode=week", "/inbox", "/backlog", "/finished"})
     void restrictedModeShowsOnlyAuthorAndAssigneeTasksInEveryView(String path) throws Exception {
         restrict();
         if (path.equals("/inbox") || path.equals("/backlog") || path.equals("/finished")) {
@@ -192,7 +192,7 @@ class ProjectTaskVisibilityTest extends IntegrationTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/calendar?month=2026-04"})
+    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/calendar?month=2026-04&mode=week"})
     void assigneeLabelsUseLoginsAndHideOnlySelfAssignments(String path) throws Exception {
         assignments.assignTask(mine, List.of(owner));
         Long myRegular = regular(owner, "My recurring", 10);

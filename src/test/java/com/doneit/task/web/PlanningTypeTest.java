@@ -70,7 +70,7 @@ class PlanningTypeTest extends IntegrationTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/kanban?date=2026-04-08", "/calendar?month=2026-04"})
+    @ValueSource(strings = {"/", "/tasks?date=2026-04-08", "/kanban?date=2026-04-08", "/calendar?month=2026-04&mode=week"})
     void filterAndVisualCategoriesWorkAcrossViews(String path) throws Exception {
         ordinary("Required task", PlanningType.REQUIRED, 60, "2026-04-08");
         ordinary("Wanted task", PlanningType.WANTED, 30, "2026-04-08");
