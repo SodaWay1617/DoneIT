@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0034-wip-settings
+      author: codex
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE users ADD COLUMN wip_enabled boolean NOT NULL DEFAULT false,
+              ADD COLUMN wip_limit_minutes integer NOT NULL DEFAULT 360,
+              ADD CONSTRAINT users_wip_limit CHECK (wip_limit_minutes >= 0 AND (NOT wip_enabled OR wip_limit_minutes > 0));

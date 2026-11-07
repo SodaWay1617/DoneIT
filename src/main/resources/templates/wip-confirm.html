@@ -1,0 +1,23 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"><head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title th:text="#{wip.title}">Day overloaded</title>
+    <th:block th:replace="~{app-shell :: assets}"></th:block>
+</head><body class="app-page"><main style="max-width:480px;margin:24px auto;padding:16px">
+    <h1 th:text="#{wip.title}">Day overloaded</h1>
+    <section th:each="day : ${wipDays}">
+        <h2 th:text="${#temporals.format(day.date,'d MMMM yyyy')}">Date</h2>
+        <p><span th:text="#{wip.before}">Before</span>: <strong th:text="${@labels.compactDuration(day.before)}"></strong></p>
+        <p><span th:text="#{wip.after}">After</span>: <strong th:text="${@labels.compactDuration(day.after)}"></strong></p>
+        <p><span th:text="#{wip.limit}">Limit</span>: <strong th:text="${@labels.compactDuration(day.limit)}"></strong></p>
+        <p><span th:text="#{wip.excess}">Excess</span>: <strong th:text="${@labels.compactDuration(day.excess)}"></strong></p>
+        <p><span th:text="#{wip.added}">Added</span>: <strong th:text="${@labels.compactDuration(day.added)}"></strong></p>
+    </section>
+    <p th:text="#{wip.chooseHint}">Choose another day if possible.</p>
+    <form method="post" data-wip-replay th:action="${wipAction}">
+        <th:block th:each="entry : ${wipFields}"><input th:each="value : ${entry.value}" type="hidden" th:name="${entry.key}" th:value="${value}"></th:block>
+        <input type="hidden" name="wipApproval" th:value="${wipApproval}">
+        <button type="submit" name="wipReview" value="true" th:if="${wipEditor}" th:text="#{wip.edit}">Change date</button>
+        <button type="submit" th:text="#{wip.confirm}">Plan anyway</button>
+    </form>
+</main></body></html>

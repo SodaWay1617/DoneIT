@@ -70,6 +70,14 @@
             <label><span th:text="#{settings.yellowHours}">Yellow</span><input type="number" name="workloadYellowHours" min="2" max="23" required th:value="${workload.yellowHours}"></label>
             <label><span th:text="#{settings.orangeHours}">Orange</span><input type="number" name="workloadOrangeHours" min="3" max="24" required th:value="${workload.orangeHours}"></label>
         </div>
+        <label class="setting">
+            <input type="checkbox" name="wipEnabled" value="true" th:checked="${wip.enabled}">
+            <span><strong th:text="#{wip.enabled}">Warn about overloaded days</strong><span th:text="#{wip.hint}">Planning remains available after confirmation.</span></span>
+        </label>
+        <div class="thresholds">
+            <label><span th:text="#{wip.hours}">Daily limit: hours</span><input type="number" name="wipHours" min="0" max="35791394" required th:value="${wip.hours}"></label>
+            <label><span th:text="#{wip.minutes}">Minutes</span><input type="number" name="wipMinutes" min="0" max="59" required th:value="${wip.remainingMinutes}"></label>
+        </div>
         <button type="submit" th:text="#{common.save}">Save</button>
     </form>
     <div class="settings-utilities"><a class="button" href="/learn"><th:block th:replace="~{app-shell :: icon('book-open')}"></th:block><span th:text="#{learn.title}">Getting started</span></a></div>

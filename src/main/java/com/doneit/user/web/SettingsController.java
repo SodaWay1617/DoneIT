@@ -20,6 +20,8 @@ public class SettingsController {
     private final UserRepository userRepository;
     private final WorkloadSettingsService workloadSettings;
     private final AnalyticsSettingsService analyticsSettings;
+    @Autowired
+    private com.doneit.user.application.WipSettingsService wipSettings;
 
     public SettingsController(UserRepository userRepository, WorkloadSettingsService workloadSettings) {
         this(userRepository, workloadSettings, null);
@@ -40,6 +42,7 @@ public class SettingsController {
         model.addAttribute("profileName", user.displayName() == null || user.displayName().isBlank() ? user.login() : user.displayName());
         model.addAttribute("showProjectInTaskTitle", user.showProjectInTaskTitle());
         model.addAttribute("workload", workloadSettings.current());
+        model.addAttribute("wip", wipSettings.current());
         model.addAttribute("rollUpSubtaskTime", analyticsSettings != null && analyticsSettings.rollUpSubtaskTime());
         return "settings";
     }
@@ -53,11 +56,15 @@ public class SettingsController {
             @RequestParam int workloadGreenHours,
             @RequestParam int workloadYellowHours,
             @RequestParam int workloadOrangeHours,
+            @RequestParam(defaultValue = "false") boolean wipEnabled,
+            @RequestParam(defaultValue = "6") int wipHours,
+            @RequestParam(defaultValue = "0") int wipMinutes,
             RedirectAttributes redirectAttributes
     ) {
         userRepository.updateShowProjectInTaskTitle(principal.getName(), showProjectInTaskTitle);
         workloadSettings.update(workloadGreenHours, workloadYellowHours, workloadOrangeHours);
         if (analyticsSettings != null) analyticsSettings.update(rollUpSubtaskTime);
+        wipSettings.update(wipEnabled, wipHours, wipMinutes);
         redirectAttributes.addFlashAttribute("settingsSaved", true);
         return "redirect:/settings";
     }

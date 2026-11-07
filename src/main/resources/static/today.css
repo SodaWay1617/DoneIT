@@ -24,7 +24,7 @@
 .today-date-picker input[type=date]::-webkit-date-and-time-value { min-height:1.3em; text-align:left; }
 .today-date-picker input[type=date]::-webkit-datetime-edit { min-width:0; padding:0; }
 .today-date-picker form > .today-button { width:100%; min-width:0; min-height:48px; border-radius:8px; font-size:16px; }
-.today-summary { --required-color:#1e6d73; --wanted-color:#8a9a72; --optional-color:#b79a69; display:grid; grid-template-columns:56px repeat(4,minmax(0,1fr)); gap:16px; align-items:center; min-height:84px; margin-bottom:16px; padding:14px 18px; border:1px solid var(--border); border-radius:8px; background:var(--panel); }
+.today-summary { --required-color:#1e6d73; --wanted-color:#8a9a72; --optional-color:#b79a69; display:grid; grid-template-columns:56px repeat(5,minmax(0,1fr)); gap:16px; align-items:center; min-height:84px; margin-bottom:16px; padding:14px 18px; border:1px solid var(--border); border-radius:8px; background:var(--panel); }
 .today-ring { position:relative; width:54px; height:54px; border-radius:50%; background:conic-gradient(var(--required-color) 0 var(--required-end),var(--wanted-color) var(--required-end) var(--wanted-end),var(--optional-color) var(--wanted-end) 100%); }
 .today-ring::after { content:""; position:absolute; inset:9px; border-radius:50%; background:var(--panel); }
 .today-ring.is-empty { background:#dfdfd5; }
@@ -58,7 +58,7 @@
 .today-tools .secondary .lucide { width:18px; height:18px; flex-shrink:0; }
 .today-tools .today-button { justify-content:flex-start; }
 @media(max-width:1100px) {
-    .today-summary { grid-template-columns:56px repeat(4,minmax(0,1fr)); gap:8px; padding:14px; }
+    .today-summary { grid-template-columns:56px repeat(5,minmax(0,1fr)); gap:8px; padding:14px; }
     .today-ring { width:52px; height:52px; }
     .today-metric { padding-left:10px; }
     .today-metric strong { font-size:18px; }
@@ -78,7 +78,7 @@
     .today-date-picker summary { padding:10px; font-size:13px; gap:6px; }
     .today-create { padding:10px; }
     .today-create span { display:none; }
-    .today-summary { grid-template-columns:40px repeat(3,minmax(0,1fr)); gap:8px; padding:12px 10px; margin-bottom:12px; }
+    .today-summary { grid-template-columns:40px repeat(4,minmax(0,1fr)); gap:8px; padding:12px 10px; margin-bottom:12px; }
     .today-ring { width:40px; height:40px; }
     .today-ring::after { inset:6px; }
     .today-metric { padding-left:8px; gap:4px; min-height:44px; }

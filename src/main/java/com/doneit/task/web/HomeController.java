@@ -187,8 +187,9 @@ public class HomeController {
                              Model model,
                              Principal principal,
                              @RequestParam(required = false) Long parentTaskId,
+                             @RequestParam(defaultValue = "false") boolean wipReview,
                              RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors() || wipReview) {
             populateTaskFormModel(model, principal, form);
             if (parentTaskId != null) {
                 model.addAttribute("parentTaskId", parentTaskId);
@@ -253,8 +254,9 @@ public class HomeController {
                            BindingResult bindingResult,
                            Model model,
                            Principal principal,
+                           @RequestParam(defaultValue = "false") boolean wipReview,
                            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors() || wipReview) {
             form.setTaskId(taskId);
             form.setEditMode(true);
             populateTaskFormModel(model, principal, form);

@@ -50,6 +50,8 @@ public class TaskApplicationService {
     private final UserRepository userRepository;
     private final Clock clock;
     private final ProjectService projectService;
+    @Autowired(required = false)
+    private WipService wip;
 
     public TaskApplicationService(TaskRepository taskRepository, UserRepository userRepository, Clock clock) {
         this(taskRepository,userRepository,clock,null);
@@ -87,6 +89,7 @@ public class TaskApplicationService {
                 command.projectId(), null, null, command.plannedDate(), command.priority(), command.estimateMinutes(), 0, command.planningType(), command.endTime()
         );
 
+        if (wip != null) wip.check(null, task);
         return toView(taskRepository.create(task));
     }
 
@@ -141,6 +144,7 @@ public class TaskApplicationService {
                 command.priority(), command.estimateMinutes(), command.spentMinutes(), command.planningType(), command.endTime()
         );
 
+        if (wip != null) wip.check(existingTask, updatedTask);
         Task savedTask = taskRepository.update(updatedTask);
         int timeAdjustment = command.spentMinutes() - existingTask.spentMinutes();
         if (timeAdjustment != 0) taskRepository.recordTrackedTimeAdjustment(
@@ -365,6 +369,8 @@ public class TaskApplicationService {
     @Transactional
     public TaskListItemView moveTask(@Valid @NotNull RescheduleTaskCommand command) {
         if (projectService != null) getTaskOrThrow(command.taskId());
+        if (wip != null) wip.move(getTaskOrThrow(command.taskId()), command.plannedDate() != null
+                ? command.plannedDate() : command.plannedForAt().toLocalDate());
         LocalDateTime now = LocalDateTime.now(clock);
         Task task = (command.plannedDate() != null
                 ? taskRepository.rescheduleOnDate(command.taskId(), command.plannedDate(), now)
@@ -409,6 +415,7 @@ public class TaskApplicationService {
     @Transactional
     public int bulkMoveUnfinishedTasksToTomorrow(@NotNull LocalDate date) {
         User activeUser = requireActiveUser();
+        if (wip != null) wip.bulk(requireDate(date).plusDays(1), true);
         return taskRepository.bulkMoveOpenDatedTasksToNextDay(
                 activeUser.id(),
                 requireDate(date),
@@ -419,6 +426,7 @@ public class TaskApplicationService {
     @Transactional
     public int bulkMoveOverdueTasksToToday() {
         User activeUser = requireActiveUser();
+        if (wip != null) wip.bulk(LocalDate.now(clock), false);
         return taskRepository.bulkMoveOverdueOpenDatedTasksToDate(
                 activeUser.id(), LocalDate.now(clock), LocalDateTime.now(clock));
     }

@@ -3,10 +3,12 @@
 <th:block th:fragment="assets">
     <link rel="stylesheet" href="/app-shell.css">
     <link rel="stylesheet" href="/tags.css">
+    <link rel="stylesheet" href="/wip.css">
     <script src="/tags.js" defer></script>
     <script src="/vendor/lucide-0.468.0.min.js" defer></script>
     <script src="/app-shell.js" defer></script>
     <script src="/form-security.js" defer th:attr="data-user=${appUserLogin},data-login-required=#{security.loginRequired},data-refresh-failed=#{security.refreshFailed}"></script>
+    <script src="/wip.js" defer th:attr="data-title=#{wip.title},data-before=#{wip.before},data-after=#{wip.after},data-limit=#{wip.limit},data-excess=#{wip.excess},data-added=#{wip.added},data-hint=#{wip.chooseHint},data-edit=#{wip.edit},data-confirm=#{wip.confirm},data-failure=#{wip.failure},data-hours=#{wip.hourUnit},data-minutes=#{wip.minuteUnit}"></script>
 </th:block>
 <th:block th:fragment="icon(name)"><i th:attr="data-lucide=${name}" aria-hidden="true"></i></th:block>
 <a th:fragment="tags-link" class="app-link" href="/tags" th:classappend="${appNav.section == 'tags'} ? 'is-active'" th:attr="aria-current=${appNav.section == 'tags' ? 'page' : null}">

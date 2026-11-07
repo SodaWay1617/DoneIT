@@ -65,3 +65,5 @@ databaseChangeLog:
       file: db/changelog/changes/0032-mcp-tokens.yaml
   - include:
       file: db/changelog/changes/0033-project-owner-codes.yaml
+  - include:
+      file: db/changelog/changes/0034-wip-settings.yaml

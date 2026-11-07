@@ -272,6 +272,7 @@
              th:style="${'--required-end:' + requiredEnd + '%;--wanted-end:' + wantedEnd + '%;'}"
              th:aria-label="${total == 0 ? #messages.msg('today.noEstimate') : #messages.msg('today.distribution', @labels.compactDuration(planningLoad.requiredMinutes), @labels.compactDuration(planningLoad.wantedMinutes), @labels.compactDuration(planningLoad.optionalMinutes))}"
              th:title="${total == 0 ? #messages.msg('today.noEstimate') : #messages.msg('today.total', @labels.compactDuration(total))}"></div>
+        <div class="today-metric today-total" th:attr="data-minutes=${total}"><strong th:text="${@labels.compactDuration(total)}">0 h</strong><span th:text="#{wip.total}">Total</span></div>
         <div class="today-metric" th:each="type : ${planningTypes}" th:with="minutes=${planningLoad.minutes(type)}"
              th:attr="data-planning-type=${type},data-minutes=${minutes}" th:classappend="${' workload-' + workloadSettings.level(minutes)}">
             <strong th:text="${@labels.compactDuration(minutes)}">0 h</strong>

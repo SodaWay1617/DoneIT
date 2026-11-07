@@ -1,0 +1,10 @@
+.wip-dialog { box-sizing:border-box; width:min(480px,calc(100vw - 24px)); max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); overflow:auto; padding:20px; border:1px solid var(--border); border-radius:14px; background:var(--panel); color:var(--ink); box-shadow:0 12px 36px #0003; }
+.wip-dialog::backdrop { background:#172b2c66; }
+.wip-dialog h2 { margin:0 0 14px; font-size:22px; }
+.wip-dialog section { padding:10px 0; border-bottom:1px solid var(--border); }
+.wip-dialog h3,.wip-dialog p { margin:0 0 8px; overflow-wrap:anywhere; }
+.wip-dialog p { font:14px/1.5 system-ui,sans-serif; }
+.wip-dialog .wip-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.wip-dialog button { flex:1 1 160px; min-height:44px; padding:10px 12px; border:1px solid var(--accent); border-radius:8px; font:14px/1.4 system-ui,sans-serif; background:transparent; color:var(--accent); cursor:pointer; }
+.wip-dialog .wip-edit { background:var(--accent); color:white; }
+.wip-dialog:not([open]) { display:none; }
