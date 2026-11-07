@@ -13,15 +13,21 @@ public class TaskQueueRepository {
     private final NamedParameterJdbcTemplate db;
     public TaskQueueRepository(NamedParameterJdbcTemplate db) { this.db = db; }
     public record Entry(Long id, boolean recurring, String title, String taskKey, String project,
-                        LocalDateTime createdAt, Integer estimateMinutes) {}
+                        LocalDateTime createdAt, Integer estimateMinutes, String status, String priority, String planningType) {}
     public record Page(List<Entry> rows, TaskListPaging paging) {}
 
     public Page page(Long user, boolean backlog, Long project, String planning, int size, long requested) {
+        return page(user,backlog,project,planning,size,requested,true);
+    }
+    public Page ordinaryPage(Long user,boolean backlog,Long project,int size,long requested) {
+        return page(user,backlog,project,null,size,requested,false);
+    }
+    private Page page(Long user,boolean backlog,Long project,String planning,int size,long requested,boolean includeRegular) {
         TaskListPaging.validate(size, requested);
         var params = new HashMap<String, Object>();
         params.put("user", user); params.put("project", project); params.put("planning", planning);
         String source = source(false, backlog, project, planning);
-        if (backlog) source += " UNION ALL " + source(true, true, project, planning);
+        if (backlog && includeRegular) source += " UNION ALL " + source(true, true, project, planning);
         Long total = db.queryForObject("SELECT COUNT(*) FROM (" + source + ") queue", params, Long.class);
         var paging = TaskListPaging.of(backlog ? "/backlog" : "/inbox", project, planning, size, total, requested);
         params.put("limit", size); params.put("offset", (paging.number() - 1) * size);
@@ -30,12 +36,12 @@ public class TaskQueueRepository {
         var rows = db.query("SELECT * FROM (" + source + ") queue ORDER BY " + order + " LIMIT :limit OFFSET :offset",
                 params, (r, n) -> new Entry(r.getLong("id"), r.getBoolean("recurring"), r.getString("title"),
                         r.getString("task_key"), r.getString("project"), r.getObject("created_at", LocalDateTime.class),
-                        (Integer) r.getObject("estimate_minutes")));
+                        (Integer) r.getObject("estimate_minutes"),r.getString("status"),r.getString("priority"),r.getString("planning_type")));
         return new Page(List.copyOf(rows), paging);
     }
 
     private static String source(boolean regular, boolean backlog, Long project, String planning) {
-        return "SELECT t.id," + regular + " recurring,t.title,t.task_key,t.created_at,t.updated_at,t.estimate_minutes,"
+        return "SELECT t.id," + regular + " recurring,t.title,t.task_key,t.created_at,t.updated_at,t.estimate_minutes,t.status,t.priority,t.planning_type,"
                 + "CASE t.priority WHEN 'CRITICAL' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'NORMAL' THEN 2 WHEN 'LOW' THEN 1 ELSE 0 END priority_rank,"
                 + "CASE WHEN p.default_project THEN 'MAIN' ELSE split_part(p.name,'___',1) END project FROM "
                 + (regular ? "regular_tasks" : "tasks") + " t JOIN projects p ON p.id=t.project_id WHERE "

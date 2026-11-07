@@ -1,5 +1,20 @@
 (() => {
     if (!document.querySelector('.app-navigation')) return;
+    const collapse=document.querySelector('[data-collapse-sidebar]');
+    if(collapse) {
+        const key='doneit-sidebar:'+document.querySelector('script[data-user]')?.dataset.user;
+        const sync=collapsed=>{
+            document.documentElement.classList.toggle('app-sidebar-collapsed',collapsed);
+            collapse.setAttribute('aria-expanded',String(!collapsed));
+            collapse.title=collapsed?collapse.dataset.expandLabel:collapse.dataset.collapseLabel;
+            collapse.setAttribute('aria-label',collapse.title);
+        };
+        try {sync(localStorage.getItem(key)==='true');}catch{/* Navigation works without storage. */}
+        collapse.addEventListener('click',()=>{
+            const next=!document.documentElement.classList.contains('app-sidebar-collapsed');sync(next);
+            try{localStorage.setItem(key,String(next));}catch{/* Keep the current page state. */}
+        });
+    }
     const standalone = matchMedia('(display-mode: standalone)');
     const syncDisplayMode = () => document.documentElement.classList.toggle('app-standalone', standalone.matches || navigator.standalone === true);
     syncDisplayMode();

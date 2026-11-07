@@ -50,6 +50,7 @@ public class AppNavigationService {
                 item("today", link("/", selected, planning, null), "sun", "nav.today", 0, section),
                 item("inbox", link("/inbox", selected, null, null), "inbox", "nav.inbox", counts[0], section),
                 item("backlog", link("/backlog", selected, planning, null), "archive", "nav.backlog", counts[1], section),
+                item("planning", link("/planning", selected, null, null), "calendar-range", "planner.title", 0, section),
                 item("calendar", link("/calendar", selected, planning, date), "calendar-days", "nav.calendar", 0, section),
                 item("schedule", link("/schedule", selected, planning, date), "calendar-clock", "schedule.title", 0, section),
                 item("analytics", link("/analytics", selected, planning, date), "chart-no-axes-combined", "nav.analytics", 0, section));
@@ -61,20 +62,21 @@ public class AppNavigationService {
                 new Item("workload", link("/analytics/workload", selected, planning, null), "gauge", "workload.analytics.title", 0, path.equals("/analytics/workload")),
                 new Item("reports", link("/reports", selected, planning, date), "file-chart-column", "reports.title", 0, path.equals("/reports")));
         Item projectItem = item("projects", "/projects", "folder", "project.title", 0, section);
-        List<Item> mobile = List.of(main.get(0), main.get(1), main.get(3), projectItem);
-        List<Item> more = new ArrayList<>(List.of(main.get(2), main.get(4), main.get(5), views.get(1), views.get(0)));
+        List<Item> mobile = List.of(main.get(0), main.get(1), main.get(4), projectItem);
+        List<Item> more = new ArrayList<>(List.of(main.get(2), main.get(5), main.get(6), views.get(1), views.get(0)));
         more.addAll(analytics.subList(1, 3));
         more.add(item("settings", "/settings", "settings", "nav.settings", 0, section));
+        more.add(main.get(3));
         final String selectedPlanning = planning;
         final String projectPath = path.equals("/inbox") || path.equals("/backlog") || path.equals("/finished") ? path : "/";
         List<ProjectItem> projectItems = available.stream().map(p -> new ProjectItem(p.id(),
                 p.defaultProject() ? "MAIN" : p.name().split("___", 2)[0],
-                path.equals("/calendar") ? calendarProjectLink(request,p.id()) : path.equals("/finished") ? finishedProjectLink(request, p.id()) :
+                path.equals("/planning") ? planningProjectLink(request,p.id()) : path.equals("/calendar") ? calendarProjectLink(request,p.id()) : path.equals("/finished") ? finishedProjectLink(request, p.id()) :
                     (path.equals("/inbox") || path.equals("/backlog") ? queueProjectLink(request, p.id(), selectedPlanning) : link(projectPath, p.id(), selectedPlanning, null)), p.id().equals(selected))).toList();
         String name = user.displayName() == null || user.displayName().isBlank() ? user.login() : user.displayName();
         boolean moreActive = mobile.stream().noneMatch(Item::active);
         return new Navigation(main, views, analytics, mobile, List.copyOf(more), projectItems,
-                path.equals("/calendar") ? calendarProjectLink(request,null) : path.equals("/finished") ? finishedProjectLink(request, null) :
+                path.equals("/planning") ? planningProjectLink(request,null) : path.equals("/calendar") ? calendarProjectLink(request,null) : path.equals("/finished") ? finishedProjectLink(request, null) :
                     (path.equals("/inbox") || path.equals("/backlog") ? queueProjectLink(request, null, planning) : link(projectPath, null, planning, null)), selected == null, section.equals("projects"), moreActive, name,
                 language(request, "en"), language(request, "ru"), section, link("/tasks", selected, planning, date));
     }
@@ -111,6 +113,12 @@ public class AppNavigationService {
             if(request.getParameter(key)!=null)uri.queryParam(key,request.getParameter(key));
         return uri.build().encode().toUriString();
     }
+    private static String planningProjectLink(HttpServletRequest request,Long projectId) {
+        var uri=UriComponentsBuilder.fromPath("/planning");
+        if(projectId!=null)uri.queryParam("projectId",projectId);
+        for(String key:List.of("mode","week","date"))if(request.getParameter(key)!=null)uri.queryParam(key,request.getParameter(key));
+        return uri.build().encode().toUriString();
+    }
 
     private static String queueProjectLink(HttpServletRequest request, Long projectId, String planning) {
         var uri = UriComponentsBuilder.fromPath(request.getRequestURI());
@@ -126,7 +134,7 @@ public class AppNavigationService {
         if (path.startsWith("/learn")) return "settings";
         if (path.startsWith("/analytics") || path.equals("/reports")) return "analytics";
         if (path.equals("/tags") || path.startsWith("/tags/")) return "tags";
-        for (String section : List.of("inbox", "backlog", "calendar", "schedule", "kanban", "finished"))
+        for (String section : List.of("inbox", "backlog", "calendar", "planning", "schedule", "kanban", "finished"))
             if (path.equals("/" + section)) return section;
         return "today";
     }

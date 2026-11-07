@@ -22,7 +22,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Component
 public class PlanningViewInterceptor implements HandlerInterceptor {
-    private static final List<String> VIEWS = List.of("tasks", "kanban", "calendar", "backlog", "status-list", "schedule");
+    private static final List<String> VIEWS = List.of("tasks", "kanban", "calendar", "planner", "backlog", "status-list", "schedule");
 
     private final ProjectService projects;
     private final CalendarTrackedTimeService trackedTime;

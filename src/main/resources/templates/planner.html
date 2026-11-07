@@ -1,0 +1,51 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"><head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title th:text="#{planner.title}">Planning</title>
+    <th:block th:replace="~{app-shell :: assets}"></th:block>
+    <th:block th:if="${form != null}"><style th:replace="~{task-form :: editorStyle}"></style></th:block>
+    <link rel="stylesheet" href="/calendar-month.css"><link rel="stylesheet" href="/calendar-week.css"><link rel="stylesheet" href="/compact-list.css"><link rel="stylesheet" href="/duration-fields.css"><link rel="stylesheet" href="/planner.css">
+    <script src="/task-context-menu.js" defer></script><script src="/planner.js" defer></script>
+</head><body class="app-page app-calendar app-planner">
+<div th:replace="~{app-shell :: navigation}"></div>
+<main class="app-content" id="app-main" tabindex="-1">
+<div class="pp-shell" data-planner th:attr="data-mode=${plannerMode},data-date=${plannerDate},data-start=${plannerStart},data-return=${plannerReturnTo},data-user=${appUserLogin},data-failure=#{wip.failure}">
+    <header class="pp-header"><h1 th:text="#{planner.title}">Planning</h1><nav class="mc-modes" th:aria-label="#{planner.mode}"><a th:href="${plannerPrepareHref}" th:classappend="${plannerMode == 'prepare'} ? 'is-active'" th:attr="aria-current=${plannerMode == 'prepare' ? 'page' : null}" th:text="#{planner.prepare}">Preparation</a><a th:href="${plannerWeekHref}" th:classappend="${plannerMode == 'week'} ? 'is-active'" th:attr="aria-current=${plannerMode == 'week' ? 'page' : null}" th:text="#{calendar.weekMode}">Week</a></nav></header>
+    <div class="pp-layout" th:classappend="${'pp-' + plannerMode + (form != null ? ' pp-has-editor' : '')}">
+        <aside class="pp-sources" data-planner-sources th:attr="data-backlog-drop=${plannerMode == 'week'}">
+            <form class="pp-filter" method="get" action="/planning"><input type="hidden" name="mode" th:value="${plannerMode}"><input type="hidden" name="week" th:value="${plannerStart}"><input type="hidden" name="date" th:value="${plannerDate}"><label><span class="mc-sr" th:text="#{project.title}">Project</span><select name="projectId" th:aria-label="#{project.title}"><option value="" th:text="#{project.all}">All projects</option><option th:each="p : ${projects}" th:value="${p.id}" th:selected="${p.id == selectedProjectId}" th:text="${p.defaultProject ? 'MAIN' : #strings.arraySplit(p.name,'___')[0]}"></option></select></label><button type="submit" class="cl-icon" th:aria-label="#{compact.apply}"><i data-lucide="filter" aria-hidden="true"></i></button></form>
+            <details class="pp-group" data-group="backlog" open><summary><span th:text="#{nav.backlog}">Backlog</span><span class="pp-count" th:text="${plannerBacklog.total}">0</span></summary>
+                <div class="pp-queue"><th:block th:each="card : ${plannerBacklog.cards}"><article th:replace="~{planner-card :: card(${card},'backlog')}"></article></th:block></div>
+                <p th:if="${plannerBacklog.cards.isEmpty()}" class="pp-empty" th:text="#{planner.noBacklog}">No backlog tasks</p>
+                <nav class="pp-paging" th:if="${plannerBacklog.pages > 1}"><a th:if="${plannerBacklog.page > 1}" th:href="${plannerBacklogPrevious}" th:text="#{finished.previous}">Previous</a><span th:text="${plannerBacklog.page + ' / ' + plannerBacklog.pages}"></span><a th:if="${plannerBacklog.page < plannerBacklog.pages}" th:href="${plannerBacklogNext}" th:text="#{finished.next}">Next</a></nav>
+            </details>
+            <details class="pp-group" data-group="inbox" th:if="${plannerMode == 'prepare'}" open><summary><span th:text="#{nav.inbox}">Inbox</span><span class="pp-count" th:text="${plannerInbox.total}">0</span></summary>
+                <div class="pp-queue"><th:block th:each="card : ${plannerInbox.cards}"><article th:replace="~{planner-card :: card(${card},'inbox')}"></article></th:block></div>
+                <p th:if="${plannerInbox.cards.isEmpty()}" class="pp-empty" th:text="#{planner.noInbox}">No incoming tasks</p>
+                <nav class="pp-paging" th:if="${plannerInbox.pages > 1}"><a th:if="${plannerInbox.page > 1}" th:href="${plannerInboxPrevious}" th:text="#{finished.previous}">Previous</a><span th:text="${plannerInbox.page + ' / ' + plannerInbox.pages}"></span><a th:if="${plannerInbox.page < plannerInbox.pages}" th:href="${plannerInboxNext}" th:text="#{finished.next}">Next</a></nav>
+            </details>
+        </aside>
+        <section th:if="${plannerMode == 'prepare'}" class="pp-editor" th:aria-label="#{inbox.edit}">
+            <a th:if="${form != null}" class="pp-editor-back" th:href="${plannerReturnTo}" th:text="#{planner.backList}">Back to list</a>
+            <div th:if="${form != null}"><div th:replace="~{task-form :: editor}"></div><script th:replace="~{task-form :: editorScript}"></script><script src="/duration-fields.js"></script></div>
+            <p th:if="${form == null}" class="pp-editor-empty" th:text="#{planner.selectTask}">Select a task to edit</p>
+        </section>
+        <section th:if="${plannerMode == 'week'}" class="pp-weekspace">
+            <nav class="pp-period" th:aria-label="#{calendar.weekMode}"><a class="cl-icon" th:href="${plannerPreviousHref}" th:aria-label="#{calendar.previousWeek}"><i data-lucide="chevron-left" aria-hidden="true"></i></a><strong th:text="${overview.monthTitle}">Week</strong><a class="cl-icon" th:href="${plannerNextHref}" th:aria-label="#{calendar.nextWeek}"><i data-lucide="chevron-right" aria-hidden="true"></i></a><a class="pp-today" th:href="${plannerTodayHref}" th:text="#{calendar.today}">Today</a></nav>
+            <nav class="pp-day-picker" th:aria-label="#{planner.chooseDay}"><a th:each="day : ${plannerDays}" th:href="@{/planning(mode=week,week=${plannerStart},date=${day.summary.source.date},projectId=${selectedProjectId},backlogPage=${plannerBacklog.page})}" th:classappend="${day.summary.source.date == plannerDate} ? 'is-selected'" th:attr="aria-current=${day.summary.source.date == plannerDate ? 'date' : null}"><span th:text="${#temporals.format(day.summary.source.date,'EEE')}">Mon</span><strong th:text="${#temporals.day(day.summary.source.date)}">1</strong><span class="mc-load" th:classappend="${'workload-' + day.summary.level}" aria-hidden="true"><span th:style="${'width:' + day.summary.fill + '%'}"></span></span></a></nav>
+            <div class="pp-board">
+                <section class="pp-day" th:each="day : ${plannerDays}" th:classappend="${(day.summary.source.date == plannerDate ? 'is-selected ' : '') + (day.summary.source.today ? 'is-today' : '')}" th:attr="data-drop-date=${day.summary.source.date}">
+                    <header><h2 th:text="${#temporals.format(day.summary.source.date,'EEE, d MMMM')}">Monday</h2><p><strong th:text="${@labels.compactDuration(day.summary.minutes)}"></strong><span th:text="#{calendar.tasksCount(${day.summary.count})}"></span></p><span class="mc-load" th:classappend="${'workload-' + day.summary.level}" aria-hidden="true"><span th:style="${'width:' + day.summary.fill + '%'}"></span></span></header>
+                    <div class="pp-day-cards"><th:block th:each="card : ${day.timed}"><article th:replace="~{planner-card :: card(${card},'day')}"></article></th:block><h3 class="pp-untimed-title" th:text="#{planner.untimed}">Without time</h3><th:block th:each="card : ${day.untimed}"><article th:replace="~{planner-card :: card(${card},'day')}"></article></th:block><p th:if="${day.timed.isEmpty() and day.untimed.isEmpty()}" class="pp-empty" th:text="#{calendar.weekEmpty}">No tasks</p></div>
+                </section>
+            </div>
+        </section>
+    </div>
+    <dialog class="compact-dialog pp-plan-dialog" id="planner-dialog" aria-labelledby="planner-dialog-title" th:attr="data-plan-title=#{planner.schedule},data-backlog-title=#{inbox.toBacklog},data-plan-label=#{backlog.schedule},data-move-label=#{task.move}"><form method="post" data-planner-operation data-refresh-csrf>
+        <header><h2 id="planner-dialog-title" th:text="#{planner.schedule}">Plan task</h2><button class="cl-icon" type="button" data-close-planner th:aria-label="#{common.cancel}"><i data-lucide="x" aria-hidden="true"></i></button></header>
+        <p data-planner-task></p><input type="hidden" name="redirectTo" th:value="${plannerReturnTo}">
+        <div data-planner-date-fields><label><span th:text="#{task.plannedDay}">Date</span><input type="date" name="plannedDate" required></label><label class="pp-time-choice"><input type="checkbox" name="plannedWithTime" value="true"><span th:text="#{task.plannedWithTime}">Set time</span></label><label data-planner-time-field hidden><span th:text="#{form.timeOptional}">Time</span><input type="time" name="time"></label></div>
+        <p data-backlog-confirm hidden th:text="#{planner.backlogConfirm}">Remove planned date and time and return to backlog?</p>
+        <footer><button type="button" data-close-planner th:text="#{common.cancel}">Cancel</button><button type="submit" th:text="#{common.confirm}">Confirm</button></footer>
+    </form></dialog>
+</div></main><script src="/reminders.js" defer></script></body></html>

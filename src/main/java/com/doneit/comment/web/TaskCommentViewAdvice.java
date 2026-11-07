@@ -13,6 +13,11 @@ public class TaskCommentViewAdvice {
 
     @ModelAttribute
     public void comments(HttpServletRequest request, Model model) {
+        if("/planning".equals(request.getRequestURI()) && !"week".equals(request.getParameter("mode")) && request.getParameter("taskId")!=null) {
+            try {model.addAttribute("comments",comments.forTask(Long.valueOf(request.getParameter("taskId"))));}
+            catch(NumberFormatException ignored) {/* The controller validates the ID. */}
+            return;
+        }
         String[] parts = request.getRequestURI().split("/");
         if (parts.length != 4 || !"edit".equals(parts[3])) return;
         try {

@@ -1,0 +1,18 @@
+.app-navigation .app-sidebar-collapse { position:absolute; right:12px; top:18px; border:1px solid var(--app-border); border-radius:8px; }
+.app-navigation .app-project-section-icon { display:none; }
+@media(min-width:1024px) {
+    .app-sidebar-collapsed { --app-sidebar-width:72px; }
+    .app-sidebar-collapsed .app-sidebar-desktop { padding:12px 8px; }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-brand { padding:0 12px; }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-brand > span:last-child { display:none; }
+    .app-sidebar-collapsed .app-sidebar-collapse { position:static; margin:0 auto; transform:rotate(180deg); }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-link-label,
+    .app-sidebar-collapsed .app-sidebar-desktop .app-project-disclosure > summary,
+    .app-sidebar-collapsed .app-sidebar-desktop .app-brand + .app-link { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-link { justify-content:center; padding:10px; position:relative; }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-badge { position:absolute; right:0; top:0; height:16px; min-width:16px; font-size:9px; }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-project-heading > a:first-child { padding:10px; }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-project-section-icon { display:block; }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-project-heading > a:last-child { display:none; }
+    .app-sidebar-collapsed .app-sidebar-desktop .app-project-scroll { top:0; }
+}

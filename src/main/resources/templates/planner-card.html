@@ -1,0 +1,17 @@
+<!doctype html><html xmlns:th="http://www.thymeleaf.org"><body>
+<article th:fragment="card(card,source)" class="pp-task" th:classappend="${plannerSelectedTask != null and plannerSelectedTask == card.id} ? 'is-selected'" th:attr="data-id=${card.id},data-mutable=${card.mutable},data-source=${source},data-title=${card.title},data-date=${card.date},data-time=${card.time},data-edit=${card.editHref}">
+    <a class="cw-card pp-card" th:classappend="${'priority-' + card.priority.name().toLowerCase() + ' state-' + card.state + (card.deadline ? ' is-deadline' : '')}" th:title="${card.title}" th:attr="href=${card.recurring ? null : card.editHref},aria-disabled=${card.recurring ? 'true' : null}">
+        <span class="cw-card-main"><span class="pp-interval" th:if="${!#strings.isEmpty(card.interval)}" th:text="${card.interval}"></span><span class="cw-card-name" th:text="${card.title}">Task</span></span>
+        <span class="cw-planning" th:if="${card.category != null}" th:classappend="${'category-' + card.category.name().toLowerCase()}" th:title="${@labels.planning(card.category)}" th:text="${#messages.msg('calendar.short.' + card.category.name())}">N</span>
+        <span class="cw-card-meta"><i data-lucide="folder" aria-hidden="true"></i><span th:text="${card.project}">Project</span><i th:if="${card.recurring}" data-lucide="repeat-2" th:title="#{task.recurring}"></i><span th:if="${card.estimate != null}" th:text="${@labels.compactDuration(card.estimate)}"></span><span class="mc-sr" th:text="${@labels.priority(card.priority)}"></span></span>
+        <span class="pp-tags" th:if="${!card.tags.isEmpty()}"><span th:each="tag,stat : ${card.tags}" th:if="${stat.index < 2}" th:text="${'#' + tag.name}"></span></span>
+    </a>
+    <button th:if="${card.mutable}" class="cl-icon pp-actions" type="button" data-row-menu aria-haspopup="menu" aria-expanded="false" th:aria-label="#{compact.actions}" th:title="#{compact.actions}"><i data-lucide="ellipsis" aria-hidden="true"></i></button>
+    <div th:if="${card.mutable}" class="compact-menu pp-menu" hidden>
+        <button th:if="${!card.incoming}" type="button" data-plan-action th:text="${source == 'day' ? #messages.msg('planner.changeDate') : #messages.msg('backlog.schedule')}">Plan</button>
+        <button th:if="${source == 'day' or card.incoming}" type="button" data-backlog-action th:text="#{inbox.toBacklog}">To backlog</button>
+        <a th:if="${source != 'day'}" th:href="${card.editHref + '#task-estimate'}" data-estimate-action th:text="#{planner.estimate}">Set estimate</a>
+        <a th:href="${card.editHref}" data-edit-action th:text="#{inbox.edit}">Edit</a>
+    </div>
+</article>
+</body></html>

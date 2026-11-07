@@ -24,11 +24,11 @@ public class TaskChangeHistoryWebConfiguration implements WebMvcConfigurer {
             public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView view) {
                 if (view == null) return;
                 Object form = view.getModel().get("form");
-                if ("task-form".equals(view.getViewName()) && form instanceof TaskUpsertForm task && task.getTaskId() != null)
+                if (("task-form".equals(view.getViewName()) || "planner".equals(view.getViewName())) && form instanceof TaskUpsertForm task && task.getTaskId() != null)
                     view.addObject("changeHistory", history.get(task.getTaskId(), false));
                 if ("recurring-form".equals(view.getViewName()) && form instanceof RegularTaskForm task && task.getId() != null)
                     view.addObject("changeHistory", history.get(task.getId(), true));
             }
-        }).addPathPatterns("/tasks/**", "/recurring/**");
+        }).addPathPatterns("/tasks/**", "/recurring/**", "/planning");
     }
 }

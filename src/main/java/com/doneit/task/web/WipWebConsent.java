@@ -28,7 +28,7 @@ public class WipWebConsent implements WipConsent {
     public boolean interactive() {
         var r=request();
         return r!=null && "POST".equals(r.getMethod()) && r.getRequestURI().matches(
-                "/tasks(?:/\\d+(?:/(?:reschedule|start-today))?|/bulk-move-(?:to-tomorrow|overdue-to-today))?");
+                "(?:/tasks(?:/\\d+(?:/(?:reschedule|start-today))?|/bulk-move-(?:to-tomorrow|overdue-to-today))?|/planning/tasks/\\d+/schedule)");
     }
     public PlanningType category(PlanningType value) {
         var r=request();

@@ -86,7 +86,7 @@ class AppNavigationTest extends IntegrationTestSupport {
         db.update("UPDATE tasks SET planning_type='OPTIONAL' WHERE id=?", optional);
         var nav = nav("owner", "/kanban?projectId=" + shared + "&planningType=OPTIONAL&date=2026-11-04");
         assertThat(nav.main().get(1).count()).isEqualTo(1);
-        assertThat(nav.main().get(3).href()).contains("projectId=" + shared, "planningType=OPTIONAL", "month=2026-11");
+        assertThat(nav.main().stream().filter(item -> item.key().equals("calendar")).findFirst().orElseThrow().href()).contains("projectId=" + shared, "planningType=OPTIONAL", "month=2026-11");
         assertThat(nav.listHref()).contains("date=2026-11-04");
         assertThat(nav.projects().stream().filter(AppNavigationService.ProjectItem::active).map(AppNavigationService.ProjectItem::id)).containsExactly(shared);
         assertThat(nav.allProjectsHref()).doesNotContain("projectId").contains("planningType=OPTIONAL");

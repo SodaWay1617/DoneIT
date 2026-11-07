@@ -11,8 +11,9 @@ public class TaskAssignmentController {
     private final TaskAssignmentService assignments;
     public TaskAssignmentController(TaskAssignmentService assignments) { this.assignments = assignments; }
     @PostMapping("/tasks/{id}/assignees")
-    public String task(@PathVariable Long id, @RequestParam(required = false) List<Long> userIds, RedirectAttributes flash) {
+    public String task(@PathVariable Long id, @RequestParam(required = false) List<Long> userIds, RedirectAttributes flash, org.springframework.ui.Model model) {
         assignments.assignTask(id, userIds); flash.addFlashAttribute("flashMessage", "Assignees updated.");
+        if(model.getAttribute("planningReturnTo") instanceof String target)return "redirect:"+target;
         return "redirect:/tasks/" + id + "/edit";
     }
     @PostMapping("/recurring/{id}/assignees")

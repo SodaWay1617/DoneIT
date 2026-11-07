@@ -21,7 +21,7 @@ public class TagWebConfiguration implements WebMvcConfigurer {
             @Override public void postHandle(HttpServletRequest request,HttpServletResponse response,Object handler,ModelAndView view) {
                 if(view==null||request.getUserPrincipal()==null) return;
                 String name=view.getViewName();
-                if("task-form".equals(name)||"recurring-form".equals(name)) {
+                if("task-form".equals(name)||"recurring-form".equals(name)||"planner".equals(name) && view.getModel().containsKey("form")) {
                     view.addObject("availableTags",tags.list());
                     if("GET".equals(request.getMethod())) {
                         Object form=view.getModel().get("form");

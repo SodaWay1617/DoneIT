@@ -14,9 +14,10 @@ public class TaskCommentController {
 
     @PostMapping("/tasks/{id}/comments")
     public String addTaskComment(@PathVariable Long id, @RequestParam String body,
-                                 RedirectAttributes flash) {
+                                 RedirectAttributes flash, org.springframework.ui.Model model) {
         comments.addToTask(id, body);
         flash.addFlashAttribute("flashMessage", "Comment added.");
+        if(model.getAttribute("planningReturnTo") instanceof String target)return "redirect:"+target;
         return "redirect:/tasks/" + id + "/edit";
     }
 

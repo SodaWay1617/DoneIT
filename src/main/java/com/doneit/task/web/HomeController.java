@@ -237,7 +237,9 @@ public class HomeController {
 
     @GetMapping("/tasks/{taskId}/edit")
     public String editTaskPage(@PathVariable Long taskId, Model model, Principal principal) {
-        populateTaskFormModel(model, principal, TaskUpsertForm.from(taskApplicationService.getTaskForEdit(taskId)));
+        var form = TaskUpsertForm.from(taskApplicationService.getTaskForEdit(taskId));
+        populateTaskFormModel(model, principal, form);
+        model.addAttribute("planningIncoming", model.containsAttribute("planningReturnTo") && form.getStatus() == com.doneit.task.domain.TaskStatus.NEW);
         if (subtasks != null) {
             model.addAttribute("subtasks", subtasks.summary(taskId));
             model.addAttribute("parentTask", subtasks.parentOf(taskId));
@@ -256,6 +258,12 @@ public class HomeController {
                            Principal principal,
                            @RequestParam(defaultValue = "false") boolean wipReview,
                            RedirectAttributes redirectAttributes) {
+        if (model.containsAttribute("planningReturnTo")) {
+            boolean incoming = taskApplicationService.getTaskForEdit(taskId).status() == com.doneit.task.domain.TaskStatus.NEW;
+            model.addAttribute("planningIncoming", incoming);
+            if (incoming && com.doneit.task.application.view.PlanningLoad.active(form.getStatus()))
+                bindingResult.rejectValue("status", "planner.prepareFirst", "Move the incoming task to backlog before scheduling it here.");
+        }
         if (bindingResult.hasErrors() || wipReview) {
             form.setTaskId(taskId);
             form.setEditMode(true);
@@ -284,6 +292,7 @@ public class HomeController {
         if (taggedTasks == null) taskApplicationService.editTask(command);
         else taggedTasks.edit(command,form.getTagNames(),form.isTagsPresent());
         redirectAttributes.addFlashAttribute("flashMessage", "Task updated.");
+        if (model.getAttribute("planningReturnTo") instanceof String planningTarget) return "redirect:" + planningTarget;
         if (model.getAttribute("calendarReturnTo") instanceof String calendarTarget) return "redirect:" + calendarTarget;
         if (model.getAttribute("dailyReturnTo") instanceof String dailyTarget) return "redirect:" + dailyTarget;
         if (model.getAttribute("inboxReturnTo") instanceof String inboxTarget) return "redirect:" + inboxTarget;

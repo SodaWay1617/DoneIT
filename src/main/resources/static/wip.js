@@ -1,7 +1,7 @@
 (() => {
     const labels=document.currentScript.dataset;
     const busy=new WeakSet();
-    const supported=/^\/tasks(?:\/\d+(?:\/(?:reschedule|start-today))?|\/bulk-move-(?:to-tomorrow|overdue-to-today))?$/;
+    const supported=/^(?:\/tasks(?:\/\d+(?:\/(?:reschedule|start-today))?|\/bulk-move-(?:to-tomorrow|overdue-to-today))?|\/planning\/tasks\/\d+\/schedule)$/;
     const duration=n=>{const h=Math.floor(n/60),m=n%60;return [h?`${h} ${labels.hours}`:'',m||!h?`${m} ${labels.minutes}`:''].filter(Boolean).join(' ');};
     const confirm=payload=>new Promise(resolve=>{
         const dialog=document.createElement('dialog');dialog.className='wip-dialog';
