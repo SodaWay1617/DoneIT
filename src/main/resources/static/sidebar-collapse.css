@@ -1,8 +1,11 @@
-.app-navigation .app-sidebar-collapse { position:absolute; right:12px; top:18px; border:1px solid var(--app-border); border-radius:8px; }
+.app-sidebar-header { display:flex; align-items:center; justify-content:space-between; gap:4px; flex-shrink:0; min-width:0; }
+.app-sidebar-header .app-brand { min-width:0; }
+.app-navigation .app-sidebar-collapse { position:static; flex-shrink:0; border:1px solid var(--app-border); border-radius:8px; }
 .app-navigation .app-project-section-icon { display:none; }
 @media(min-width:1024px) {
     .app-sidebar-collapsed { --app-sidebar-width:72px; }
     .app-sidebar-collapsed .app-sidebar-desktop { padding:12px 8px; }
+    .app-sidebar-collapsed .app-sidebar-header { flex-direction:column; }
     .app-sidebar-collapsed .app-sidebar-desktop .app-brand { padding:0 12px; }
     .app-sidebar-collapsed .app-sidebar-desktop .app-brand > span:last-child { display:none; }
     .app-sidebar-collapsed .app-sidebar-collapse { position:static; margin:0 auto; transform:rotate(180deg); }

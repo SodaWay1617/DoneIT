@@ -46,8 +46,10 @@
     </details>
 </div>
 <aside th:fragment="sidebar(variant)" class="app-sidebar" th:classappend="${'app-sidebar-' + variant}" th:attr="aria-label=#{shell.navigation}">
+    <div class="app-sidebar-header">
     <a class="app-brand" href="/"><span class="app-brand-symbol"><th:block th:replace="~{app-shell :: icon('check')}"></th:block></span><span>DoneIt</span></a>
     <button th:if="${variant == 'desktop'}" class="app-icon-button app-sidebar-collapse" type="button" data-collapse-sidebar aria-expanded="true" th:attr="data-collapse-label=#{shell.collapse},data-expand-label=#{shell.expand}" th:title="#{shell.collapse}" th:aria-label="#{shell.collapse}"><i data-lucide="panel-left-close" aria-hidden="true"></i></button>
+    </div>
     <div class="app-sidebar-body">
         <nav th:attr="aria-label=#{shell.sections}"><th:block th:each="item : ${appNav.main}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block></nav>
         <nav class="app-secondary-nav" th:attr="aria-label=#{shell.views}"><th:block th:each="item : ${appNav.views}"><a th:replace="~{app-shell :: item(${item})}"></a></th:block><a th:replace="~{app-shell :: tags-link}"></a></nav>
