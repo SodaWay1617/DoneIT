@@ -40,9 +40,16 @@ public class PlanningController {
         model.addAttribute("plannerReturnTo",back);model.addAttribute("selectedProjectId",projectId);model.addAttribute("projects",projects.list());
         var backlogQueue=board.queue(true,projectId,backlogPage,back);
         backlogPage=backlogQueue.page();model.addAttribute("plannerBacklog",backlogQueue);
+        model.addAttribute("plannerExplicitTask",taskId!=null);
+        model.addAttribute("plannerEmpty",false);
         if("prepare".equals(mode)) {
             var inboxQueue=board.queue(false,projectId,inboxPage,back);
             inboxPage=inboxQueue.page();model.addAttribute("plannerInbox",inboxQueue);
+            model.addAttribute("plannerEmpty",taskId==null && backlogQueue.total()==0 && inboxQueue.total()==0);
+            if(taskId==null) {
+                var available=backlogQueue.cards().isEmpty()?inboxQueue.cards():backlogQueue.cards();
+                if(!available.isEmpty())taskId=available.getFirst().id();
+            }
         }
         model.addAttribute("plannerBacklogPrevious",url(mode,start,selected,projectId,Math.max(1,backlogPage-1),inboxPage,null));
         model.addAttribute("plannerBacklogNext",url(mode,start,selected,projectId,backlogPage+1,inboxPage,null));

@@ -2,9 +2,13 @@
     const root=document.querySelector('[data-planner]');if(!root)return;
     const wide=matchMedia('(min-width:900px), (min-width:800px) and (max-height:500px)');
     const sources=root.querySelector('[data-planner-sources]'),dialog=document.getElementById('planner-dialog');
+    if(!sources)return;
     const form=dialog.querySelector('form'),day=form.elements.plannedDate,withTime=form.elements.plannedWithTime,time=form.elements.time;
     const rows=[...root.querySelectorAll('.pp-task[data-mutable=true]')];
     const pointer=matchMedia('(pointer:fine)');
+    root.querySelector('.pp-filter select').addEventListener('change',event=>{
+        if(document.documentElement.classList.contains('app-standalone') && matchMedia('(max-width:1023px)').matches) event.target.form.requestSubmit();
+    });
     const syncDrag=()=>rows.forEach(row=>{row.draggable=root.dataset.mode==='week' && wide.matches && pointer.matches;});
     wide.addEventListener('change',syncDrag);pointer.addEventListener('change',syncDrag);
     const prefix='doneit-planner:'+root.dataset.user+':';
@@ -48,7 +52,7 @@
         withTime.checked=!backlog && Boolean(row.dataset.time);
         time.value=row.dataset.time||'';updateTime();
         preserve();dialog.showModal();
-        (backlog?form.querySelector('[data-close-planner]'):day).focus();
+        form.querySelector('[data-close-planner]').focus({preventScroll:true});
     };
     root.querySelectorAll('[data-close-planner]').forEach(button=>button.addEventListener('click',()=>dialog.close()));
     const menus=window.DoneItTaskMenu(root,'.pp-task[data-mutable=true]');

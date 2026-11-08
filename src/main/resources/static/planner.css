@@ -22,6 +22,7 @@ body.app-planner { background:var(--app-bg); color:var(--app-ink); font:14px/1.4
 .pp-count { padding:1px 6px; border-radius:6px; background:var(--app-active); font:12px/1.5 system-ui,sans-serif; }
 .pp-queue,.pp-day-cards { display:grid; align-content:start; gap:7px; }
 .pp-task { position:relative; min-width:0; }
+.pp-card-details { display:contents; }
 .pp-task[data-mutable=true] .pp-card { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
 .app-planner .pp-task.is-selected .pp-card { border-color:var(--app-accent); background:var(--app-active); }
 .app-planner .pp-card { padding-right:32px; min-width:0; cursor:pointer; }
@@ -44,6 +45,7 @@ body.app-planner { background:var(--app-bg); color:var(--app-ink); font:14px/1.4
 .pp-has-editor .pp-editor { display:block; }
 .pp-has-editor .pp-sources { display:none; }
 .pp-editor-empty { padding:24px; color:var(--app-muted); }
+.pp-empty-state { display:grid; place-items:center; min-height:280px; margin:0; padding:24px; border:1px solid var(--app-border); border-radius:14px; background:var(--app-surface); color:var(--app-muted); }
 .pp-week .pp-sources { order:1; }
 .pp-weekspace { min-width:0; container-type:inline-size; }
 .pp-period { display:flex; align-items:center; gap:6px; margin-bottom:12px; }
@@ -88,6 +90,8 @@ body.app-planner { background:var(--app-bg); color:var(--app-ink); font:14px/1.4
     .pp-layout { grid-template-columns:minmax(210px,260px) minmax(0,1fr); align-items:start; }
     .pp-sources { max-height:calc(100dvh - 130px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
     .pp-prepare .pp-sources { display:block; }
+    .pp-prepare .pp-sources { contain:size; align-self:stretch; min-height:0; max-height:none; }
+    .pp-prepare { align-items:stretch; }
     .pp-prepare .pp-editor { display:block; }
     .pp-week .pp-sources { order:0; }
     .pp-editor-back { display:none; }
@@ -99,7 +103,101 @@ body.app-planner { background:var(--app-bg); color:var(--app-ink); font:14px/1.4
     .pp-header .mc-modes { width:100%; }
     .pp-header .mc-modes a { flex:1; text-align:center; }
 }
+@media(min-width:1024px) {
+    .app-planner .pp-shell { padding:12px 18px; }
+    .app-planner .pp-header { margin-bottom:10px; gap:8px; }
+    .app-planner .pp-header h1 { font-size:26px; }
+    .app-planner .pp-header .mc-modes { padding:2px; border-radius:8px; }
+    .app-planner .pp-header .mc-modes a { min-height:28px; padding:5px 12px; font-size:12px; border-radius:6px; }
+    .app-planner .pp-filter { margin-bottom:6px; gap:4px; }
+    .app-planner .pp-filter select { height:32px; min-height:32px; padding:5px 8px; font-size:12px; }
+    .app-planner .pp-filter .cl-icon { width:32px; height:32px; }
+    .app-planner .pp-period { gap:4px; margin-bottom:8px; }
+    .app-planner .pp-period .cl-icon { width:32px; height:32px; }
+    .app-planner .pp-period strong { font-size:15px; }
+    .app-planner .pp-today { padding:6px 8px; font-size:12px; }
+    .app-planner .pp-week { align-items:stretch; }
+    .app-planner .pp-week .pp-sources { contain:size; align-self:stretch; min-height:0; max-height:none; overflow-y:auto; }
+}
 @media(max-width:899px) and (pointer:coarse) {
     .app-planner .pp-actions { width:44px; height:44px; top:16px; }
     .app-planner .pp-card { padding-right:44px; }
+}
+/* Installed PWA only: keep the landscape workspace inside the visible frame.
+   Portrait and ordinary browser pages retain their normal document flow. */
+@media(min-width:800px) and (max-width:1023px) and (max-height:600px) and (orientation:landscape) {
+    .app-standalone body.app-planner-week { height:100dvh; overflow:hidden; }
+    .app-standalone .app-planner-week .app-content { position:absolute; inset:0; height:100dvh; min-height:0; display:flex; overflow:hidden; padding-bottom:max(8px,env(safe-area-inset-bottom)); }
+    .app-standalone .app-planner-week .pp-shell { flex:1; min-height:0; display:flex; flex-direction:column; padding:8px max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left)); }
+    .app-standalone .app-planner-week .pp-header { flex:none; margin-bottom:8px; gap:8px; }
+    .app-standalone .app-planner-week .pp-header h1 { font-size:22px; }
+    .app-standalone .app-planner-week .mc-modes a { padding:8px 12px; font-size:12px; }
+    .app-standalone .app-planner-week .pp-layout { flex:1; min-height:0; grid-template-columns:190px minmax(0,1fr); align-items:stretch; gap:8px; }
+    .app-standalone .app-planner-week .pp-sources { order:0; align-self:stretch; min-height:0; max-height:none; overflow-y:auto; overscroll-behavior:contain; padding:8px; }
+    .app-standalone .app-planner-week .pp-filter { margin-bottom:4px; gap:2px; }
+    .app-standalone .app-planner-week .pp-filter select { font-size:12px; }
+    .app-standalone .app-planner-week .pp-group > summary { font-size:16px; }
+    .app-standalone .app-planner-week .pp-weekspace { min-height:0; display:flex; flex-direction:column; }
+    .app-standalone .app-planner-week .pp-period { flex:none; margin-bottom:6px; gap:4px; }
+    .app-standalone .app-planner-week .pp-period strong { font-size:14px; }
+    .app-standalone .app-planner-week .pp-day-picker { display:none; }
+    .app-standalone .app-planner-week .pp-board { flex:1; min-height:0; grid-template-columns:repeat(7,minmax(0,1fr)); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+    .app-standalone .app-planner-week .pp-day { display:block; border-left:1px solid var(--app-border); }
+    .app-standalone .app-planner-week .pp-day:first-child { border-left:0; }
+    .app-standalone .app-planner-week .pp-day > header { position:sticky; top:0; z-index:1; padding:6px 4px; background:var(--app-surface); }
+    .app-standalone .app-planner-week .pp-day.is-today > header { background:#e4f2eb; }
+    .app-standalone .app-planner-week .pp-day h2 { font-size:12px; margin-bottom:5px; }
+    .app-standalone .app-planner-week .pp-day header p { gap:2px; font-size:11px; margin-bottom:5px; }
+    .app-standalone .app-planner-week .pp-day-cards { padding:4px; gap:5px; }
+    .app-standalone .app-planner-week .pp-day .pp-card { padding:6px 4px; }
+    .app-standalone .app-planner-week .pp-day .cw-card-main { grid-column:1/-1; font-size:12px; }
+    .app-standalone .app-planner-week .pp-day .cw-planning { grid-row:auto; }
+    .app-standalone .app-planner-week .pp-day .pp-actions { top:auto; bottom:0; right:0; width:44px; height:44px; }
+    .app-standalone .app-planner-week .pp-day .cw-card-meta > span:not(.mc-sr) { max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+}
+/* Compact task sources in the installed mobile app. */
+@media(max-width:1023px) {
+    .app-standalone .app-planner .pp-untimed-title { height:1px; margin:4px 0; overflow:hidden; border:0; background:var(--app-border); font-size:0; line-height:0; }
+    .app-standalone .app-planner .pp-shell { padding:4px 8px; }
+    .app-standalone .app-planner .pp-header { flex-wrap:nowrap; gap:6px; margin-bottom:2px; }
+    .app-standalone .app-planner .pp-header h1 { font-size:18px; line-height:1.2; }
+    .app-standalone .app-planner .pp-header .mc-modes { width:auto; flex:none; gap:2px; padding:2px; border-radius:7px; }
+    .app-standalone .app-planner .pp-header .mc-modes a { flex:none; min-height:24px; padding:5px 8px; border-radius:5px; font-size:11px; line-height:1.2; }
+    .app-standalone .app-planner .pp-period { gap:2px; margin-bottom:3px; }
+    .app-standalone .app-planner .pp-period strong { font-size:12px; }
+    .app-standalone .app-planner .pp-period .cl-icon { width:32px; height:32px; }
+    .app-standalone .app-planner .pp-today { padding:5px 7px; font-size:11px; }
+    .app-standalone .app-planner .pp-card .pp-project,
+    .app-standalone .app-planner .pp-card .cw-card-meta > svg:first-child { display:none; }
+    .app-standalone .app-planner-week .pp-day .pp-card { padding:6px; gap:4px; }
+    .app-standalone .app-planner-week .pp-day .cw-card-main { grid-column:1/-1; padding-right:0; font-size:12px; line-height:1.25; }
+    .app-standalone .app-planner-week .pp-day .pp-card-details { display:flex; align-items:center; grid-column:1/-1; min-width:0; gap:3px; }
+    .app-standalone .app-planner-week .pp-day .cw-planning { position:static; flex:none; width:16px; height:16px; font-size:10px; }
+    .app-standalone .app-planner-week .pp-day .cw-card-meta { flex:1; min-width:0; flex-wrap:nowrap; gap:3px; font-size:10px; }
+    .app-standalone .app-planner-week .pp-day .cw-card-meta svg { flex:none; width:11px; height:11px; }
+    .app-standalone .app-planner-week .pp-day .cw-card-meta > svg:first-child { display:none; }
+    .app-standalone .app-planner-week .pp-day .pp-project { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .app-standalone .app-planner-week .pp-day .pp-estimate { flex:none; white-space:nowrap; }
+    .app-standalone .app-planner-week .pp-day .pp-actions:not(:focus-visible) { width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); }
+    .app-standalone .app-planner .pp-sources { padding:4px; border:0; border-radius:8px; background:transparent; }
+    .app-standalone .app-planner .pp-filter { margin-bottom:2px; gap:0; }
+    .app-standalone .app-planner .pp-filter select { min-height:36px; padding:4px 6px; border:0; border-bottom:1px solid var(--app-border); border-radius:0; background:transparent; font-size:12px; }
+    .app-standalone .app-planner .pp-filter button { display:none; }
+    .app-standalone .app-planner .pp-group { margin-bottom:10px; }
+    .app-standalone .app-planner .pp-group > summary { min-height:36px; gap:5px; font-size:15px; }
+    .app-standalone .app-planner .pp-count { font-size:11px; padding:0 5px; }
+    .app-standalone .app-planner .pp-queue { gap:5px; }
+    .app-standalone .app-planner .pp-sources .pp-card { padding:6px; gap:4px; border-radius:7px; }
+    .app-standalone .app-planner .pp-sources .cw-card-main { grid-column:1/-1; padding-right:20px; font-size:12px; line-height:1.25; }
+    .app-standalone .app-planner .pp-sources .cw-planning { position:absolute; top:6px; right:6px; width:17px; height:17px; font-size:11px; }
+    .app-standalone .app-planner .pp-sources .cw-card-meta { flex-wrap:nowrap; padding-right:30px; gap:3px; font-size:10px; }
+    .app-standalone .app-planner .pp-sources .cw-card-meta > span:not(.mc-sr) { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .app-standalone .app-planner .pp-sources .cw-card-meta svg { width:12px; height:12px; }
+    .app-standalone .app-planner .pp-sources .pp-actions { top:auto; bottom:0; right:0; width:44px; height:44px; }
+    .app-standalone .app-planner .pp-sources .pp-tags { padding-right:30px; font-size:10px; }
+}
+@media(min-width:800px) and (max-width:1023px) and (max-height:600px) and (orientation:landscape) {
+    .app-standalone .app-planner-week .pp-shell { padding:4px max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left)); }
+    .app-standalone .app-planner-week .pp-filter select { min-height:28px; padding:2px 4px; font-size:11px; }
+    .app-standalone .app-planner-week .pp-sources { padding-top:0; }
 }

@@ -52,6 +52,22 @@ class PlanningBoardTest extends IntegrationTestSupport {
     MvcResult page(String query)throws Exception {return mvc.perform(get("/planning"+query)).andExpect(status().isOk()).andReturn();}
     Object model(MvcResult result,String key){return result.getModelAndView().getModel().get(key);}
     @SuppressWarnings("unchecked") List<Day> days(MvcResult result){return (List<Day>)model(result,"plannerDays");}
+    @Test void preparationSelectsFirstBacklogThenInboxAndHandlesEmptyQueue()throws Exception {
+        var empty=page("");
+        assertThat(model(empty,"plannerEmpty")).isEqualTo(true);
+        assertThat(model(empty,"form")).isNull();
+        assertThat(empty.getResponse().getContentAsString()).contains("pp-empty-state").doesNotContain("data-planner-sources");
+        Long incoming=seed("Incoming first",TaskStatus.NEW,null,null,30);
+        assertThat(model(page(""),"plannerSelectedTask")).isEqualTo(incoming);
+        seed("Backlog first",TaskStatus.BACKLOG,null,null,60);
+        var prep=page("");
+        Long first=((Queue)model(prep,"plannerBacklog")).cards().getFirst().id();
+        assertThat(model(prep,"plannerSelectedTask")).isEqualTo(first);
+        assertThat(model(prep,"plannerExplicitTask")).isEqualTo(false);
+        var explicit=page("?taskId="+incoming);
+        assertThat(model(explicit,"plannerSelectedTask")).isEqualTo(incoming);
+        assertThat(model(explicit,"plannerExplicitTask")).isEqualTo(true);
+    }
     @Test void preparationSeparatesSourcesAndWeekOnlyOffersOrdinaryBacklog()throws Exception {
         seed("Ready",TaskStatus.BACKLOG,null,null,60);seed("New task",TaskStatus.NEW,null,null,30);
         seed("Paused",TaskStatus.PAUSED,null,null,15);
