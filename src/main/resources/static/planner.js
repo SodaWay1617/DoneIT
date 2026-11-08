@@ -6,6 +6,8 @@
     const form=dialog.querySelector('form'),day=form.elements.plannedDate,withTime=form.elements.plannedWithTime,time=form.elements.time;
     const rows=[...root.querySelectorAll('.pp-task[data-mutable=true]')];
     const pointer=matchMedia('(pointer:fine)');
+    const landscape=matchMedia('(min-width:800px) and (max-width:1023px) and (max-height:600px) and (orientation:landscape)');
+    const touchWeek=()=>root.dataset.mode==='week' && document.documentElement.classList.contains('app-standalone') && landscape.matches;
     root.querySelector('.pp-filter select').addEventListener('change',event=>{
         if(document.documentElement.classList.contains('app-standalone') && matchMedia('(max-width:1023px)').matches) event.target.form.requestSubmit();
     });
@@ -29,6 +31,7 @@
     const preserve=()=>{save();write(prefix+'restore',key);};
     window.addEventListener('pagehide',save);
     const edit=(row,estimate=false)=>{
+        if(touchWeek())return;
         preserve();
         if(root.dataset.mode==='prepare' && wide.matches) {
             const url=new URL(root.dataset.return,location.origin);url.searchParams.set('taskId',row.dataset.id);
@@ -56,9 +59,59 @@
     };
     root.querySelectorAll('[data-close-planner]').forEach(button=>button.addEventListener('click',()=>dialog.close()));
     const menus=window.DoneItTaskMenu(root,'.pp-task[data-mutable=true]');
+    let touchDrag,touchTimer,blockedClickUntil=0;
+    const clearTouch=()=>{
+        clearTimeout(touchTimer);
+        if(touchDrag){cancelAnimationFrame(touchDrag.frame);touchDrag.ghost?.remove();touchDrag.row.classList.remove('is-dragging');}
+        root.querySelectorAll('.pp-drop-target').forEach(el=>el.classList.remove('pp-drop-target'));
+        touchDrag=null;
+    };
+    const trackTouch=()=>{
+        const d=touchDrag;if(!d?.active)return;
+        const edge=48,top=document.querySelector('.app-topbar')?.getBoundingClientRect().bottom||0;
+        const speed=d.y>innerHeight-edge?10:d.y<top+edge?-10:0;
+        if(speed)scroller().scrollTop+=speed;
+        d.ghost.style.left=Math.max(0,Math.min(innerWidth-d.width,d.x-d.width/2))+'px';
+        d.ghost.style.top=(d.y-30)+'px';
+        const target=document.elementFromPoint(d.x,d.y)?.closest('[data-drop-date],[data-backlog-drop=true]');
+        if(d.target!==target){d.target?.classList.remove('pp-drop-target');d.target=target;target?.classList.add('pp-drop-target');}
+        d.frame=requestAnimationFrame(trackTouch);
+    };
     rows.forEach(row=>{
         const card=row.querySelector('.pp-card');
+        row.addEventListener('pointerdown',event=>{if(touchWeek())event.stopImmediatePropagation();},true);
+        row.addEventListener('contextmenu',event=>{if(touchWeek()){event.preventDefault();event.stopImmediatePropagation();menus.close();}},true);
+        row.addEventListener('touchstart',event=>{
+            if(!touchWeek() || event.touches.length!==1)return;
+            clearTouch();const t=event.touches[0];
+            touchDrag={row,x:t.clientX,y:t.clientY,startX:t.clientX,startY:t.clientY,active:false};
+            touchTimer=setTimeout(()=>{
+                const d=touchDrag;if(!d || !touchWeek())return;
+                const box=card.getBoundingClientRect();d.width=box.width;d.active=true;
+                d.ghost=card.cloneNode(true);d.ghost.removeAttribute('href');d.ghost.classList.add('pp-touch-ghost');d.ghost.style.width=box.width+'px';
+                document.body.append(d.ghost);row.classList.add('is-dragging');menus.close();trackTouch();
+            },300);
+        },{passive:true});
+        row.addEventListener('touchmove',event=>{
+            const d=touchDrag;if(!d || d.row!==row)return;
+            if(event.touches.length!==1){clearTouch();return;}
+            const t=event.touches[0];d.x=t.clientX;d.y=t.clientY;
+            if(d.active)event.preventDefault();
+            else if(Math.hypot(d.x-d.startX,d.y-d.startY)>8)clearTouch();
+        },{passive:false});
+        row.addEventListener('touchend',event=>{
+            const d=touchDrag;if(!d || d.row!==row)return;
+            if(d.active){
+                event.preventDefault();blockedClickUntil=Date.now()+600;
+                const target=d.target,moved=Math.hypot(d.x-d.startX,d.y-d.startY)>8;
+                clearTouch();
+                if(target && moved){const backlog=target.dataset.backlogDrop==='true';if(!backlog || row.dataset.source!=='backlog')open(row,target.dataset.dropDate,backlog);}
+            }else clearTouch();
+        },{passive:false});
+        row.addEventListener('touchcancel',clearTouch);
         card.addEventListener('click',event=>{
+            if(Date.now()<blockedClickUntil){event.preventDefault();return;}
+            if(touchWeek()){event.preventDefault();return;}
             if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
             event.preventDefault();
             if(root.dataset.mode==='week')open(row,row.dataset.source==='backlog'?root.dataset.date:row.dataset.date);
@@ -77,6 +130,7 @@
         });
         row.addEventListener('dragend',()=>{row.classList.remove('is-dragging');root.querySelectorAll('.pp-drop-target').forEach(el=>el.classList.remove('pp-drop-target'));});
     });
+    window.addEventListener('resize',clearTouch);
     syncDrag();
     root.querySelectorAll('[data-drop-date],[data-backlog-drop=true]').forEach(target=>{
         target.addEventListener('dragover',event=>{
