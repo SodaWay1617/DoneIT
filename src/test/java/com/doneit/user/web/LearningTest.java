@@ -3,14 +3,23 @@ package com.doneit.user.web;
 import com.doneit.support.IntegrationTestSupport;
 import com.doneit.user.application.LearningService;
 import java.util.Locale;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.MessageSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockHttpSession;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -22,16 +31,88 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(LearningTest.ClockConfiguration.class)
 class LearningTest extends IntegrationTestSupport {
+    static class TestClock extends Clock {
+        Instant now = Instant.parse("2026-11-08T23:59:00Z");
+        @Override public ZoneId getZone() { return ZoneOffset.UTC; }
+        @Override public Clock withZone(ZoneId zone) { return Clock.fixed(now, zone); }
+        @Override public Instant instant() { return now; }
+    }
+    @TestConfiguration
+    static class ClockConfiguration {
+        @Bean @Primary TestClock learningClock() { return new TestClock(); }
+    }
     @Autowired JdbcTemplate db;
     @Autowired MockMvc mvc;
     @Autowired LearningService learning;
     @Autowired MessageSource messages;
+    @Autowired TestClock clock;
 
     @BeforeEach void setup() {
+        clock.now = Instant.parse("2026-11-08T23:59:00Z");
         db.execute("TRUNCATE users CASCADE");
         for (String login : new String[]{"owner", "katya"})
             db.update("INSERT INTO users(login,password_hash,created_at,updated_at) VALUES(?,'unused',NOW(),NOW())", login);
+    }
+
+    @Test void invitationAndProgressSurviveMidnightNewSessionsAndAnotherUsersDismissal() throws Exception {
+        learning.markRead("owner", 0);
+        MockHttpSession firstSession = new MockHttpSession();
+        mvc.perform(get("/").session(firstSession).with(user("owner")))
+                .andExpect(content().string(containsString("id=\"learning-invite\"")));
+        mvc.perform(post("/learn/dismiss").with(user("katya")).with(csrf()))
+                .andExpect(redirectedUrl("/"));
+        clock.now = Instant.parse("2026-11-09T00:01:00Z");
+        firstSession.invalidate();
+        MockHttpSession nextSession = new MockHttpSession();
+        mvc.perform(get("/").session(nextSession).with(user("owner")))
+                .andExpect(content().string(containsString("id=\"learning-invite\"")));
+        mvc.perform(get("/tasks").param("date", "2026-11-08").session(nextSession).with(user("owner")))
+                .andExpect(content().string(containsString("id=\"learning-invite\"")));
+        mvc.perform(get("/learn").session(nextSession).with(user("owner")))
+                .andExpect(redirectedUrl("/learn/1"));
+        assertThat(learning.progress("owner").read(0)).isTrue();
+        assertThat(learning.progress("owner").dismissed()).isFalse();
+        assertThat(learning.progress("katya").dismissed()).isTrue();
+    }
+
+    @Test void laterOnlyNavigatesAndDoesNotPermanentlyHideInvitation() throws Exception {
+        learning.markRead("owner", 0);
+        String html = mvc.perform(get("/learn/1").with(user("owner"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(html).contains("class=\"learning-text-button\" href=\"/\"")
+                .doesNotContain("action=\"/learn/dismiss\"");
+        mvc.perform(get("/").with(user("owner")))
+                .andExpect(content().string(containsString("id=\"learning-invite\"")));
+        assertThat(learning.progress("owner").read(0)).isTrue();
+        assertThat(learning.progress("owner").dismissed()).isFalse();
+    }
+
+    @Test void explicitDismissalSurvivesNewDayWithoutHidingLearningOrResettingProgress() throws Exception {
+        learning.markRead("owner", 0);
+        learning.dismiss("owner");
+        clock.now = Instant.parse("2026-11-10T12:00:00Z");
+        mvc.perform(get("/").with(user("owner")))
+                .andExpect(content().string(not(containsString("id=\"learning-invite\""))));
+        mvc.perform(get("/settings").with(user("owner")))
+                .andExpect(content().string(containsString("href=\"/learn\"")));
+        assertThat(learning.progress("owner").dismissed()).isTrue();
+        mvc.perform(get("/learn").with(user("owner"))).andExpect(redirectedUrl("/learn/1"));
+        assertThat(learning.progress("owner").read(0)).isTrue();
+        assertThat(learning.progress("katya").invite()).isTrue();
+    }
+
+    @Test void completedLearningRemainsAvailableButDoesNotInviteAfterNewDay() throws Exception {
+        for (int topic = 0; topic < LearningService.TOPIC_COUNT; topic++) learning.markRead("owner", topic);
+        clock.now = Instant.parse("2026-11-10T12:00:00Z");
+        mvc.perform(get("/").with(user("owner")))
+                .andExpect(content().string(not(containsString("id=\"learning-invite\""))));
+        mvc.perform(get("/settings").with(user("owner")))
+                .andExpect(content().string(containsString("href=\"/learn\"")));
+        mvc.perform(get("/learn/0").with(user("owner"))).andExpect(status().isOk());
+        assertThat(learning.progress("owner").complete()).isTrue();
+        assertThat(learning.progress("owner").invite()).isFalse();
     }
 
     @Test void newUsersGetInvitationButCanAlwaysOpenLearningFromSettings() throws Exception {

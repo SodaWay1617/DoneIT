@@ -26,7 +26,7 @@ body:has(.learning-shell) { margin:0; background:#f7f8fa; }
 .learning-controls { display:flex; gap:12px; flex-wrap:wrap; margin-top:32px; border-top:1px solid #dce2e7; padding-top:20px; }
 .learning-controls form { margin:0; }
 .learning-bottom { display:flex; justify-content:space-between; gap:16px; margin-top:24px; }
-.learning-text-button { padding:8px 0; color:#52636c; background:none; border:0; text-decoration:underline; text-underline-offset:3px; font:inherit; cursor:pointer; min-height:44px; }
+.learning-text-button { display:inline-flex; align-items:center; padding:8px 0; color:#52636c; background:none; border:0; text-decoration:underline; text-underline-offset:3px; font:inherit; cursor:pointer; min-height:44px; }
 .learning-shell a:focus-visible,.learning-shell button:focus-visible { outline:3px solid #c9973e; outline-offset:3px; }
 @media(max-width:700px) {
     .learning-shell { width:calc(100% - 24px); margin:16px auto; }

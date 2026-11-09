@@ -49,7 +49,7 @@
         </article>
     </div>
     <div class="learning-bottom">
-        <form method="post" th:action="@{/learn/dismiss}"><button class="learning-text-button" th:text="#{learn.later}">Later</button></form>
+        <a class="learning-text-button" href="/" th:text="#{learn.later}">Later</a>
         <form method="post" th:action="@{/learn/restart}"><button class="learning-text-button" th:text="#{learn.restart}">Start over</button></form>
     </div>
 </main>

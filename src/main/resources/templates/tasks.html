@@ -288,7 +288,7 @@
             <p class="today-learning-progress" th:if="${learningProgress.count() > 0}" th:text="#{learn.progress(${learningProgress.count()},8)}">Progress</p>
             <div class="today-learning-actions">
                 <a class="today-button today-primary" href="/learn" th:text="${learningProgress.count() > 0} ? #{learn.resume} : #{learn.begin}">Start learning</a>
-                <form method="post" th:action="@{/learn/dismiss}"><button class="today-button" type="submit" th:text="#{learn.later}">Later</button></form>
+                <form method="post" th:action="@{/learn/dismiss}"><button class="today-button" type="submit" th:text="#{today.hideLearning}">Hide learning invitation</button></form>
             </div>
         </div>
         <form class="today-learning-dismiss" method="post" th:action="@{/learn/dismiss}"><button class="today-button today-icon" type="submit" th:title="#{today.hideLearning}" th:aria-label="#{today.hideLearning}"><i data-lucide="x" aria-hidden="true"></i></button></form>
